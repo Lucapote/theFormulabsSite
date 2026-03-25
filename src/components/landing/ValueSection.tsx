@@ -1,80 +1,63 @@
 import { motion } from "framer-motion";
-import { Zap, Target, Brain, TrendingUp, Sparkles } from "lucide-react";
+import { Activity, FlaskConical, ScanSearch } from "lucide-react";
 
-const values = [
+const symptoms = [
   {
-    icon: Brain,
-    title: "Mentalidad de élite",
-    description: "Reprograma tu forma de pensar para operar al nivel de los que ya ganaron.",
+    icon: ScanSearch,
+    symptom: "\"Publico contenido pero nadie compra\"",
+    diagnosis: "Tu mensaje no conecta con el dolor real de tu cliente. Falta de posicionamiento estratégico.",
   },
   {
-    icon: Target,
-    title: "Estrategia sin ruido",
-    description: "Sistemas probados que eliminan la improvisación y aceleran tus resultados.",
+    icon: Activity,
+    symptom: "\"Trabajo todo el día y no escalo\"",
+    diagnosis: "Estás operando sin sistemas. La IA puede automatizar el 60% de tus tareas repetitivas.",
   },
   {
-    icon: Zap,
-    title: "IA como ventaja competitiva",
-    description: "Automatiza, escala y multiplica tu impacto con inteligencia artificial aplicada.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Crecimiento exponencial",
-    description: "No creces linealmente. Construyes palancas que trabajan mientras duermes.",
-  },
-  {
-    icon: Sparkles,
-    title: "Marca magnética",
-    description: "Posiciónate como referente. Que la gente te busque, no que tú persigas.",
+    icon: FlaskConical,
+    symptom: "\"No sé qué me diferencia del resto\"",
+    diagnosis: "Tu marca no tiene una fórmula propia. Sin diferenciación, compites solo por precio.",
   },
 ];
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] },
-  }),
-};
-
 const ValueSection = () => {
   return (
-    <section className="py-28 md:py-36 relative">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.03),transparent_60%)]" />
-      <div className="container relative z-10 max-w-5xl mx-auto px-6">
+    <section className="py-24 md:py-32 relative" id="valor">
+      <div className="lab-divider mb-24" />
+      <div className="container max-w-4xl mx-auto px-6">
         <motion.div
-          className="text-center mb-16"
-          initial={{ opacity: 0, y: 30 }}
+          className="text-center mb-14"
+          initial={{ opacity: 0, y: 25 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6 }}
         >
-          <span className="text-sm font-display font-medium tracking-[0.2em] uppercase text-primary mb-4 block">
-            ¿Por qué The Formula B?
-          </span>
-          <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight">
-            Lo que nadie te enseña{" "}
-            <span className="text-gradient">hasta que llegas.</span>
+          <span className="lab-mono mb-3 block">Diagnóstico</span>
+          <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight">
+            ¿Reconoces estos{" "}
+            <span className="text-gradient">síntomas?</span>
           </h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {values.map((value, i) => (
+        <div className="space-y-4">
+          {symptoms.map((item, i) => (
             <motion.div
-              key={value.title}
-              className="group p-6 rounded-xl bg-card border border-border hover:border-primary/30 transition-all duration-500"
-              custom={i}
-              initial="hidden"
-              whileInView="visible"
+              key={i}
+              className="group flex flex-col sm:flex-row gap-5 p-6 rounded-xl bg-card border border-border hover:border-primary/30 transition-all duration-500"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
-              variants={fadeUp}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
             >
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                <value.icon className="w-5 h-5 text-primary" />
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+                <item.icon className="w-5 h-5 text-primary" />
               </div>
-              <h3 className="text-lg font-display font-semibold mb-2">{value.title}</h3>
-              <p className="text-text-secondary text-sm leading-relaxed">{value.description}</p>
+              <div>
+                <p className="font-display font-semibold text-foreground mb-1">{item.symptom}</p>
+                <p className="text-text-secondary text-sm leading-relaxed">
+                  <span className="font-mono text-[10px] text-primary tracking-wider uppercase mr-2">Rx →</span>
+                  {item.diagnosis}
+                </p>
+              </div>
             </motion.div>
           ))}
         </div>
