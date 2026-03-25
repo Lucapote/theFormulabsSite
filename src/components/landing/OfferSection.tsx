@@ -1,62 +1,55 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Check } from "lucide-react";
-
-const features = [
-  "Acceso a la comunidad privada",
-  "Framework completo de 4 pilares",
-  "Herramientas de IA exclusivas",
-  "Sesiones en vivo semanales",
-  "Plantillas y recursos premium",
-  "Soporte y accountability",
-];
+import { ArrowRight } from "lucide-react";
+import { useState } from "react";
 
 const OfferSection = () => {
+  const [email, setEmail] = useState("");
+
   return (
-    <section className="py-28 md:py-36 relative">
-      <div className="container max-w-4xl mx-auto px-6">
+    <section className="py-24 md:py-32 relative">
+      <div className="lab-divider mb-24" />
+      <div className="container max-w-3xl mx-auto px-6">
         <motion.div
-          className="rounded-2xl border border-border bg-card p-8 md:p-14 text-center relative overflow-hidden"
-          initial={{ opacity: 0, y: 40 }}
+          className="rounded-2xl border border-primary/20 bg-card p-8 md:p-12 text-center relative overflow-hidden"
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.7 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.6 }}
         >
           {/* Glow */}
-          <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[400px] h-[400px] rounded-full bg-primary/8 blur-[100px]" />
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[300px] h-[300px] rounded-full bg-primary/8 blur-[100px]" />
 
           <div className="relative z-10">
-            <span className="text-sm font-display font-medium tracking-[0.2em] uppercase text-primary mb-4 block">
-              Tu siguiente paso
-            </span>
-            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight mb-4">
-              Entra a{" "}
-              <span className="text-gradient">The Formula B</span>
+            <span className="lab-mono mb-3 block">Acceso limitado</span>
+            <h2 className="text-2xl md:text-4xl font-display font-bold tracking-tight mb-3">
+              ¿Listo para{" "}
+              <span className="text-gradient">la fórmula?</span>
             </h2>
-            <p className="text-text-secondary max-w-lg mx-auto mb-10 leading-relaxed">
-              Un ecosistema completo para personas que no se conforman con lo promedio. 
-              Estrategia, comunidad e IA en un solo lugar.
+            <p className="text-text-secondary text-sm max-w-md mx-auto mb-8 leading-relaxed">
+              Solicita tu diagnóstico gratuito. Analizamos tu negocio y te decimos exactamente 
+              qué cambiar para escalar. Sin compromiso.
             </p>
 
-            <div className="grid sm:grid-cols-2 gap-3 max-w-md mx-auto mb-10 text-left">
-              {features.map((feature) => (
-                <div key={feature} className="flex items-center gap-3">
-                  <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Check className="w-3 h-3 text-primary" />
-                  </div>
-                  <span className="text-sm text-text-secondary">{feature}</span>
-                </div>
-              ))}
+            {/* CRO: Repeat the same email form for consistency */}
+            <div className="max-w-sm mx-auto">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="email"
+                  placeholder="tu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="flex-1 h-12 px-4 rounded-lg bg-background border border-border text-foreground placeholder:text-text-tertiary text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                />
+                <Button variant="hero" className="h-12 px-6 shrink-0">
+                  Empezar
+                  <ArrowRight className="ml-1 w-4 h-4" />
+                </Button>
+              </div>
+              <p className="text-text-tertiary text-[10px] mt-3 font-mono tracking-wider">
+                47 plazas restantes este mes · Respuesta en 24h
+              </p>
             </div>
-
-            <Button variant="hero" size="lg" className="px-10 py-6 text-base">
-              Quiero entrar ahora
-              <ArrowRight className="ml-2" />
-            </Button>
-
-            <p className="text-text-tertiary text-xs mt-4">
-              Plazas limitadas · Sin permanencia · Garantía de satisfacción
-            </p>
           </div>
         </motion.div>
       </div>
