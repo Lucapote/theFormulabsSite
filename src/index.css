@@ -6,57 +6,60 @@
 
 @layer base {
   :root {
-    --background: 180 10% 3%;
-    --foreground: 0 0% 95%;
+    --background: 210 20% 98%;
+    --foreground: 220 25% 10%;
 
-    --card: 180 8% 6%;
-    --card-foreground: 0 0% 95%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 10%;
 
-    --popover: 180 8% 6%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 10%;
 
-    --primary: 160 84% 39%;
-    --primary-foreground: 180 10% 3%;
+    --primary: 172 66% 40%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 180 8% 11%;
-    --secondary-foreground: 0 0% 80%;
+    --secondary: 210 15% 95%;
+    --secondary-foreground: 220 20% 30%;
 
-    --muted: 180 8% 9%;
-    --muted-foreground: 180 6% 48%;
+    --muted: 210 15% 96%;
+    --muted-foreground: 220 10% 50%;
 
-    --accent: 160 84% 39%;
-    --accent-foreground: 180 10% 3%;
+    --accent: 172 66% 40%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 95%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 180 8% 12%;
-    --input: 180 8% 12%;
-    --ring: 160 84% 39%;
+    --border: 210 15% 90%;
+    --input: 210 15% 90%;
+    --ring: 172 66% 40%;
 
-    --radius: 0.75rem;
+    --radius: 0.625rem;
 
     /* Lab tokens */
-    --glow: 160 84% 39%;
-    --surface: 180 8% 5%;
-    --surface-elevated: 180 8% 8%;
-    --text-secondary: 180 6% 55%;
-    --text-tertiary: 180 6% 32%;
-    --gradient-accent: linear-gradient(135deg, hsl(160 84% 39%), hsl(180 70% 35%));
-    --gradient-surface: linear-gradient(180deg, hsl(180 8% 7%), hsl(180 10% 3%));
-    --shadow-glow: 0 0 40px -10px hsl(160 84% 39% / 0.35);
-    --lab-green: 160 84% 39%;
-    --lab-teal: 180 70% 35%;
-    --lab-pulse: 160 90% 45%;
+    --lab-accent: 172 66% 40%;
+    --lab-accent-soft: 172 40% 95%;
+    --lab-surface: 210 20% 98.5%;
+    --lab-glass: 0 0% 100%;
+    --lab-border: 210 15% 92%;
+    --lab-text-primary: 220 25% 10%;
+    --lab-text-secondary: 220 12% 45%;
+    --lab-text-tertiary: 220 10% 62%;
+    --lab-text-mono: 172 50% 32%;
+    --lab-glow: 172 66% 40%;
+    --lab-gradient: linear-gradient(135deg, hsl(172 66% 40%), hsl(190 60% 42%));
+    --lab-shadow: 0 1px 3px 0 hsl(220 25% 10% / 0.04), 0 4px 20px -4px hsl(220 25% 10% / 0.06);
+    --lab-shadow-lg: 0 4px 6px -1px hsl(220 25% 10% / 0.05), 0 20px 50px -12px hsl(172 66% 40% / 0.08);
+    --lab-grid: hsl(210 15% 92% / 0.6);
 
-    --sidebar-background: 180 8% 5%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 160 84% 39%;
-    --sidebar-primary-foreground: 180 10% 3%;
-    --sidebar-accent: 180 8% 11%;
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 180 8% 12%;
-    --sidebar-ring: 160 84% 39%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 25% 10%;
+    --sidebar-primary: 172 66% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 15% 96%;
+    --sidebar-accent-foreground: 220 25% 10%;
+    --sidebar-border: 210 15% 92%;
+    --sidebar-ring: 172 66% 40%;
   }
 }
 
@@ -72,33 +75,48 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-display;
   }
+
+  ::selection {
+    background: hsl(172 66% 40% / 0.15);
+  }
 }
 
 @layer utilities {
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: var(--gradient-accent);
-  }
-
-  .glow-border {
-    box-shadow: var(--shadow-glow);
-  }
-
-  .surface {
-    @apply bg-surface;
-  }
-
-  .surface-elevated {
-    @apply bg-surface-elevated;
+    background-image: var(--lab-gradient);
   }
 
   .lab-mono {
-    @apply font-mono text-xs tracking-wider uppercase;
-    color: hsl(var(--lab-green));
+    @apply font-mono text-[11px] tracking-[0.15em] uppercase;
+    color: hsl(var(--lab-text-mono));
   }
 
   .lab-divider {
     @apply h-px w-full;
-    background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
+    background: hsl(var(--lab-border));
+  }
+
+  .lab-card {
+    background: hsl(var(--lab-glass));
+    border: 1px solid hsl(var(--lab-border));
+    box-shadow: var(--lab-shadow);
+  }
+
+  .lab-card-hover:hover {
+    box-shadow: var(--lab-shadow-lg);
+    border-color: hsl(var(--lab-accent) / 0.25);
+  }
+
+  .lab-grid-bg {
+    background-image: 
+      linear-gradient(var(--lab-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--lab-grid) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .lab-dot-bg {
+    background-image: radial-gradient(hsl(var(--lab-border)) 1px, transparent 1px);
+    background-size: 24px 24px;
   }
 }

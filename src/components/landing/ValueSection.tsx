@@ -1,60 +1,69 @@
 import { motion } from "framer-motion";
-import { Activity, FlaskConical, ScanSearch } from "lucide-react";
+import { Activity, Brain, TrendingDown } from "lucide-react";
 
 const symptoms = [
   {
-    icon: ScanSearch,
-    symptom: "\"Publico contenido pero nadie compra\"",
-    diagnosis: "Tu mensaje no conecta con el dolor real de tu cliente. Falta de posicionamiento estratégico.",
+    icon: TrendingDown,
+    symptom: "\"Invierto en marketing pero no convierto\"",
+    diagnosis: "Tu funnel tiene fugas. No tienes un sistema de diagnóstico de conversión ni automatización de seguimiento.",
+    area: "Marketing",
   },
   {
     icon: Activity,
-    symptom: "\"Trabajo todo el día y no escalo\"",
-    diagnosis: "Estás operando sin sistemas. La IA puede automatizar el 60% de tus tareas repetitivas.",
+    symptom: "\"Trabajo 12 horas y no escalo\"",
+    diagnosis: "Operas sin sistemas. El 60% de tus tareas operativas pueden automatizarse con AI hoy.",
+    area: "Operaciones",
   },
   {
-    icon: FlaskConical,
-    symptom: "\"No sé qué me diferencia del resto\"",
-    diagnosis: "Tu marca no tiene una fórmula propia. Sin diferenciación, compites solo por precio.",
+    icon: Brain,
+    symptom: "\"No sé por qué mis clientes no repiten\"",
+    diagnosis: "Falta de análisis de retención y experiencia post-venta. Sin datos, no hay diagnóstico posible.",
+    area: "Ventas",
   },
 ];
 
 const ValueSection = () => {
   return (
-    <section className="py-24 md:py-32 relative" id="valor">
-      <div className="lab-divider mb-24" />
+    <section className="py-24 md:py-32 relative" id="diagnostico">
       <div className="container max-w-4xl mx-auto px-6">
         <motion.div
           className="text-center mb-14"
-          initial={{ opacity: 0, y: 25 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
         >
-          <span className="lab-mono mb-3 block">Diagnóstico</span>
-          <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight">
-            ¿Reconoces estos{" "}
-            <span className="text-gradient">síntomas?</span>
+          <span className="lab-mono mb-3 block">Síntomas comunes</span>
+          <h2 className="text-3xl md:text-[2.5rem] font-display font-bold tracking-tight text-foreground leading-tight">
+            ¿Tu negocio presenta
+            <br />
+            <span className="text-gradient">estos síntomas?</span>
           </h2>
         </motion.div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {symptoms.map((item, i) => (
             <motion.div
               key={i}
-              className="group flex flex-col sm:flex-row gap-5 p-6 rounded-xl bg-card border border-border hover:border-primary/30 transition-all duration-500"
-              initial={{ opacity: 0, y: 20 }}
+              className="group flex flex-col sm:flex-row items-start gap-5 p-6 rounded-xl lab-card lab-card-hover transition-all duration-500"
+              initial={{ opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
+              transition={{ duration: 0.45, delay: i * 0.08 }}
             >
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-                <item.icon className="w-5 h-5 text-primary" />
+              <div className="flex items-center gap-3 shrink-0">
+                <div className="w-9 h-9 rounded-lg bg-lab-accent-soft flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                  <item.icon className="w-4 h-4 text-primary" />
+                </div>
+                <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-lab-text-tertiary sm:hidden">{item.area}</span>
               </div>
-              <div>
-                <p className="font-display font-semibold text-foreground mb-1">{item.symptom}</p>
-                <p className="text-text-secondary text-sm leading-relaxed">
-                  <span className="font-mono text-[10px] text-primary tracking-wider uppercase mr-2">Rx →</span>
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-1.5">
+                  <p className="font-display font-semibold text-foreground text-[15px]">{item.symptom}</p>
+                  <span className="hidden sm:inline font-mono text-[9px] tracking-[0.15em] uppercase px-2 py-0.5 rounded bg-lab-accent-soft text-lab-text-mono">{item.area}</span>
+                </div>
+                <p className="text-lab-text-secondary text-sm leading-relaxed">
+                  <span className="font-mono text-[10px] text-primary tracking-wider mr-1.5">Rx →</span>
                   {item.diagnosis}
                 </p>
               </div>

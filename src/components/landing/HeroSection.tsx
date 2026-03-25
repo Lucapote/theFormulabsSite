@@ -7,89 +7,98 @@ const HeroSection = () => {
   const [email, setEmail] = useState("");
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-14">
-      {/* Lab grid */}
-      <div className="absolute inset-0 bg-[linear-gradient(hsl(var(--border)/0.2)_1px,transparent_1px),linear-gradient(90deg,hsl(var(--border)/0.2)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black_20%,transparent_70%)]" />
-      
-      {/* Glow orb — clinical green */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/6 blur-[150px]" />
+    <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden pt-16">
+      {/* Precision grid */}
+      <div className="absolute inset-0 lab-grid-bg [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
 
-      <div className="container relative z-10 text-center max-w-3xl mx-auto px-6">
-        {/* Lab badge — builds credibility fast */}
+      {/* Soft glow */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full bg-primary/[0.04] blur-[120px]" />
+
+      <div className="container relative z-10 max-w-3xl mx-auto px-6">
+        {/* Status badge */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-8"
+          transition={{ duration: 0.5 }}
+          className="flex justify-center mb-8"
         >
-          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card text-xs font-mono tracking-wider uppercase text-primary">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            Lab abierto · 47 plazas restantes
+          <span className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full lab-card text-[11px] font-mono tracking-[0.12em] uppercase text-lab-text-mono">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/40" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+            </span>
+            Lab abierto · Aceptando pacientes
           </span>
         </motion.div>
 
-        <motion.h1
-          className="text-4xl sm:text-5xl md:text-6xl font-display font-bold leading-[1.08] tracking-tight mb-5"
-          initial={{ opacity: 0, y: 30 }}
+        {/* Headline */}
+        <motion.div
+          className="text-center"
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         >
-          Tu negocio tiene un problema.{" "}
-          <br className="hidden sm:block" />
-          Nosotros tenemos{" "}
-          <span className="text-gradient">la fórmula.</span>
-        </motion.h1>
+          <h1 className="text-[clamp(2rem,5vw,3.5rem)] font-display font-bold leading-[1.1] tracking-tight text-foreground mb-5">
+            Tu negocio está estancado.
+            <br />
+            <span className="text-gradient">Nosotros tenemos el diagnóstico.</span>
+          </h1>
+        </motion.div>
 
         <motion.p
-          className="text-base md:text-lg text-text-secondary max-w-xl mx-auto mb-8 leading-relaxed"
-          initial={{ opacity: 0, y: 20 }}
+          className="text-center text-[15px] md:text-base text-lab-text-secondary max-w-lg mx-auto mb-10 leading-relaxed"
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.25 }}
+          transition={{ duration: 0.6, delay: 0.25 }}
         >
-          Diagnosticamos lo que frena tu crecimiento y aplicamos un sistema de 
-          estrategia + IA para que escales sin improvisar.
+          Somos el laboratorio de AI que diagnostica los cuellos de botella de tu negocio 
+          y prescribe sistemas inteligentes para marketing, ventas y operaciones.
         </motion.p>
 
-        {/* CRO: Inline email capture — reduces friction vs separate page */}
+        {/* CTA: Email capture */}
         <motion.div
           className="max-w-md mx-auto"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.4 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-2.5 p-2 rounded-xl lab-card">
             <input
               type="email"
               placeholder="tu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 h-12 px-4 rounded-lg bg-card border border-border text-foreground placeholder:text-text-tertiary text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+              className="flex-1 h-11 px-4 rounded-lg bg-background border-0 text-foreground placeholder:text-lab-text-tertiary text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
             />
-            <Button variant="hero" className="h-12 px-6 shrink-0">
+            <Button variant="lab" className="h-11 px-6 shrink-0">
               Diagnóstico gratis
-              <ArrowRight className="ml-1 w-4 h-4" />
+              <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
             </Button>
           </div>
-          <p className="text-text-tertiary text-xs mt-3 font-mono tracking-wide">
-            Sin spam · Respuesta en 24h · 100% confidencial
-          </p>
+          <div className="flex items-center justify-center gap-4 mt-4">
+            <span className="text-lab-text-tertiary text-[10px] font-mono tracking-wider">Sin spam</span>
+            <span className="w-1 h-1 rounded-full bg-lab-border" />
+            <span className="text-lab-text-tertiary text-[10px] font-mono tracking-wider">Respuesta en 24h</span>
+            <span className="w-1 h-1 rounded-full bg-lab-border" />
+            <span className="text-lab-text-tertiary text-[10px] font-mono tracking-wider">100% confidencial</span>
+          </div>
         </motion.div>
 
-        {/* CRO: Immediate social proof below CTA */}
+        {/* Social proof strip */}
         <motion.div
-          className="flex items-center justify-center gap-6 mt-10 pt-8 border-t border-border/50"
+          className="flex items-center justify-center gap-8 md:gap-12 mt-14 pt-8 border-t border-lab-border"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
         >
           {[
-            { value: "200+", label: "negocios diagnosticados" },
-            { value: "3x", label: "crecimiento promedio" },
-            { value: "92%", label: "satisfacción" },
+            { value: "200+", label: "Negocios diagnosticados" },
+            { value: "3.2x", label: "Crecimiento promedio" },
+            { value: "92%", label: "Satisfacción" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
-              <div className="text-lg font-display font-bold text-gradient">{stat.value}</div>
-              <div className="text-text-tertiary text-[10px] font-mono tracking-wider uppercase">{stat.label}</div>
+              <div className="text-xl md:text-2xl font-display font-bold text-foreground">{stat.value}</div>
+              <div className="text-lab-text-tertiary text-[10px] font-mono tracking-[0.1em] uppercase mt-1">{stat.label}</div>
             </div>
           ))}
         </motion.div>
