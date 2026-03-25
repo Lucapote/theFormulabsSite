@@ -1,51 +1,59 @@
 import { motion } from "framer-motion";
+import { ScanSearch, FlaskConical, Syringe, BarChart3 } from "lucide-react";
 
 const steps = [
   {
-    phase: "Fase 01",
-    title: "Diagnóstico",
-    description: "Analizamos tu negocio, tu audiencia y tu posicionamiento actual. Identificamos exactamente qué bloquea tu crecimiento.",
+    icon: ScanSearch,
+    phase: "01",
+    title: "El Paciente",
+    subtitle: "Intake & análisis",
+    description: "Tu negocio llega al lab. Recopilamos datos de marketing, ventas y operaciones. Ejecutamos el Growth Simulator para mapear cada cuello de botella.",
     tag: "Semana 1",
   },
   {
-    phase: "Fase 02",
-    title: "Fórmula",
-    description: "Diseñamos tu estrategia personalizada: mensaje, oferta, canales y sistemas de IA adaptados a tu caso.",
+    icon: FlaskConical,
+    phase: "02",
+    title: "El Diagnóstico",
+    subtitle: "Growth Simulator™",
+    description: "Nuestro sistema de AI analiza tus métricas, tu funnel y tus procesos. Resultado: un informe clínico con tus 3 mayores bloqueos de crecimiento.",
+    tag: "Semana 1-2",
+  },
+  {
+    icon: Syringe,
+    phase: "03",
+    title: "La Receta (Rx)",
+    subtitle: "Roadmap estratégico 90 días",
+    description: "Diseñamos tu protocolo personalizado: qué herramientas de AI implementar, qué automatizar y qué eliminar. Un plan preciso, no genérico.",
     tag: "Semana 2-3",
   },
   {
-    phase: "Fase 03",
-    title: "Tratamiento",
-    description: "Implementamos la fórmula con sprints de ejecución, automatizaciones y contenido estratégico que trabaja 24/7.",
-    tag: "Semana 4-8",
-  },
-  {
-    phase: "Fase 04",
-    title: "Evolución",
-    description: "Medimos, optimizamos y escalamos. Tu negocio opera con un sistema que crece contigo, no depende de ti.",
-    tag: "Continuo",
+    icon: BarChart3,
+    phase: "04",
+    title: "El Tratamiento",
+    subtitle: "Ejecución Full-Stack",
+    description: "Nuestro equipo implementa la fórmula: automatizaciones, contenido con AI, sistemas de venta y dashboards de control. Tú supervisas, nosotros ejecutamos.",
+    tag: "Semana 3-12",
   },
 ];
 
 const FrameworkSection = () => {
   return (
-    <section className="py-24 md:py-32 relative" id="sistema">
-      <div className="lab-divider mb-24" />
+    <section className="py-24 md:py-32 relative" id="protocolo">
       <div className="container max-w-4xl mx-auto px-6">
         <motion.div
           className="text-center mb-16"
-          initial={{ opacity: 0, y: 25 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
         >
-          <span className="lab-mono mb-3 block">Protocolo</span>
-          <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight">
-            El proceso es{" "}
-            <span className="text-gradient">preciso.</span>
+          <span className="lab-mono mb-3 block">Protocolo clínico</span>
+          <h2 className="text-3xl md:text-[2.5rem] font-display font-bold tracking-tight text-foreground leading-tight">
+            Un proceso{" "}
+            <span className="text-gradient">quirúrgico.</span>
           </h2>
-          <p className="text-text-secondary mt-3 max-w-lg mx-auto text-sm">
-            No improvisamos. Cada paso tiene un propósito claro y un resultado medible.
+          <p className="text-lab-text-secondary mt-3 max-w-md mx-auto text-sm leading-relaxed">
+            No improvisamos. Cada fase tiene un entregable medible y un resultado claro.
           </p>
         </motion.div>
 
@@ -53,23 +61,27 @@ const FrameworkSection = () => {
           {steps.map((step, i) => (
             <motion.div
               key={i}
-              className="group p-6 rounded-xl bg-card border border-border hover:border-primary/25 transition-all duration-500 relative overflow-hidden"
-              initial={{ opacity: 0, y: 25 }}
+              className="group p-6 rounded-xl lab-card lab-card-hover transition-all duration-500 relative"
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.5, delay: i * 0.08 }}
+              transition={{ duration: 0.45, delay: i * 0.07 }}
             >
-              {/* Phase glow on hover */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-              
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="font-mono text-[10px] text-primary tracking-wider uppercase">{step.phase}</span>
-                  <span className="font-mono text-[10px] text-text-tertiary tracking-wider">{step.tag}</span>
+              <div className="flex items-start justify-between mb-5">
+                <div className="w-10 h-10 rounded-lg bg-lab-accent-soft flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                  <step.icon className="w-4.5 h-4.5 text-primary" />
                 </div>
-                <h3 className="text-xl font-display font-bold mb-2">{step.title}</h3>
-                <p className="text-text-secondary text-sm leading-relaxed">{step.description}</p>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[9px] tracking-[0.15em] uppercase text-lab-text-tertiary">{step.tag}</span>
+                </div>
               </div>
+
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="font-mono text-[10px] text-primary tracking-wider">{step.phase}</span>
+                <h3 className="text-lg font-display font-bold text-foreground">{step.title}</h3>
+              </div>
+              <p className="text-[11px] font-mono text-lab-text-mono tracking-wide mb-3">{step.subtitle}</p>
+              <p className="text-lab-text-secondary text-sm leading-relaxed">{step.description}</p>
             </motion.div>
           ))}
         </div>
