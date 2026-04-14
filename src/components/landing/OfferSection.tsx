@@ -8,7 +8,7 @@ const includes = [
   "Informe clínico de cuellos de botella",
   "Roadmap estratégico 90 días",
   "Implementación full-stack con AI",
-  "Dashboard de métricas en tiempo real",
+  "Dashboard de métricas",
   "Soporte directo con el equipo lab",
 ];
 
