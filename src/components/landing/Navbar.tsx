@@ -11,12 +11,7 @@ const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-b border-lab-border">
       <div className="container max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
         <a href="#" className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
-            <span className="font-mono text-[10px] font-bold text-primary-foreground">Fx</span>
-          </div>
-          <span className="font-display font-bold text-foreground tracking-tight text-[15px]">
-            formu<span className="text-primary">lab</span>
-          </span>
+          <img src={logo} alt="The Formulab" className="h-8" />
         </a>
 
         <div className="hidden md:flex items-center gap-8">
