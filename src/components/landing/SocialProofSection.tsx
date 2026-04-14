@@ -3,7 +3,7 @@ import { ArrowUpRight } from "lucide-react";
 
 const cases = [
   {
-    quote: "En 3 semanas automatizamos el 70% de nuestro follow-up de ventas con AI. Los cierres subieron un 280%.",
+    quote: "En 3 meses estructuramos el proceso comercial y automatizamos el seguimiento de leads, dando respuestas más rápidas y aumentar sus oportunidades de cierre",
     name: "Carlos M.",
     role: "CEO — Agencia Digital",
     result: "+280%",
