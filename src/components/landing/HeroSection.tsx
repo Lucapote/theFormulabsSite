@@ -92,9 +92,9 @@ const HeroSection = () => {
           transition={{ duration: 0.5, delay: 0.6 }}
         >
           {[
-            { value: "200+", label: "Negocios diagnosticados" },
-            { value: "3.2x", label: "Crecimiento promedio" },
-            { value: "92%", label: "Satisfacción" },
+            { value: "25+", label: "Negocios diagnosticados" },
+            { value: "2.5x", label: "Crecimiento promedio" },
+            { value: "94%", label: "Satisfacción" },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
               <div className="text-xl md:text-2xl font-display font-bold text-foreground">{stat.value}</div>
