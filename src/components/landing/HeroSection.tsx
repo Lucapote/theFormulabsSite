@@ -1,10 +1,22 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 
 const HeroSection = () => {
   const [email, setEmail] = useState("");
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    
+    setIsRedirecting(true);
+    setTimeout(() => {
+      window.open(`https://calendly.com/theformulab-io/30min?email=${encodeURIComponent(email)}`, "_blank");
+      setIsRedirecting(false);
+    }, 1500);
+  };
 
   return (
     <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden pt-16">
@@ -62,19 +74,24 @@ const HeroSection = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <div className="flex flex-col sm:flex-row gap-2.5 p-2 rounded-xl lab-card">
+          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2.5 p-2 rounded-xl lab-card">
             <input
               type="email"
+              required
               placeholder="tu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="flex-1 h-11 px-4 rounded-lg bg-background border-0 text-foreground placeholder:text-lab-text-tertiary text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
             />
-            <Button variant="lab" className="h-11 px-6 shrink-0">
-              Diagnóstico gratis
-              <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
+            <Button type="submit" variant="lab" className="h-11 px-6 shrink-0" disabled={isRedirecting}>
+              {isRedirecting ? "Redirigiendo..." : (
+                <>
+                  Diagnóstico gratis
+                  <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
+                </>
+              )}
             </Button>
-          </div>
+          </form>
           <div className="flex items-center justify-center gap-4 mt-4">
             <span className="text-lab-text-tertiary text-[10px] font-mono tracking-wider">Sin spam</span>
             <span className="w-1 h-1 rounded-full bg-lab-border" />

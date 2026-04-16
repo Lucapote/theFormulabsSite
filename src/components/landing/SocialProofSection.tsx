@@ -5,8 +5,8 @@ const cases = [
   {
     quote: "En 3 meses estructuramos el proceso comercial y automatizamos el seguimiento de leads, dando respuestas más rápidas y aumentar sus oportunidades de cierre",
     name: "Carlos M.",
-    role: "CEO — Agencia Digital",
-    result: "+280%",
+    role: "Dueño — Restaurante",
+    result: "+35%",
     metric: "OPTIMIZACION SEGUIMIENTO",
     before: "Seguimiento manual, 3% cierre",
     after: "Automatización y procesos claros de follow-up",
@@ -17,7 +17,7 @@ const cases = [
     role: "Fundador — Negocio Digital",
     result: "-40%",
     metric: "FRICCIÓN ONBOARDING",
-    before: "Proceso de incorporación sin planificación\n\n",
+    before: "Proceso de incorporación sin planificación",
     after: "Onboarding estructurado y sin seguimiento claro",
   },
   {

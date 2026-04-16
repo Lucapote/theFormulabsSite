@@ -18,8 +18,8 @@ const Navbar = () => {
           <a href="#diagnostico" className="text-[13px] text-lab-text-secondary hover:text-foreground transition-colors">Diagnóstico</a>
           <a href="#protocolo" className="text-[13px] text-lab-text-secondary hover:text-foreground transition-colors">Protocolo</a>
           <a href="#casos" className="text-[13px] text-lab-text-secondary hover:text-foreground transition-colors">Casos</a>
-          <Button variant="lab" size="sm" className="px-5 h-9">
-            Solicitar diagnóstico
+          <Button variant="lab" size="sm" className="px-5 h-9" asChild>
+            <a href="#oferta">Solicitar diagnóstico</a>
           </Button>
         </div>
 
@@ -39,8 +39,8 @@ const Navbar = () => {
             <a href="#diagnostico" className="block text-sm text-lab-text-secondary" onClick={() => setIsOpen(false)}>Diagnóstico</a>
             <a href="#protocolo" className="block text-sm text-lab-text-secondary" onClick={() => setIsOpen(false)}>Protocolo</a>
             <a href="#casos" className="block text-sm text-lab-text-secondary" onClick={() => setIsOpen(false)}>Casos</a>
-            <Button variant="lab" size="sm" className="w-full" onClick={() => setIsOpen(false)}>
-              Solicitar diagnóstico
+            <Button variant="lab" size="sm" className="w-full" asChild>
+              <a href="#oferta" onClick={() => setIsOpen(false)}>Solicitar diagnóstico</a>
             </Button>
           </motion.div>
         )}

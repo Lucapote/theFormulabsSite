@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 
 const includes = [
   "Growth Simulator™ (diagnóstico AI)",
@@ -14,9 +14,21 @@ const includes = [
 
 const OfferSection = () => {
   const [email, setEmail] = useState("");
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    
+    setIsRedirecting(true);
+    setTimeout(() => {
+      window.open(`https://calendly.com/theformulab-io/30min?email=${encodeURIComponent(email)}`, "_blank");
+      setIsRedirecting(false);
+    }, 1500);
+  };
 
   return (
-    <section className="py-24 md:py-32 relative">
+    <section id="oferta" className="py-24 md:py-32 relative">
       <div className="container max-w-3xl mx-auto px-6">
         <motion.div
           className="rounded-2xl lab-card p-8 md:p-12 relative overflow-hidden"
@@ -37,7 +49,7 @@ const OfferSection = () => {
               <span className="text-gradient">Es gratuito.</span>
             </h2>
             <p className="text-lab-text-secondary text-sm max-w-md mx-auto mb-8 leading-relaxed">
-              Analizamos tu negocio con nuestro Growth Simulator y te entregamos un informe 
+              Analizamos tu negocio con nuestro Growth Simulator y te entregamos un informe
               con tus 3 mayores oportunidades de crecimiento. Sin compromiso.
             </p>
 
@@ -54,19 +66,24 @@ const OfferSection = () => {
 
             {/* Email capture */}
             <div className="max-w-sm mx-auto">
-              <div className="flex flex-col sm:flex-row gap-2.5 p-2 rounded-xl bg-background border border-lab-border">
+              <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2.5 p-2 rounded-xl bg-background border border-lab-border">
                 <input
                   type="email"
+                  required
                   placeholder="tu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="flex-1 h-11 px-4 rounded-lg bg-card border-0 text-foreground placeholder:text-lab-text-tertiary text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
                 />
-                <Button variant="lab" className="h-11 px-6 shrink-0">
-                  Empezar
-                  <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
+                <Button type="submit" variant="lab" className="h-11 px-6 shrink-0" disabled={isRedirecting}>
+                  {isRedirecting ? "Redirigiendo..." : (
+                    <>
+                      Empezar
+                      <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
+                    </>
+                  )}
                 </Button>
-              </div>
+              </form>
               <p className="text-lab-text-tertiary text-[10px] mt-3 font-mono tracking-[0.1em]">
                 Plazas limitadas este mes · Respuesta en 24h
               </p>
