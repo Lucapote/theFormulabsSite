@@ -49,9 +49,9 @@ const SocialProofSection = () => {
           </h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-4">
+        <ul className="grid md:grid-cols-3 gap-4">
           {cases.map((c, i) => (
-            <motion.div
+            <motion.li
               key={c.name}
               className="flex flex-col p-6 rounded-xl lab-card lab-card-hover transition-all duration-500"
               initial={{ opacity: 0, y: 20 }}
@@ -80,15 +80,15 @@ const SocialProofSection = () => {
                 </div>
               </div>
 
-              <p className="text-lab-text-secondary text-[13px] leading-relaxed mb-5 flex-1">"{c.quote}"</p>
+              <blockquote className="text-lab-text-secondary text-[13px] leading-relaxed mb-5 flex-1">"{c.quote}"</blockquote>
 
               <div className="pt-4 border-t border-lab-border">
                 <div className="font-display font-semibold text-sm text-foreground">{c.name}</div>
                 <div className="text-lab-text-tertiary text-[11px]">{c.role}</div>
               </div>
-            </motion.div>
+            </motion.li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );

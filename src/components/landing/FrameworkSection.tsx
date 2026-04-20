@@ -57,9 +57,9 @@ const FrameworkSection = () => {
           </p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 gap-4">
+        <ol className="grid sm:grid-cols-2 gap-4">
           {steps.map((step, i) => (
-            <motion.div
+            <motion.li
               key={i}
               className="group p-6 rounded-xl lab-card lab-card-hover transition-all duration-500 relative"
               initial={{ opacity: 0, y: 20 }}
@@ -82,9 +82,9 @@ const FrameworkSection = () => {
               </div>
               <p className="text-[11px] font-mono text-lab-text-mono tracking-wide mb-3">{step.subtitle}</p>
               <p className="text-lab-text-secondary text-sm leading-relaxed">{step.description}</p>
-            </motion.div>
+            </motion.li>
           ))}
-        </div>
+        </ol>
       </div>
     </section>
   );

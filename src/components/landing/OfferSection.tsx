@@ -53,19 +53,19 @@ const OfferSection = () => {
               con tus 3 mayores oportunidades de crecimiento. Sin compromiso.
             </p>
 
-            <div className="grid sm:grid-cols-2 gap-2.5 max-w-sm mx-auto mb-8 text-left">
+            <ul className="grid sm:grid-cols-2 gap-2.5 max-w-sm mx-auto mb-8 text-left">
               {includes.map((item) => (
-                <div key={item} className="flex items-start gap-2.5">
+                <li key={item} className="flex items-start gap-2.5">
                   <div className="w-4 h-4 rounded-full bg-lab-accent-soft flex items-center justify-center mt-0.5 shrink-0">
                     <Check className="w-2.5 h-2.5 text-primary" />
                   </div>
                   <span className="text-[12px] text-lab-text-secondary leading-snug">{item}</span>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
 
             {/* Email capture */}
-            <div className="max-w-sm mx-auto">
+            <div className="max-w-md mx-auto">
               <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2.5 p-2 rounded-xl bg-background border border-lab-border">
                 <input
                   type="email"

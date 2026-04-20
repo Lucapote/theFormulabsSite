@@ -41,9 +41,9 @@ const ValueSection = () => {
           </h2>
         </motion.div>
 
-        <div className="space-y-3">
+        <ul className="space-y-3">
           {symptoms.map((item, i) => (
-            <motion.div
+            <motion.li
               key={i}
               className="group flex flex-col sm:flex-row items-start gap-5 p-6 rounded-xl lab-card lab-card-hover transition-all duration-500"
               initial={{ opacity: 0, y: 16 }}
@@ -67,9 +67,9 @@ const ValueSection = () => {
                   {item.diagnosis}
                 </p>
               </div>
-            </motion.div>
+              </motion.li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );

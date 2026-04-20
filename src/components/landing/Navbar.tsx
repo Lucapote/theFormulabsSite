@@ -8,8 +8,8 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-b border-lab-border">
-      <div className="container max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-b border-lab-border">
+      <nav className="container max-w-5xl mx-auto px-6 h-16 flex items-center justify-between" aria-label="Main Navigation">
         <a href="#" className="flex items-center gap-2.5">
           <img src={logo} alt="The Formulab" className="h-8" />
         </a>
@@ -26,15 +26,16 @@ const Navbar = () => {
         <button className="md:hidden text-foreground" onClick={() => setIsOpen(!isOpen)}>
           {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
-      </div>
+      </nav>
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <motion.nav
             className="md:hidden bg-card border-b border-lab-border px-6 py-5 space-y-3"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
+            aria-label="Mobile Navigation"
           >
             <a href="#diagnostico" className="block text-sm text-lab-text-secondary" onClick={() => setIsOpen(false)}>Diagnóstico</a>
             <a href="#protocolo" className="block text-sm text-lab-text-secondary" onClick={() => setIsOpen(false)}>Protocolo</a>
@@ -42,10 +43,10 @@ const Navbar = () => {
             <Button variant="lab" size="sm" className="w-full" asChild>
               <a href="#oferta" onClick={() => setIsOpen(false)}>Solicitar diagnóstico</a>
             </Button>
-          </motion.div>
+          </motion.nav>
         )}
       </AnimatePresence>
-    </nav>
+    </header>
   );
 };
 

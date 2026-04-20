@@ -8,19 +8,21 @@ import Footer from "@/components/landing/Footer";
 
 const Index = () => {
   return (
-    <main className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Navbar />
-      <HeroSection />
-      <div className="lab-divider max-w-4xl mx-auto" />
-      <ValueSection />
-      <div className="lab-divider max-w-4xl mx-auto" />
-      <FrameworkSection />
-      <div className="lab-divider max-w-4xl mx-auto" />
-      <SocialProofSection />
-      <div className="lab-divider max-w-4xl mx-auto" />
-      <OfferSection />
+      <main>
+        <HeroSection />
+        <hr className="lab-divider max-w-4xl mx-auto border-0" aria-hidden="true" />
+        <ValueSection />
+        <hr className="lab-divider max-w-4xl mx-auto border-0" aria-hidden="true" />
+        <FrameworkSection />
+        <hr className="lab-divider max-w-4xl mx-auto border-0" aria-hidden="true" />
+        <SocialProofSection />
+        <hr className="lab-divider max-w-4xl mx-auto border-0" aria-hidden="true" />
+        <OfferSection />
+      </main>
       <Footer />
-    </main>
+    </div>
   );
 };
 
