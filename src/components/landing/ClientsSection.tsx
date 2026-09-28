@@ -9,7 +9,8 @@ const clients = [
   { name: "Cliente 1", logo: "MV Mobile Notary", location: "Florida" },
   { name: "Cliente 2", logo: "Noah's Cleaners", location: "Florida" },
   { name: "Cliente 3", logo: "Yamamoto", location: "Mexico" },
-  { name: "Cliente 4", logo: "Logo Empresa 4", location: "Florida" },
+  { name: "Cliente 4", logo: "Xochipilli", location: "Mexico" },
+  { name: "Cliente 4", logo: "Lemonade", location: "Mexico" }
 ];
 
 const ClientsSection = () => {
