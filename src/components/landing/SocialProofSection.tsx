@@ -13,7 +13,7 @@ const cases = [
   },
   {
     quote: "El diagnóstico nos permitió detectar puntos de fricción en el proceso de onboarding. En pocas semanas optimizamos la experiencia del cliente, logrando un flujo más claro y eficiente.",
-    name: "Marco",
+    name: "Marco R.",
     role: "Fundador — Negocio Digital",
     result: "-40%",
     metric: "FRICCIÓN ONBOARDING",

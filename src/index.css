@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -60,6 +60,10 @@
     --sidebar-accent-foreground: 220 25% 10%;
     --sidebar-border: 210 15% 92%;
     --sidebar-ring: 307 87% 52%;
+
+    /* Proposal Brand tokens */
+    --brand-magenta: #ef18d6;
+    --brand-blue: #188ff0;
   }
 }
 
@@ -82,9 +86,33 @@
 }
 
 @layer utilities {
+  .font-sora {
+    font-family: 'Sora', sans-serif !important;
+  }
+
+  /* Proposal Brand Color Utilities */
+  .text-brand-blue { color: var(--brand-blue) !important; }
+  .bg-brand-blue { background-color: var(--brand-blue) !important; }
+  .bg-brand-blue-50 { background-color: rgba(24, 143, 240, 0.08) !important; }
+  .border-brand-blue-200 { border-color: rgba(24, 143, 240, 0.25) !important; }
+
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: var(--lab-gradient);
+    background-image: linear-gradient(
+      -45deg, 
+      hsl(307 87% 52%), 
+      hsl(280 70% 55%), 
+      hsl(320 80% 60%), 
+      hsl(270 75% 50%)
+    );
+    background-size: 300% 300%;
+    animation: gradient-shift 8s ease infinite;
+  }
+
+  @keyframes gradient-shift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 
   .lab-mono {
@@ -119,4 +147,54 @@
     background-image: radial-gradient(hsl(var(--lab-border)) 1px, transparent 1px);
     background-size: 24px 24px;
   }
+
+  @keyframes labBubble { 0% { transform: translateY(0) scale(1); opacity: .7; } 100% { transform: translateY(-60px) scale(.3); opacity: 0; } }
+  @keyframes labShake { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-8deg); } 40% { transform: rotate(8deg); } 60% { transform: rotate(-5deg); } 80% { transform: rotate(5deg); } }
+  @keyframes labFadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes labBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  @keyframes labPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.5); } }
 }
+
+/* Print Rules for PDF export */
+@page {
+  size: A4 portrait;
+  margin: 8mm 10mm;
+}
+
+@media screen {
+  .print-only {
+    display: none !important;
+  }
+}
+
+@media print {
+  html, body {
+    width: 210mm !important;
+    height: 297mm !important;
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .screen-only {
+    display: none !important;
+  }
+  
+  .print-only, #lab-result-pdf-report {
+    display: block !important;
+    position: relative !important;
+    width: 100% !important;
+    max-width: 210mm !important;
+    margin: 0 auto !important;
+    padding: 8mm 10mm !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    box-sizing: border-box !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
+
