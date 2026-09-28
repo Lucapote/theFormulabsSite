@@ -1,12 +1,10 @@
-import logo from "@/assets/logo_formulabs_color.png";
-
 const Footer = () => {
   return (
     <footer className="border-t border-lab-border py-10">
       <div className="container max-w-5xl mx-auto px-6">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <a href="#" className="flex items-center">
-            <img src={logo} alt="The Formulab" className="h-6" />
+            <img src="/logo.png" alt="The Formulab" className="h-6" />
           </a>
 
           <nav className="flex items-center gap-5 text-[11px] text-lab-text-tertiary">

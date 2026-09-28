@@ -69,7 +69,7 @@ export const PROPOSAL_DATA: ProposalData = {
     name: "Case Cool",
     shortName: "Case Cool",
     proposalTitle: "Propuesta de Contenido",
-    logoUrl: "/logo.png", // Imagen en la carpeta public/
+    logoUrl: "/logo.png", // Logo desde la carpeta public/
     greeting: "Hola!! Estuve dándole vueltas a lo que platicamos y a cómo podemos estructurar mejor la estrategia para la marca. Quería compartirte la visión completa y aterrizada de todo el proyecto para que estemos en la misma página con el camino que vamos a tomar.",
     vision: "La idea principal con la que quiero que trabajemos es transformar la presencia digital del proyecto. No se trata solo de publicar por publicar ni de llenar un feed de fotos bonitas, sino de construir una estrategia que conecte de verdad con la gente correcta, posicione tu marca con la autoridad que merece y, sobre todo, genere resultados reales."
   },

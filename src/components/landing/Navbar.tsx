@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import logo from "@/assets/logo_formulabs_color.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,7 +10,7 @@ const Navbar = () => {
     <header className="fixed top-0 left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-b border-lab-border">
       <nav className="container max-w-5xl mx-auto px-6 h-16 flex items-center justify-between" aria-label="Main Navigation">
         <a href="#" className="flex items-center gap-2.5">
-          <img src={logo} alt="The Formulab" className="h-8" />
+          <img src="/logo.png" alt="The Formulab" className="h-8" />
         </a>
 
         <div className="hidden md:flex items-center gap-8">
