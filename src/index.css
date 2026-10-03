@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Sora:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
+    --background: 0 0% 98%;
     --foreground: 220 25% 10%;
 
     --card: 0 0% 100%;
@@ -18,10 +18,10 @@
     --primary: 307 87% 52%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 15% 95%;
-    --secondary-foreground: 220 20% 30%;
+    --secondary: 207 89% 96%;
+    --secondary-foreground: 207 89% 30%;
 
-    --muted: 210 15% 96%;
+    --muted: 0 0% 95.7%;
     --muted-foreground: 220 10% 50%;
 
     --accent: 307 87% 52%;
@@ -30,40 +30,44 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 15% 90%;
-    --input: 210 15% 90%;
+    --border: 210 15% 91%;
+    --input: 210 15% 91%;
     --ring: 307 87% 52%;
 
-    --radius: 0.625rem;
+    --radius: 0.75rem;
 
-    /* Lab tokens */
+    /* Lab Brand tokens from Brand Manual */
+    --brand-magenta: #ef18d6;
+    --brand-blue: #188ff0;
+    --brand-blue-50: rgba(24, 143, 240, 0.5);
+    --brand-blue-15: rgba(24, 143, 240, 0.15);
+    --brand-neutral: #f4f4f4;
+
     --lab-accent: 307 87% 52%;
-    --lab-accent-soft: 307 40% 95%;
-    --lab-surface: 210 20% 98.5%;
+    --lab-accent-soft: 307 87% 96%;
+    --lab-accent-blue: 207 89% 52%;
+    --lab-accent-blue-soft: 207 89% 95%;
+    --lab-surface: 0 0% 95.7%;
     --lab-glass: 0 0% 100%;
-    --lab-border: 210 15% 92%;
+    --lab-border: 210 15% 91%;
     --lab-text-primary: 220 25% 10%;
-    --lab-text-secondary: 220 12% 45%;
-    --lab-text-tertiary: 220 10% 62%;
-    --lab-text-mono: 307 50% 40%;
+    --lab-text-secondary: 220 12% 42%;
+    --lab-text-tertiary: 220 10% 60%;
+    --lab-text-mono: 307 87% 45%;
     --lab-glow: 307 87% 52%;
-    --lab-gradient: linear-gradient(135deg, hsl(307 87% 52%), hsl(280 70% 55%));
-    --lab-shadow: 0 1px 3px 0 hsl(220 25% 10% / 0.04), 0 4px 20px -4px hsl(220 25% 10% / 0.06);
-    --lab-shadow-lg: 0 4px 6px -1px hsl(220 25% 10% / 0.05), 0 20px 50px -12px hsl(307 87% 52% / 0.08);
-    --lab-grid: hsl(210 15% 92% / 0.6);
+    --lab-gradient: linear-gradient(135deg, #ef18d6 0%, #188ff0 100%);
+    --lab-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.04), 0 8px 30px -4px rgba(24, 143, 240, 0.06);
+    --lab-shadow-lg: 0 8px 16px -2px rgba(0, 0, 0, 0.05), 0 20px 45px -10px rgba(239, 24, 214, 0.12);
+    --lab-grid: rgba(24, 143, 240, 0.08);
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 220 25% 10%;
     --sidebar-primary: 307 87% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 15% 96%;
+    --sidebar-accent: 207 89% 96%;
     --sidebar-accent-foreground: 220 25% 10%;
     --sidebar-border: 210 15% 92%;
     --sidebar-ring: 307 87% 52%;
-
-    /* Proposal Brand tokens */
-    --brand-magenta: #ef18d6;
-    --brand-blue: #188ff0;
   }
 }
 
@@ -81,7 +85,8 @@
   }
 
   ::selection {
-    background: hsl(307 87% 52% / 0.15);
+    background: rgba(239, 24, 214, 0.18);
+    color: #ef18d6;
   }
 }
 
@@ -89,40 +94,41 @@
   .font-sora {
     font-family: 'Sora', sans-serif !important;
   }
+  .font-inter {
+    font-family: 'Inter', sans-serif !important;
+  }
 
-  /* Proposal Brand Color Utilities */
+  /* Brand Manual Utility Classes */
+  .text-brand-magenta { color: var(--brand-magenta) !important; }
+  .bg-brand-magenta { background-color: var(--brand-magenta) !important; }
+  
   .text-brand-blue { color: var(--brand-blue) !important; }
   .bg-brand-blue { background-color: var(--brand-blue) !important; }
-  .bg-brand-blue-50 { background-color: rgba(24, 143, 240, 0.08) !important; }
+  .bg-brand-blue-50 { background-color: var(--brand-blue-50) !important; }
+  .bg-brand-blue-15 { background-color: var(--brand-blue-15) !important; }
+  .border-brand-blue { border-color: var(--brand-blue) !important; }
   .border-brand-blue-200 { border-color: rgba(24, 143, 240, 0.25) !important; }
+
+  .bg-brand-neutral { background-color: var(--brand-neutral) !important; }
 
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(
-      -45deg, 
-      hsl(307 87% 52%), 
-      hsl(280 70% 55%), 
-      hsl(320 80% 60%), 
-      hsl(270 75% 50%)
-    );
-    background-size: 300% 300%;
-    animation: gradient-shift 8s ease infinite;
+    background-image: linear-gradient(135deg, #ef18d6 0%, #188ff0 100%);
   }
 
-  @keyframes gradient-shift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+  .text-gradient-reverse {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #188ff0 0%, #ef18d6 100%);
   }
 
   .lab-mono {
     @apply font-mono text-[11px] tracking-[0.15em] uppercase;
-    color: hsl(var(--lab-text-mono));
+    color: var(--brand-magenta);
   }
 
   .lab-divider {
     @apply h-px w-full;
-    background: hsl(var(--lab-border));
+    background: linear-gradient(90deg, transparent, hsl(var(--lab-border)), transparent);
   }
 
   .lab-card {
@@ -133,7 +139,7 @@
 
   .lab-card-hover:hover {
     box-shadow: var(--lab-shadow-lg);
-    border-color: hsl(var(--lab-accent) / 0.25);
+    border-color: rgba(239, 24, 214, 0.3);
   }
 
   .lab-grid-bg {

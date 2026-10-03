@@ -1,94 +1,70 @@
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
-const cases = [
-  {
-    quote: "En 3 meses estructuramos el proceso comercial y automatizamos el seguimiento de leads, dando respuestas m\xE1s r\xE1pidas y aumentar sus oportunidades de cierre",
-    name: "Carlos M.",
-    role: "Due\xF1o \u2014 Restaurante",
-    result: "+35%",
-    metric: "OPTIMIZACION SEGUIMIENTO",
-    before: "Seguimiento manual, 3% cierre",
-    after: "Automatizaci\xF3n y procesos claros de follow-up"
-  },
-  {
-    quote: "El diagn\xF3stico nos permiti\xF3 detectar puntos de fricci\xF3n en el proceso de onboarding. En pocas semanas optimizamos la experiencia del cliente, logrando un flujo m\xE1s claro y eficiente.",
-    name: "Marco R.",
-    role: "Fundador \u2014 Negocio Digital",
-    result: "-40%",
-    metric: "FRICCI\xD3N ONBOARDING",
-    before: "Proceso de incorporaci\xF3n sin planificaci\xF3n",
-    after: "Onboarding estructurado y sin seguimiento claro"
-  },
-  {
-    quote: "Logramos transformar una idea en una marca con direcci\xF3n, prop\xF3sito y presencia digital. Hoy cuenta con una estrategia clara para posicionarse y atraer oportunidades.",
-    name: "Paula S.",
-    role: "Marca Personal \u2014 Consultor\xEDa y Desarrollo Profesional",
-    result: "6 sem.",
-    metric: "POSICIONAMIENTO DE MARCA ",
-    before: "Sin estrategia clara, ni identidad, ni presencia digital estructurada",
-    after: "Marca personal con narrativa, identidad visual y bases s\xF3lidas para su crecimiento."
-  }
-];
+import { casesData } from "@/data";
+
 const SocialProofSection = () => {
-  return <section className="py-24 md:py-32 relative" id="casos">
+  return (
+    <section className="py-24 md:py-32 relative" id="casos">
       <div className="container max-w-4xl mx-auto px-6">
         <motion.div
-    className="text-center mb-14"
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: "-80px" }}
-    transition={{ duration: 0.5 }}
-  >
-          <span className="lab-mono mb-3 block">Casos clínicos</span>
-          <h2 className="text-3xl md:text-[2.5rem] font-display font-bold tracking-tight text-foreground leading-tight">
+          className="text-center mb-14"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.5 }}
+        >
+          <span className="lab-mono mb-3 block text-brand-magenta font-mono tracking-widest uppercase text-xs">Casos clínicos</span>
+          <h2 className="text-3xl md:text-[2.5rem] font-sora font-extrabold tracking-tight text-foreground leading-tight">
             Resultados medibles,{" "}
             <span className="text-gradient">no promesas.</span>
           </h2>
         </motion.div>
 
-        <ul className="grid md:grid-cols-3 gap-4">
-          {cases.map((c, i) => <motion.li
-    key={c.name}
-    className="flex flex-col p-6 rounded-xl lab-card lab-card-hover transition-all duration-500"
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.45, delay: i * 0.08 }}
-  >
-              {
-    /* Result header */
-  }
+        <ul className="grid md:grid-cols-3 gap-5">
+          {casesData.map((c, i) => (
+            <motion.li
+              key={c.name}
+              className="flex flex-col p-6 rounded-2xl lab-card lab-card-hover transition-all duration-500 bg-white/80"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: i * 0.08 }}
+            >
+              {/* Result header */}
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <div className="text-2xl font-display font-bold text-primary">{c.result}</div>
-                  <div className="font-mono text-[9px] tracking-[0.12em] uppercase text-lab-text-tertiary mt-0.5">{c.metric}</div>
+                  <div className="text-3xl font-sora font-extrabold" style={{ color: c.color }}>{c.result}</div>
+                  <div className="font-mono text-[9px] tracking-[0.12em] uppercase text-lab-text-tertiary mt-1 font-semibold">{c.metric}</div>
                 </div>
-                <ArrowUpRight className="w-4 h-4 text-lab-text-tertiary" />
-              </div>
-
-              {
-    /* Before/After */
-  }
-              <div className="flex gap-2 mb-4">
-                <div className="flex-1 p-2.5 rounded-md bg-background">
-                  <div className="font-mono text-[8px] tracking-[0.15em] uppercase text-lab-text-tertiary mb-1">Antes</div>
-                  <div className="text-[11px] text-lab-text-secondary leading-snug">{c.before}</div>
-                </div>
-                <div className="flex-1 p-2.5 rounded-md bg-lab-accent-soft">
-                  <div className="font-mono text-[8px] tracking-[0.15em] uppercase text-lab-text-mono mb-1">Después</div>
-                  <div className="text-[11px] text-foreground leading-snug">{c.after}</div>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-background border border-lab-border">
+                  <ArrowUpRight className="w-4 h-4" style={{ color: c.color }} />
                 </div>
               </div>
 
-              <blockquote className="text-lab-text-secondary text-[13px] leading-relaxed mb-5 flex-1">"{c.quote}"</blockquote>
+              {/* Before/After */}
+              <div className="flex gap-2 mb-5">
+                <div className="flex-1 p-3 rounded-xl bg-brand-neutral/80 border border-lab-border/60">
+                  <div className="font-mono text-[8px] tracking-[0.15em] uppercase text-lab-text-tertiary mb-1 font-bold">Antes</div>
+                  <div className="text-[11px] text-lab-text-secondary leading-snug font-inter">{c.before}</div>
+                </div>
+                <div className="flex-1 p-3 rounded-xl border border-lab-border/60" style={{ backgroundColor: `${c.color}10` }}>
+                  <div className="font-mono text-[8px] tracking-[0.15em] uppercase mb-1 font-bold" style={{ color: c.color }}>Después</div>
+                  <div className="text-[11px] text-foreground leading-snug font-inter font-medium">{c.after}</div>
+                </div>
+              </div>
+
+              <blockquote className="text-lab-text-secondary text-[13px] leading-relaxed mb-6 flex-1 font-inter">"{c.quote}"</blockquote>
 
               <div className="pt-4 border-t border-lab-border">
-                <div className="font-display font-semibold text-sm text-foreground">{c.name}</div>
-                <div className="text-lab-text-tertiary text-[11px]">{c.role}</div>
+                <div className="font-sora font-bold text-sm text-foreground">{c.name}</div>
+                <div className="text-lab-text-tertiary text-[11px] font-inter">{c.role}</div>
               </div>
-            </motion.li>)}
+            </motion.li>
+          ))}
         </ul>
       </div>
-    </section>;
+    </section>
+  );
 };
+
 export default SocialProofSection;

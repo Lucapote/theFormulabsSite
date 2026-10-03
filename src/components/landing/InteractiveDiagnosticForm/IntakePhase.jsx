@@ -6,7 +6,7 @@ export default function IntakePhase({ onComplete }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [key, setKey] = useState(0);
-  const fillPct = (step / STEPS.length) * 85;
+  const fillPct = ((step + 1) / STEPS.length) * 85;
   const color = TUBE_COLORS[step % TUBE_COLORS.length];
   const cur = STEPS[step];
   const questionRef = useRef(null);
@@ -35,10 +35,10 @@ export default function IntakePhase({ onComplete }) {
   }
 
   return (
-    <div className="w-full flex flex-col items-center justify-center relative">
-      <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 560, animation: "labFadeUp .4s ease both" }}>
-        <div className="mb-10 text-center sm:text-left">
-          <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-display font-bold leading-[1.1] tracking-tight text-foreground">
+    <div className="w-full flex flex-col items-center justify-center relative font-inter">
+      <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 580, animation: "labFadeUp .4s ease both" }}>
+        <div className="mb-8 text-center sm:text-left">
+          <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-sora font-extrabold leading-[1.1] tracking-tight text-foreground">
             Diagnóstico en curso.
             <br />
             <span className="text-gradient">Descubriendo la fórmula.</span>
@@ -53,22 +53,22 @@ export default function IntakePhase({ onComplete }) {
 
           {/* Progress bar */}
           <div className="w-full sm:col-start-2 sm:row-start-1" key={`prog-${key}`}>
-            <div className="mb-2 sm:mb-5">
+            <div className="mb-4 sm:mb-6">
               <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
                 {STEPS.map((s, i) => (
-                  <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
+                  <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
                     <div
                       style={{
-                        height: 3,
+                        height: 4,
                         borderRadius: 2,
                         background: i < step ? TUBE_COLORS[i] : i === step ? color : "var(--lab-border)",
                         transition: "background .3s"
                       }}
                     />
                     <span
-                      className="font-mono"
+                      className="font-mono font-bold"
                       style={{
-                        fontSize: 8,
+                        fontSize: 9,
                         letterSpacing: ".04em",
                         textTransform: "uppercase",
                         color: i < step ? TUBE_COLORS[i] : i === step ? color : "var(--lab-text-tertiary)",
@@ -93,35 +93,37 @@ export default function IntakePhase({ onComplete }) {
 
           {/* Question */}
           <div className="w-full min-w-0 sm:col-start-2 sm:row-start-2" ref={questionRef} key={`q-${key}`}>
-            <h2 className="text-foreground" style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-.02em", lineHeight: 1.35, marginBottom: 18 }}>
+            <h2 className="text-foreground font-sora" style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-.02em", lineHeight: 1.35, marginBottom: 20 }}>
               {cur.q}
             </h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {cur.opts.map((opt, i) => (
                 <button
                   key={opt}
                   onClick={() => pick(opt)}
-                  className="bg-background border border-lab-border text-foreground hover:bg-muted"
+                  className="bg-background border border-lab-border text-foreground hover:bg-white hover:shadow-sm font-inter"
                   style={{
                     textAlign: "left",
-                    borderRadius: 10,
-                    padding: "11px 14px",
+                    borderRadius: 12,
+                    padding: "13px 16px",
                     cursor: "pointer",
-                    fontSize: 13,
-                    transition: "all .15s",
+                    fontSize: 14,
+                    transition: "all .2s",
                     display: "flex",
                     alignItems: "center",
-                    gap: 10,
+                    gap: 12,
                     animation: `labFadeUp .3s ease ${i * 60}ms both`
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = color;
+                    e.currentTarget.style.transform = "translateY(-1px)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = "";
+                    e.currentTarget.style.transform = "";
                   }}
                 >
-                  <span className="font-mono" style={{ fontSize: 10, color: "var(--lab-text-tertiary)", minWidth: 14 }}>
+                  <span className="font-mono font-bold" style={{ fontSize: 11, color: color, minWidth: 16 }}>
                     {String.fromCharCode(65 + i)}
                   </span>
                   {opt}

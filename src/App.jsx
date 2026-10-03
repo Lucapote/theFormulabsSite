@@ -14,7 +14,6 @@ const App = () => <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/CaseCool" element={<CaseCoolProposal />} />
           <Route path="/casecool" element={<CaseCoolProposal />} />
           {
   /* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */

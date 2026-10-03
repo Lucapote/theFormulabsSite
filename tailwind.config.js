@@ -12,7 +12,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Space Grotesk"', "system-ui", "sans-serif"],
+        display: ['"Sora"', "system-ui", "sans-serif"],
         body: ['"Inter"', "system-ui", "sans-serif"],
         mono: ['"JetBrains Mono"', "monospace"]
       },
@@ -22,6 +22,14 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        brand: {
+          magenta: "#ef18d6",
+          blue: "#188ff0",
+          "blue-soft": "rgba(24, 143, 240, 0.15)",
+          "blue-50": "rgba(24, 143, 240, 0.5)",
+          neutral: "#f4f4f4",
+          black: "#0f0f11"
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))"
@@ -53,6 +61,8 @@ export default {
         lab: {
           accent: "hsl(var(--lab-accent))",
           "accent-soft": "hsl(var(--lab-accent-soft))",
+          "accent-blue": "hsl(var(--lab-accent-blue))",
+          "accent-blue-soft": "hsl(var(--lab-accent-blue-soft))",
           surface: "hsl(var(--lab-surface))",
           glass: "hsl(var(--lab-glass))",
           border: "hsl(var(--lab-border))",
