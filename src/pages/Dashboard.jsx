@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [loadingDb, setLoadingDb] = useState(false);
 
   const fetchDiagnostics = async () => {
+    if (!supabase) return;
     setLoadingDb(true);
     try {
       const { data, error } = await supabase

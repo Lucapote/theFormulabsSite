@@ -15,24 +15,32 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     // Fetch current session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-    });
+    }).catch(() => setLoading(false));
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } = {} } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => subscription?.unsubscribe();
   }, []);
 
   const login = async (email, password) => {
+    if (!supabase) {
+      throw new Error("La autenticación requiere configurar VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en Vercel.");
+    }
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -42,6 +50,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    if (!supabase) {
+      setUser(null);
+      setSession(null);
+      return;
+    }
     const { error } = await supabase.auth.signOut();
     if (error) console.error("Error signing out:", error.message);
     setUser(null);
