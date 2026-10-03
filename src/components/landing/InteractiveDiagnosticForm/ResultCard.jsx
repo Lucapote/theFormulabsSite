@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { TUBE_COLORS, TAG_BG, TAG_TXT } from "./diagnosticData";
+import { TUBE_COLORS, TAG_BG, TAG_TXT } from "@/data/diagnosticData";
 
 export default function ResultCard({ r, i, email }) {
   if (r.locked) {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import TestTube from "./TestTube";
-import { PROCESSING } from "./diagnosticData";
+import { PROCESSING } from "@/data/diagnosticData";
 
 export default function BoilingPhase({ answers, onComplete }) {
   const [prog, setProg] = useState(0);

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import TestTube from "./TestTube";
 import ResultCard from "./ResultCard";
-import { buildDiagnostic } from "./diagnosticData";
+import { buildDiagnostic } from "@/data/diagnosticData";
 
 export default function ResultPhase({ answers, onReset, email }) {
   const [ctaSent, setCtaSent] = useState(false);

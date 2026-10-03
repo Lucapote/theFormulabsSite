@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import TestTube from "./TestTube";
-import { STEPS, TUBE_COLORS } from "./diagnosticData";
+import { STEPS, TUBE_COLORS } from "@/data/diagnosticData";
 
 export default function IntakePhase({ onComplete }) {
   const [step, setStep] = useState(0);

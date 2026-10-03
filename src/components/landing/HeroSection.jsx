@@ -1,6 +1,6 @@
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle2, TrendingUp, Target, Search, BarChart3 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Target, Search, BarChart3 } from "lucide-react";
 import { useState, useEffect } from "react";
 import InteractiveDiagnosticForm from "./InteractiveDiagnosticForm";
 
@@ -93,7 +93,7 @@ const HeroSection = () => {
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-24 pb-16 bg-background">
       {/* Subtle clean grid background */}
-      <div 
+      <div
         className="absolute inset-0 opacity-40 pointer-events-none lab-grid-bg"
         style={{
           maskImage: "radial-gradient(ellipse at center, black 40%, transparent 80%)",
