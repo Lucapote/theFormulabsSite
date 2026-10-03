@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.jsx";
 import NotFound from "./pages/NotFound.jsx";
-import CaseCoolProposal from "./propuestas/CaseCool/CaseCoolProposal";
+import ProposalPage from "./pages/ProposalPage.jsx";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
@@ -31,8 +31,8 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route path="/casecool" element={<CaseCoolProposal />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/propuesta/:slug" element={<ProposalPage />} />
+            <Route path="/:slug" element={<ProposalPage />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
