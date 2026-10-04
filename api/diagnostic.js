@@ -1,12 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-
-let supabase = null;
-if (supabaseKey) {
-  supabase = createClient(supabaseUrl, supabaseKey);
-}
+import { supabase, isSupabaseConfigured } from "./_lib/supabaseClient.js";
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Credentials", true);
@@ -23,7 +15,7 @@ export default async function handler(req, res) {
 
   if (req.method === "POST") {
     try {
-      const { email, answers } = req.body || {};
+      const { email, answers, resultData } = req.body || {};
 
       if (!email) {
         return res.status(400).json({ success: false, error: "El correo es requerido." });
@@ -33,7 +25,7 @@ export default async function handler(req, res) {
       if (supabase) {
         const { data, error } = await supabase
           .from("diagnostics")
-          .insert([{ email, answers, created_at: new Date().toISOString() }]);
+          .insert([{ email, answers, result_data: resultData || null, created_at: new Date().toISOString() }]);
         if (error) {
           console.warn("Supabase API Insert Warning:", error.message);
         } else {
@@ -59,7 +51,7 @@ export default async function handler(req, res) {
 
   return res.status(200).json({
     service: "The Formulab Diagnostic API (Supabase Connected)",
-    supabaseConfigured: Boolean(supabaseKey),
+    supabaseConfigured: isSupabaseConfigured,
     timestamp: new Date().toISOString()
   });
 }
