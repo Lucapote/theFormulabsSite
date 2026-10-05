@@ -14,7 +14,10 @@ import {
   Check,
   Edit2,
   Trash2,
-  BarChart2
+  BarChart2,
+  Sparkles,
+  Eye,
+  Users
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { DEFAULT_PROPOSAL_TEMPLATE as defaultTemplate } from "@/data/proposalData";
@@ -26,6 +29,7 @@ import {
   deleteProposal
 } from "@/services/proposalService";
 import ProposalModal from "@/components/dashboard/ProposalModal";
+import ClientsCalendarSection from "@/components/dashboard/ClientsCalendarSection";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -42,8 +46,10 @@ export default function Dashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [deletingItem, setDeletingItem] = useState(null);
   const [copiedSlug, setCopiedSlug] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Load diagnostics from Supabase
   const loadDiagnostics = async () => {
@@ -129,8 +135,11 @@ export default function Dashboard() {
       return addon;
     });
 
+    const token = existingContent.token || (Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 6));
+
     return {
       ...existingContent,
+      token,
       client: {
         ...(existingContent.client || {}),
         name: formData.clientName,
@@ -193,53 +202,54 @@ export default function Dashboard() {
   };
 
   // Delete Proposal Handler
-  const handleDelete = async (item) => {
-    if (!window.confirm(`¿Estás seguro de que deseas eliminar la propuesta para "${item.cliente || item.slug}"?`)) {
-      return;
-    }
-
-    const res = await deleteProposal(item.id);
+  const handleConfirmDelete = async () => {
+    if (!deletingItem) return;
+    setIsDeleting(true);
+    const res = await deleteProposal(deletingItem.id);
     if (res.success) {
-      toast.success(`Propuesta para "${item.cliente || item.slug}" eliminada.`);
+      toast.success(`Propuesta para "${deletingItem.cliente || deletingItem.slug}" eliminada.`);
+      setDeletingItem(null);
       loadProposals();
     } else {
       toast.error(res.error || "Error al eliminar la propuesta.");
     }
+    setIsDeleting(false);
   };
 
-  const copyProposalLink = (slug) => {
-    const fullUrl = `${window.location.origin}/${slug}`;
+  const copyProposalLink = (item) => {
+    const slug = item.slug;
+    const token = item.contenido?.token;
+    const fullUrl = token
+      ? `${window.location.origin}/${slug}?token=${token}`
+      : `${window.location.origin}/${slug}`;
     navigator.clipboard.writeText(fullUrl);
     setCopiedSlug(slug);
-    toast.success("Enlace copiado al portapapeles.");
+    toast.success("Enlace privado copiado al portapapeles.");
     setTimeout(() => setCopiedSlug(null), 2000);
   };
 
   return (
-    <div className="min-h-screen bg-white text-neutral-900 font-inter">
-      {/* Top Navigation Bar */}
-      <header className="border-b border-neutral-200 bg-white sticky top-0 z-40">
-        <div className="container max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-inter pb-20">
+      {/* Top Navigation Bar matching ProposalView style */}
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-xs py-2">
+        <div className="max-w-6xl mx-auto px-5 md:px-8 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <a href="/">
-              <img src="/logo.png" alt="The Formulab" className="h-7 w-auto object-contain" />
+            <a href="/" className="flex items-center shrink-0">
+              <img src="/logo.png" alt="The Formulab" className="h-9 w-auto object-contain" />
             </a>
-            <span className="hidden sm:inline-block text-[10px] font-mono uppercase tracking-widest px-2.5 py-0.5 border border-brand-magenta/30 text-brand-magenta font-bold">
-              ÁREA PROTEGIDA
-            </span>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-neutral-500 border-r border-neutral-200 pr-4">
-              <User className="w-3.5 h-3.5 text-brand-magenta" />
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:inline-flex items-center h-10 px-4 rounded-full text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 gap-2">
+              <User className="w-3.5 h-3.5 text-pink-500 shrink-0" />
               <span>{user?.email}</span>
             </div>
 
             <button
               onClick={handleLogout}
-              className="h-9 px-4 rounded-none border border-neutral-900 text-neutral-900 hover:bg-neutral-900 hover:text-white font-sora font-bold text-xs tracking-wider uppercase transition-colors flex items-center gap-2 cursor-pointer"
+              className="h-10 px-5 rounded-full border border-gray-300 hover:border-gray-900 text-gray-800 hover:bg-gray-900 hover:text-white font-sora font-bold text-xs tracking-wider uppercase transition-all inline-flex items-center gap-2 cursor-pointer shadow-2xs"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <LogOut className="w-3.5 h-3.5 shrink-0" />
               Cerrar Sesión
             </button>
           </div>
@@ -247,182 +257,205 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content Container */}
-      <main className="container max-w-6xl mx-auto px-6 py-10">
-        {/* Welcome Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 pb-8 border-b border-neutral-200">
-          <div>
-            <span className="text-xs font-mono text-brand-magenta font-bold uppercase tracking-wider block mb-1">
-              PANEL GENERAL DE CONTROL
-            </span>
-            <h1 className="text-3xl font-sora font-extrabold tracking-tight text-neutral-900">
-              Dashboard de Estrategias
-            </h1>
-          </div>
+      <main className="max-w-6xl mx-auto px-5 md:px-8 pt-10">
+        {/* Hero Welcome Card matching ProposalView */}
+        <div className="bg-white rounded-[2rem] p-8 md:p-10 shadow-xl border border-gray-100 relative overflow-hidden mb-8">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-pink-50 rounded-bl-[100%] -z-10 opacity-70" />
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                loadDiagnostics();
-                loadProposals();
-              }}
-              className="h-10 px-4 border border-neutral-300 text-neutral-700 hover:border-neutral-900 font-sora font-bold text-xs tracking-wider uppercase transition-colors flex items-center gap-2 cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${loadingProposals || loadingDb ? "animate-spin text-brand-magenta" : ""}`} />
-              Recargar
-            </button>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+              <p className="text-pink-500 font-bold tracking-widest uppercase text-xs mb-2 font-sora">
+                PANEL DE CONTROL GENERAL
+              </p>
+              <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight font-sora">
+                Gestor de <span className="text-brand-blue">Estrategias</span>
+              </h1>
+              <p className="text-gray-600 text-base mt-2 font-medium">
+                Crea, personaliza y supervisa las propuestas enviadas a tus clientes.
+              </p>
+            </div>
 
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="h-10 px-5 bg-brand-magenta text-white font-sora font-bold text-xs tracking-wider uppercase hover:opacity-90 transition-opacity flex items-center gap-2 cursor-pointer shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              Nueva Propuesta
-            </button>
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                onClick={() => {
+                  loadDiagnostics();
+                  loadProposals();
+                }}
+                className="h-11 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-sora font-bold text-xs rounded-full transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <RefreshCw className={`w-4 h-4 ${loadingProposals || loadingDb ? "animate-spin text-pink-500" : ""}`} />
+                Actualizar
+              </button>
+
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="h-11 px-6 bg-pink-500 hover:bg-pink-600 text-white font-sora font-bold text-xs rounded-full shadow-lg shadow-pink-200 transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                Nueva Propuesta
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Dashboard Navigation Tabs */}
-        <div className="flex border-b border-neutral-200 mb-8">
+        {/* Navigation Tabs Pill Style */}
+        <div className="flex flex-wrap gap-3 mb-8">
           <button
             onClick={() => setActiveTab("proposals")}
-            className={`pb-4 px-6 font-sora text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
+            className={`py-3 px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-2.5 ${
               activeTab === "proposals"
-                ? "border-brand-magenta text-brand-magenta"
-                : "border-transparent text-neutral-400 hover:text-neutral-900"
+                ? "bg-gray-900 text-white shadow-md"
+                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
             }`}
           >
-            <FileText className="w-4 h-4" />
+            <FileText className="w-4 h-4 text-pink-400" />
             Propuestas Activas ({proposals.length})
           </button>
           <button
-            onClick={() => setActiveTab("diagnostics")}
-            className={`pb-4 px-6 font-sora text-xs font-bold uppercase tracking-wider flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
-              activeTab === "diagnostics"
-                ? "border-brand-magenta text-brand-magenta"
-                : "border-transparent text-neutral-400 hover:text-neutral-900"
+            onClick={() => setActiveTab("calendars")}
+            className={`py-3 px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-2.5 ${
+              activeTab === "calendars"
+                ? "bg-gray-900 text-white shadow-md"
+                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
             }`}
           >
-            <BarChart2 className="w-4 h-4" />
+            <Users className="w-4 h-4 text-pink-500" />
+            Clientes y Calendarios
+          </button>
+          <button
+            onClick={() => setActiveTab("diagnostics")}
+            className={`py-3 px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-2.5 ${
+              activeTab === "diagnostics"
+                ? "bg-gray-900 text-white shadow-md"
+                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
+            }`}
+          >
+            <BarChart2 className="w-4 h-4 text-brand-blue" />
             Diagnósticos Recibidos ({diagnostics.length})
           </button>
         </div>
 
+        {/* TAB 2: CLIENTES Y CALENDARIOS */}
+        {activeTab === "calendars" && <ClientsCalendarSection />}
+
         {/* TAB 1: PROPUESTAS TABLE */}
         {activeTab === "proposals" && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-sora font-bold text-neutral-900">Gestor de Propuestas</h2>
-              <span className="text-xs text-neutral-500 font-mono">
-                {proposals.length} propuesta(s) registradas
-              </span>
-            </div>
-
+          <div className="space-y-4">
             {loadingProposals ? (
-              <div className="p-12 text-center border border-neutral-200 bg-neutral-50">
-                <RefreshCw className="w-6 h-6 text-brand-magenta animate-spin mx-auto mb-2" />
-                <p className="text-xs font-mono text-neutral-500 uppercase">Cargando propuestas...</p>
+              <div className="bg-white rounded-[2rem] p-12 text-center border border-gray-100 shadow-lg">
+                <Sparkles className="w-8 h-8 text-pink-500 animate-spin mx-auto mb-3" />
+                <p className="text-sm font-sora font-bold text-gray-700">Cargando propuestas clínicas...</p>
               </div>
             ) : proposals.length === 0 ? (
-              <div className="p-12 text-center border border-dashed border-neutral-300 bg-neutral-50">
-                <FileText className="w-10 h-10 text-neutral-300 mx-auto mb-3" />
-                <p className="font-sora font-bold text-neutral-800 text-sm mb-1">No hay propuestas creadas</p>
-                <p className="text-xs text-neutral-500 mb-4">
-                  Crea tu primera propuesta personalizada para tus clientes.
+              <div className="bg-white rounded-[2rem] p-12 text-center border border-gray-100 shadow-lg">
+                <FileText className="w-12 h-12 text-pink-300 mx-auto mb-3" />
+                <h3 className="font-sora font-extrabold text-gray-900 text-lg mb-1">No hay propuestas creadas</h3>
+                <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
+                  Comienza creando tu primera propuesta de contenido personalizada para tus clientes.
                 </p>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="h-9 px-4 bg-brand-magenta text-white font-sora font-bold text-xs uppercase tracking-wider inline-flex items-center gap-2"
+                  className="h-11 px-6 bg-pink-500 text-white font-sora font-bold text-xs rounded-full shadow-lg shadow-pink-200 inline-flex items-center gap-2"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Crear Propuesta
+                  <Plus className="w-4 h-4" /> Crear Propuesta
                 </button>
               </div>
             ) : (
-              <div className="border border-neutral-200 overflow-x-auto shadow-xs">
-                <table className="w-full text-left border-collapse min-w-[700px]">
-                  <thead>
-                    <tr className="bg-neutral-900 text-white font-sora text-xs uppercase tracking-wider">
-                      <th className="p-4 w-[25%]">Cliente / Marca</th>
-                      <th className="p-4 w-[20%]">URL (Slug)</th>
-                      <th className="p-4 w-[20%]">Fecha de Creación</th>
-                      <th className="p-4 w-[35%] text-right">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-200 text-sm">
-                    {proposals.map((item) => (
-                      <tr key={item.id || item.slug} className="hover:bg-neutral-50 transition-colors">
-                        <td className="p-4">
-                          <span className="font-sora font-bold text-neutral-900 block">
-                            {item.cliente || item.shortName || item.slug}
-                          </span>
-                          <span className="text-[11px] text-neutral-500">
-                            {item.contenido?.client?.proposalTitle || "Propuesta de Contenido"}
-                          </span>
-                        </td>
-                        <td className="p-4">
-                          <span className="font-mono text-xs font-semibold text-brand-magenta bg-brand-magenta/5 border border-brand-magenta/20 px-2.5 py-1">
-                            /{item.slug}
-                          </span>
-                        </td>
-                        <td className="p-4 text-xs font-mono text-neutral-500">
-                          {item.created_at
-                            ? new Date(item.created_at).toLocaleDateString("es-MX", {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric"
-                              })
-                            : "Fecha N/A"}
-                        </td>
-                        <td className="p-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => copyProposalLink(item.slug)}
-                              title="Copiar enlace público"
-                              className="h-8 px-2.5 border border-neutral-300 hover:border-neutral-900 text-neutral-700 font-mono text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                            >
-                              {copiedSlug === item.slug ? (
-                                <Check className="w-3.5 h-3.5 text-green-600" />
-                              ) : (
-                                <Copy className="w-3.5 h-3.5 text-neutral-500" />
-                              )}
-                              <span>{copiedSlug === item.slug ? "Copiado" : "Copiar"}</span>
-                            </button>
-
-                            <Link
-                              to={`/${item.slug}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title="Ver propuesta en vivo"
-                              className="h-8 px-2.5 bg-neutral-100 hover:bg-neutral-900 hover:text-white border border-neutral-200 text-neutral-800 font-mono text-xs flex items-center gap-1.5 transition-colors"
-                            >
-                              <ExternalLink className="w-3.5 h-3.5" />
-                              <span>Ver</span>
-                            </Link>
-
-                            <button
-                              onClick={() => {
-                                setEditingItem(item);
-                                setShowEditModal(true);
-                              }}
-                              title="Editar propuesta"
-                              className="h-8 px-2.5 bg-neutral-900 text-white hover:bg-brand-magenta font-mono text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                              <span>Editar</span>
-                            </button>
-
-                            <button
-                              onClick={() => handleDelete(item)}
-                              title="Eliminar propuesta"
-                              className="h-8 px-2 border border-red-200 text-red-600 hover:bg-red-600 hover:text-white font-mono text-xs flex items-center transition-colors cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
+              <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[700px]">
+                    <thead>
+                      <tr className="bg-gray-900 text-white font-sora text-xs">
+                        <th className="p-5 font-bold w-[26%]">Cliente / Marca</th>
+                        <th className="p-5 font-bold w-[20%]">URL (Slug)</th>
+                        <th className="p-5 font-bold w-[14%] text-center">Vistas</th>
+                        <th className="p-5 font-bold w-[15%]">Fecha</th>
+                        <th className="p-5 font-bold w-[25%] text-right">Acciones</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
+                      {proposals.map((item) => (
+                        <tr key={item.id || item.slug} className="hover:bg-pink-50/40 transition-colors">
+                          <td className="p-5">
+                            <span className="font-sora font-bold text-gray-900 text-base block">
+                              {item.cliente || item.shortName || item.slug}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {item.contenido?.client?.proposalTitle || "Propuesta de Contenido"}
+                            </span>
+                          </td>
+                          <td className="p-5">
+                            <span className="inline-block font-mono text-xs font-semibold text-pink-600 bg-pink-50 border border-pink-200 px-3 py-1 rounded-full">
+                              /{item.slug}
+                            </span>
+                          </td>
+                          <td className="p-5 text-center">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-sora font-bold text-gray-700 bg-gray-100 px-3 py-1 rounded-full">
+                              <Eye className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+                              {item.contenido?.views || item.views || 0}
+                            </span>
+                          </td>
+                          <td className="p-5 text-xs text-gray-500 font-medium">
+                            {item.created_at
+                              ? new Date(item.created_at).toLocaleDateString("es-MX", {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric"
+                                })
+                              : "Fecha N/A"}
+                          </td>
+                          <td className="p-5 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => copyProposalLink(item)}
+                                title="Copiar enlace privado"
+                                className="h-9 px-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-xs font-sora font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                              >
+                                {copiedSlug === item.slug ? (
+                                  <Check className="w-3.5 h-3.5 text-green-600" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5 text-gray-500" />
+                                )}
+                                <span>{copiedSlug === item.slug ? "Copiado" : "Copiar"}</span>
+                              </button>
+
+                              <Link
+                                to={item.contenido?.token ? `/${item.slug}?token=${item.contenido.token}` : `/${item.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Ver propuesta en vivo"
+                                className="h-9 px-3.5 bg-blue-50 hover:bg-[#188ff0] text-[#188ff0] hover:text-white rounded-full text-xs font-sora font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                                <span>Ver</span>
+                              </Link>
+
+                              <button
+                                onClick={() => {
+                                  setEditingItem(item);
+                                  setShowEditModal(true);
+                                }}
+                                title="Editar propuesta"
+                                className="h-9 px-3.5 bg-gray-900 hover:bg-pink-500 text-white rounded-full text-xs font-sora font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                                <span>Editar</span>
+                              </button>
+
+                              <button
+                                onClick={() => setDeletingItem(item)}
+                                title="Eliminar propuesta"
+                                className="h-9 px-2.5 bg-red-50 hover:bg-red-500 text-red-600 hover:text-white rounded-full text-xs font-sora transition-all flex items-center cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>
@@ -430,50 +463,47 @@ export default function Dashboard() {
 
         {/* TAB 2: DIAGNOSTICS TABLE */}
         {activeTab === "diagnostics" && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-sora font-bold text-neutral-900">Diagnósticos del Test Interactivo</h2>
-              <span className="text-xs text-neutral-500 font-mono">Últimos 15 resultados</span>
-            </div>
-
+          <div className="space-y-4">
             {loadingDb ? (
-              <div className="p-12 text-center border border-neutral-200 bg-neutral-50">
-                <RefreshCw className="w-6 h-6 text-brand-magenta animate-spin mx-auto mb-2" />
-                <p className="text-xs font-mono text-neutral-500 uppercase">Cargando diagnósticos...</p>
+              <div className="bg-white rounded-[2rem] p-12 text-center border border-gray-100 shadow-lg">
+                <Sparkles className="w-8 h-8 text-pink-500 animate-spin mx-auto mb-3" />
+                <p className="text-sm font-sora font-bold text-gray-700">Cargando diagnósticos...</p>
               </div>
             ) : diagnostics.length === 0 ? (
-              <div className="p-12 text-center border border-neutral-200 bg-neutral-50 text-neutral-500 text-sm">
-                <Database className="w-8 h-8 mx-auto mb-2 text-neutral-400" />
+              <div className="bg-white rounded-[2rem] p-12 text-center border border-gray-100 shadow-lg text-gray-500 text-sm">
+                <Database className="w-10 h-10 mx-auto mb-3 text-gray-300" />
                 No se registraron respuestas de diagnóstico aún.
               </div>
             ) : (
-              <div className="border border-neutral-200 overflow-x-auto shadow-xs">
-                <table className="w-full text-left border-collapse min-w-[600px]">
-                  <thead>
-                    <tr className="bg-neutral-900 text-white font-sora text-xs uppercase tracking-wider">
-                      <th className="p-4 w-[35%]">Email</th>
-                      <th className="p-4 w-[25%]">Diagnóstico Emitido</th>
-                      <th className="p-4 w-[20%]">Fecha</th>
-                      <th className="p-4 w-[20%]">Detalles</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-neutral-200 text-sm">
-                    {diagnostics.map((diag) => (
-                      <tr key={diag.id} className="hover:bg-neutral-50 transition-colors">
-                        <td className="p-4 font-mono font-medium text-neutral-900">{diag.email}</td>
-                        <td className="p-4 font-sora font-bold text-brand-magenta">
-                          {diag.result_data?.title || "Diagnóstico Completo"}
-                        </td>
-                        <td className="p-4 text-xs font-mono text-neutral-500">
-                          {new Date(diag.created_at).toLocaleDateString("es-MX")}
-                        </td>
-                        <td className="p-4 text-xs text-neutral-500 font-mono">
-                          {diag.answers ? `${Object.keys(diag.answers).length} Respuestas` : "N/A"}
-                        </td>
+              <div className="bg-white rounded-[2rem] shadow-xl border border-gray-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[600px]">
+                    <thead>
+                      <tr className="bg-gray-900 text-white font-sora text-xs">
+                        <th className="p-5 font-bold w-[35%]">Email</th>
+                        <th className="p-5 font-bold w-[25%]">Diagnóstico Emitido</th>
+                        <th className="p-5 font-bold w-[20%]">Fecha</th>
+                        <th className="p-5 font-bold w-[20%]">Detalles</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
+                      {diagnostics.map((diag) => (
+                        <tr key={diag.id} className="hover:bg-pink-50/30 transition-colors">
+                          <td className="p-5 font-mono font-medium text-gray-900">{diag.email}</td>
+                          <td className="p-5 font-sora font-bold text-pink-600">
+                            {diag.result_data?.title || "Diagnóstico Completo"}
+                          </td>
+                          <td className="p-5 text-xs text-gray-500 font-medium">
+                            {new Date(diag.created_at).toLocaleDateString("es-MX")}
+                          </td>
+                          <td className="p-5 text-xs text-gray-500 font-mono">
+                            {diag.answers ? `${Object.keys(diag.answers).length} Respuestas` : "N/A"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>
@@ -501,6 +531,59 @@ export default function Dashboard() {
         initialData={editingItem}
         isSaving={isSaving}
       />
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {deletingItem && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] p-6 md:p-8 max-w-md w-full shadow-2xl border border-gray-100 relative text-center">
+            <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-4 text-red-500">
+              <Trash2 className="w-7 h-7" />
+            </div>
+
+            <h3 className="text-xl font-sora font-extrabold text-gray-900 mb-2">
+              ¿Eliminar propuesta?
+            </h3>
+
+            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+              Estás a punto de eliminar la propuesta para{" "}
+              <span className="font-bold text-gray-900 font-sora">
+                "{deletingItem.cliente || deletingItem.slug}"
+              </span>
+              . Esta acción no se puede deshacer.
+            </p>
+
+            <div className="flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setDeletingItem(null)}
+                disabled={isDeleting}
+                className="h-11 px-6 rounded-full border border-gray-300 hover:bg-gray-100 text-gray-700 font-sora font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="h-11 px-6 rounded-full bg-red-500 hover:bg-red-600 text-white font-sora font-bold text-xs uppercase tracking-wider shadow-lg shadow-red-200 transition-all cursor-pointer inline-flex items-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Eliminando...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Eliminar
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

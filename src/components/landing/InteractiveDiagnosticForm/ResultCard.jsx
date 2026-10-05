@@ -24,7 +24,7 @@ export default function ResultCard({ r, i, email }) {
             className="font-mono bg-background text-lab-text-secondary border border-lab-border hover:border-primary hover:text-primary transition-all duration-200"
             style={{ fontSize: 10, borderRadius: 6, padding: "7px 18px", cursor: "pointer", letterSpacing: ".06em" }}
           >
-            Revisar email ✉
+            Revisar email
           </button>
         </div>
       </div>

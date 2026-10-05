@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound.jsx";
 import ProposalPage from "./pages/ProposalPage.jsx";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import PublicCalendarPage from "./pages/PublicCalendarPage.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 
@@ -31,6 +32,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route path="/calendario/:slug" element={<PublicCalendarPage />} />
             <Route path="/propuesta/:slug" element={<ProposalPage />} />
             <Route path="/:slug" element={<ProposalPage />} />
           </Routes>

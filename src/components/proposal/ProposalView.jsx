@@ -160,7 +160,7 @@ export default function ProposalView({ data = defaultData }) {
                 target.outerHTML = '<div class="font-black text-xl tracking-tighter flex items-center">the <span class="text-pink-500 ml-1">formu</span>lab</div>';
               }}
             />
-            <span className="text-sm font-semibold text-brand-blue bg-brand-blue-50 border border-brand-blue-200 px-3 py-1.5 rounded-full hidden md:inline-block">
+            <span className="text-xs font-sora font-bold text-white bg-[#188ff0] border border-[#188ff0] px-4 py-1.5 rounded-full shadow-xs hidden md:inline-block">
               Propuesta para {clientData.shortName}
             </span>
           </div>
@@ -171,13 +171,13 @@ export default function ProposalView({ data = defaultData }) {
           <div className="bg-white rounded-[2rem] p-8 md:p-12 shadow-xl border border-gray-100 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-pink-50 rounded-bl-[100%] -z-10 opacity-70" />
 
-            <p className="text-pink-500 font-bold tracking-widest uppercase text-sm mb-4">{clientData.proposalTitle}</p>
-            <h1 className="text-4xl md:text-6xl font-black text-gray-900 mb-8 leading-tight font-sora">
+            <p className="text-pink-500 font-bold tracking-widest uppercase text-xs mb-3">{clientData.proposalTitle}</p>
+            <h1 className="text-2xl md:text-4xl font-extrabold text-gray-900 mb-6 leading-tight font-sora">
               Hola, <span className="text-brand-blue font-sora">{clientData.name}</span>
             </h1>
 
-            <div className="space-y-6">
-              <Subtext className="text-xl md:text-2xl font-medium text-gray-800 leading-relaxed">
+            <div className="space-y-5">
+              <Subtext className="text-base md:text-lg font-normal text-gray-700 leading-relaxed">
                 {clientData.greeting}
               </Subtext>
 
@@ -185,7 +185,7 @@ export default function ProposalView({ data = defaultData }) {
 
               <div className={`grid transition-all duration-1000 ease-in-out ${showSecondText ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
                 <div className="overflow-hidden">
-                  <Subtext className="text-xl md:text-2xl font-medium text-gray-800 leading-relaxed pt-1">
+                  <Subtext className="text-base md:text-lg font-normal text-gray-700 leading-relaxed pt-1">
                     {clientData.vision}
                   </Subtext>
                 </div>

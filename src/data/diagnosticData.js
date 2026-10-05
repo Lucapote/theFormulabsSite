@@ -61,10 +61,10 @@ export function buildDiagnostic(a) {
   }
 
   return [
-    { label: "Tipo de problema", value: tipo, icon: "⚛", tag: "Diagnóstico primario", locked: false },
-    { label: "Restricción principal", value: restriccion, icon: "🔬", tag: "Punto crítico", locked: false },
-    { label: "Fuga de ingresos estimada", value: fuga, icon: "💊", tag: "Cálculo activo", locked: true },
-    { label: "Oportunidad de optimización", value: oportunidad, icon: "🧪", tag: "Estrategia", locked: true },
-    { label: "Urgencia / Impacto", value: urgencia, icon: "📊", tag: "Índice de impacto", locked: true }
+    { label: "Tipo de problema", value: tipo, icon: "◆", tag: "Diagnóstico primario", locked: false },
+    { label: "Restricción principal", value: restriccion, icon: "▲", tag: "Punto crítico", locked: false },
+    { label: "Fuga de ingresos estimada", value: fuga, icon: "⚡", tag: "Cálculo activo", locked: true },
+    { label: "Oportunidad de optimización", value: oportunidad, icon: "★", tag: "Estrategia", locked: true },
+    { label: "Urgencia / Impacto", value: urgencia, icon: "●", tag: "Índice de impacto", locked: true }
   ];
 }

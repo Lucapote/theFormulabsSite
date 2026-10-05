@@ -1,0 +1,611 @@
+import { useState, useEffect, useRef } from "react";
+import {
+  UploadCloud,
+  Image as ImageIcon,
+  Video as VideoIcon,
+  Trash2,
+  CheckCircle,
+  Clock,
+  Copy,
+  Check,
+  Eye,
+  RefreshCw,
+  Sparkles,
+  Filter,
+  X,
+  Play,
+  Film,
+  ArrowLeft,
+  AlertTriangle
+} from "lucide-react";
+import { toast } from "sonner";
+import {
+  getArchivosByCalendario,
+  uploadMediaFile,
+  deleteArchivo
+} from "@/services/calendarService";
+import { compressMediaFile, formatBytes } from "@/utils/mediaCompressor";
+
+export default function MediaGallery({
+  calendarioId,
+  calendarioNombre = "Calendario",
+  onBack,
+  refreshTrigger = 0
+}) {
+  const [archivos, setArchivos] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Filters
+  const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'disponible' | 'en_uso'
+  const [typeFilter, setTypeFilter] = useState("all"); // 'all' | 'image' | 'video'
+
+  // Drag & drop / Upload state
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+  const fileInputRef = useRef(null);
+
+  // Lightbox / Delete Modal
+  const [previewMedia, setPreviewMedia] = useState(null);
+  const [deletingMedia, setDeletingMedia] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
+
+  // Load gallery files
+  const fetchGallery = async () => {
+    if (!calendarioId) return;
+    setLoading(true);
+    const res = await getArchivosByCalendario(calendarioId);
+    if (res.success) {
+      setArchivos(res.data || []);
+    } else {
+      toast.error(res.error || "No se pudieron cargar los archivos de la galería.");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchGallery();
+  }, [calendarioId, refreshTrigger]);
+
+  // Handle batch file upload with automatic compression
+  const handleUploadFiles = async (filesList) => {
+    const files = Array.from(filesList).filter((file) => {
+      const isImg = file.type.startsWith("image/");
+      const isVid = file.type.startsWith("video/") || /\.(mp4|mov|webm|m4v|avi)$/i.test(file.name);
+      return isImg || isVid;
+    });
+
+    if (files.length === 0) {
+      toast.error("Selecciona archivos de imagen (.png, .jpg, .webp) o video (.mp4, .mov, .webm).");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress({ current: 0, total: files.length });
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < files.length; i++) {
+      const originalFile = files[i];
+      setUploadProgress({ current: i + 1, total: files.length });
+
+      // Compresión automática de imágenes antes de subir
+      const compressResult = await compressMediaFile(originalFile);
+      const fileToUpload = compressResult.file;
+
+      const res = await uploadMediaFile(calendarioId, fileToUpload);
+      if (res.success) {
+        successCount++;
+        if (compressResult.compressed && compressResult.savedPercentage > 10) {
+          toast.success(
+            `"${originalFile.name}" comprimido: ${formatBytes(compressResult.originalSize)} → ${formatBytes(compressResult.compressedSize)} (-${compressResult.savedPercentage}%)`,
+            { duration: 3500 }
+          );
+        }
+      } else {
+        failCount++;
+        console.error(`Error subiendo ${originalFile.name}:`, res.error);
+      }
+    }
+
+    setIsUploading(false);
+    setUploadProgress({ current: 0, total: 0 });
+
+    if (successCount > 0) {
+      toast.success(`${successCount} archivo(s) subido(s) a la galería con éxito.`);
+      fetchGallery();
+    }
+    if (failCount > 0) {
+      toast.error(`${failCount} archivo(s) no se pudieron subir.`);
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // Drag handlers
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleUploadFiles(e.dataTransfer.files);
+    }
+  };
+
+  // Delete handler
+  const handleConfirmDelete = async () => {
+    if (!deletingMedia) return;
+    setIsDeleting(true);
+    const res = await deleteArchivo(deletingMedia.id, deletingMedia.url);
+    if (res.success) {
+      toast.success(`Archivo "${deletingMedia.nombre_archivo}" eliminado de la galería.`);
+      setDeletingMedia(null);
+      if (previewMedia?.id === deletingMedia.id) {
+        setPreviewMedia(null);
+      }
+      fetchGallery();
+    } else {
+      toast.error(res.error || "No se pudo eliminar el archivo.");
+    }
+    setIsDeleting(false);
+  };
+
+  // Copy link handler
+  const copyMediaUrl = (item, e) => {
+    e?.stopPropagation();
+    navigator.clipboard.writeText(item.url);
+    setCopiedId(item.id);
+    toast.success("Enlace del archivo copiado al portapapeles.");
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  // Filtered files
+  const filteredArchivos = archivos.filter((item) => {
+    // Status filter
+    if ((statusFilter === "disponible" || statusFilter === "disponibles") && item.en_uso) return false;
+    if (statusFilter === "en_uso" && !item.en_uso) return false;
+
+    // Type filter
+    if (typeFilter === "image" && item.tipo !== "image") return false;
+    if (typeFilter === "video" && item.tipo !== "video") return false;
+
+    return true;
+  });
+
+  const disponiblesCount = archivos.filter((a) => !a.en_uso).length;
+  const enUsoCount = archivos.filter((a) => a.en_uso).length;
+
+  return (
+    <div className="space-y-6 font-inter">
+      {/* INTEGRATED HEADER BAR WITH FILTERS & TITLE */}
+      <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-gray-100 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all cursor-pointer"
+              title="Volver a los calendarios"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
+          <div>
+            <div className="inline-flex items-center gap-2 text-pink-500 font-bold tracking-widest uppercase text-xs mb-1 font-sora">
+              <Film className="w-4 h-4" />
+              <span>BANCO DE MEDIOS • GALERÍA INTERNA</span>
+            </div>
+            <h2 className="text-2xl font-sora font-extrabold text-gray-900 tracking-tight">
+              {calendarioNombre}
+            </h2>
+          </div>
+        </div>
+
+        {/* Integrated Filter List Controls */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Status Filter Tabs */}
+          <div className="flex items-center bg-gray-100 p-1 rounded-full border border-gray-200">
+            <button
+              onClick={() => setStatusFilter("all")}
+              className={`px-3 py-1.5 rounded-full font-sora text-xs font-bold transition-all cursor-pointer ${
+                statusFilter === "all"
+                  ? "bg-gray-900 text-white shadow-xs"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Todos ({archivos.length})
+            </button>
+            <button
+              onClick={() => setStatusFilter("disponibles")}
+              className={`px-3 py-1.5 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                statusFilter === "disponibles"
+                  ? "bg-emerald-600 text-white shadow-xs"
+                  : "text-gray-600 hover:text-emerald-700"
+              }`}
+            >
+              <CheckCircle className="w-3.5 h-3.5" />
+              Disponibles ({disponiblesCount})
+            </button>
+            <button
+              onClick={() => setStatusFilter("en_uso")}
+              className={`px-3 py-1.5 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                statusFilter === "en_uso"
+                  ? "bg-purple-600 text-white shadow-xs"
+                  : "text-gray-600 hover:text-purple-700"
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              En uso ({enUsoCount})
+            </button>
+          </div>
+
+          {/* Type Filter Tabs */}
+          <div className="flex items-center bg-gray-100 p-1 rounded-full border border-gray-200">
+            <button
+              onClick={() => setTypeFilter("all")}
+              className={`px-3 py-1.5 rounded-full text-xs font-sora font-bold cursor-pointer transition-all ${
+                typeFilter === "all"
+                  ? "bg-[#188ff0] text-white shadow-xs"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Todos
+            </button>
+            <button
+              onClick={() => setTypeFilter("image")}
+              className={`px-3 py-1.5 rounded-full text-xs font-sora font-bold cursor-pointer transition-all flex items-center gap-1 ${
+                typeFilter === "image"
+                  ? "bg-[#188ff0] text-white shadow-xs"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <ImageIcon className="w-3.5 h-3.5" /> Imágenes
+            </button>
+            <button
+              onClick={() => setTypeFilter("video")}
+              className={`px-3 py-1.5 rounded-full text-xs font-sora font-bold cursor-pointer transition-all flex items-center gap-1 ${
+                typeFilter === "video"
+                  ? "bg-[#188ff0] text-white shadow-xs"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <VideoIcon className="w-3.5 h-3.5" /> Videos
+            </button>
+          </div>
+
+          {/* Refresh Button */}
+          <button
+            onClick={fetchGallery}
+            className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all cursor-pointer"
+            title="Actualizar banco de medios"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-pink-500" : ""}`} />
+          </button>
+        </div>
+      </div>
+
+      {/* 2-COLUMN MAIN CONTENT (1/3 Upload, 2/3 Gallery Grid) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* LEFT COLUMN (1/3 Width: lg:col-span-4) - COMPACT UPLOADER */}
+        <div className="lg:col-span-4 bg-white rounded-[2rem] p-6 shadow-xl border border-gray-100 space-y-4 lg:sticky lg:top-6">
+          <div className="flex items-center justify-between gap-2 pb-3 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <UploadCloud className="w-4 h-4 text-pink-500" />
+              <h3 className="font-sora font-bold text-gray-900 text-sm">Subir Nuevos Medios</h3>
+            </div>
+          </div>
+
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`rounded-2xl p-6 text-center transition-all border-2 border-dashed relative overflow-hidden ${
+              isDragging
+                ? "border-pink-500 bg-pink-50/80 scale-[1.01]"
+                : "border-gray-200 hover:border-pink-300 bg-gray-50/50 hover:bg-pink-50/20"
+            }`}
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              multiple
+              accept="image/png,image/jpeg,image/webp,video/mp4,video/quicktime,video/webm"
+              onChange={(e) => e.target.files && handleUploadFiles(e.target.files)}
+              className="hidden"
+            />
+
+            <div className="space-y-3">
+              <div className="w-12 h-12 rounded-full bg-pink-50 border border-pink-100 text-pink-500 flex items-center justify-center mx-auto transition-transform hover:scale-110">
+                {isUploading ? (
+                  <RefreshCw className="w-6 h-6 animate-spin" />
+                ) : (
+                  <UploadCloud className="w-6 h-6" />
+                )}
+              </div>
+
+              <div>
+                <h4 className="font-sora font-extrabold text-gray-900 text-sm">
+                  {isUploading
+                    ? `Subiendo (${uploadProgress.current} / ${uploadProgress.total})...`
+                    : "Arrastra archivos aquí"}
+                </h4>
+                <p className="text-[11px] text-gray-500 mt-1 leading-relaxed">
+                  Admite imágenes (.PNG, .JPG, .WEBP) y videos (.MP4, .MOV, .WEBM) para alimentar los posts del calendario.
+                </p>
+              </div>
+
+              {isUploading ? (
+                <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden max-w-xs mx-auto">
+                  <div
+                    className="bg-pink-500 h-2 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${(uploadProgress.current / (uploadProgress.total || 1)) * 100}%`
+                    }}
+                  />
+                </div>
+              ) : (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-10 px-5 bg-pink-500 hover:bg-pink-600 text-white font-sora font-bold text-xs uppercase tracking-wider rounded-full shadow-md shadow-pink-200 transition-all inline-flex items-center gap-2 cursor-pointer w-full justify-center"
+                >
+                  <UploadCloud className="w-4 h-4" /> Seleccionar Archivos
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN (2/3 Width: lg:col-span-8) - MEDIA GALLERY GRID */}
+        <div className="lg:col-span-8 space-y-4">
+          {loading ? (
+            <div className="bg-white rounded-[2rem] p-12 text-center shadow-xl border border-gray-100">
+              <Sparkles className="w-8 h-8 text-pink-500 animate-spin mx-auto mb-3" />
+              <p className="text-sm font-sora font-bold text-gray-700">Cargando banco de medios...</p>
+            </div>
+          ) : filteredArchivos.length === 0 ? (
+            <div className="bg-white rounded-[2rem] p-12 text-center shadow-xl border border-gray-100">
+              <ImageIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <h4 className="font-sora font-bold text-gray-900 text-base mb-1">
+                No se encontraron archivos
+              </h4>
+              <p className="text-xs text-gray-500 max-w-sm mx-auto mb-5">
+                {archivos.length === 0
+                  ? "Sube tus primeros archivos utilizando el panel de carga lateral."
+                  : "No hay archivos que coincidan con los filtros seleccionados."}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
+              {filteredArchivos.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => setPreviewMedia(item)}
+                  className="group bg-gray-900 rounded-[1.5rem] overflow-hidden relative aspect-square shadow-md hover:shadow-xl transition-all cursor-pointer border border-gray-100"
+                >
+                  {/* Image or Video Preview */}
+                  {item.tipo === "video" ? (
+                    <div className="w-full h-full relative bg-gray-950 flex items-center justify-center">
+                      <video
+                        src={item.url}
+                        muted
+                        preload="metadata"
+                        className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                      />
+                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-white/95 text-gray-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                          <Play className="w-5 h-5 fill-current ml-0.5 text-gray-900" />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full relative">
+                      <img
+                        src={item.url}
+                        alt={item.nombre_archivo}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="w-12 h-12 rounded-full bg-white/95 text-gray-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                          <Eye className="w-5 h-5 text-gray-900" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Clean Bottom-Right Delete Button */}
+                  <div className="absolute bottom-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeletingMedia(item);
+                      }}
+                      className="w-9 h-9 rounded-full bg-black/60 hover:bg-red-500 text-white backdrop-blur-md flex items-center justify-center transition-all shadow-md cursor-pointer"
+                      title="Eliminar de la galería"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+
+      {/* LIGHTBOX PREVIEW MODAL */}
+      {previewMedia && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] max-w-3xl w-full overflow-hidden shadow-2xl relative border border-gray-100 flex flex-col md:flex-row max-h-[90vh]">
+            {/* Media Player / Image Area */}
+            <div className="md:w-3/5 bg-gray-950 flex items-center justify-center relative p-4 min-h-[300px]">
+              {previewMedia.tipo === "video" ? (
+                <video
+                  src={previewMedia.url}
+                  controls
+                  autoPlay
+                  className="max-h-[70vh] w-full object-contain rounded-xl"
+                />
+              ) : (
+                <img
+                  src={previewMedia.url}
+                  alt={previewMedia.nombre_archivo}
+                  className="max-h-[70vh] w-full object-contain rounded-xl"
+                />
+              )}
+            </div>
+
+            {/* Details Side Area */}
+            <div className="md:w-2/5 p-6 flex flex-col justify-between space-y-6 bg-white">
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
+                  <span className="inline-block text-[10px] font-sora font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-pink-50 text-pink-600">
+                    DETALLES DE MEDIO
+                  </span>
+                  <button
+                    onClick={() => setPreviewMedia(null)}
+                    className="text-gray-400 hover:text-gray-700 font-bold p-1 rounded-full hover:bg-gray-100"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <h3 className="font-sora font-extrabold text-gray-900 text-lg mb-2 break-all">
+                  {previewMedia.nombre_archivo}
+                </h3>
+
+                <div className="space-y-2 text-xs text-gray-600 font-medium">
+                  <div className="flex items-center justify-between py-1.5 border-b border-gray-50">
+                    <span className="text-gray-400">Tipo de Archivo:</span>
+                    <span className="font-sora font-bold text-gray-900 uppercase flex items-center gap-1.5">
+                      {previewMedia.tipo === "video" ? (
+                        <>
+                          <VideoIcon className="w-3.5 h-3.5 text-pink-500" /> Video / Reel
+                        </>
+                      ) : (
+                        <>
+                          <ImageIcon className="w-3.5 h-3.5 text-brand-blue" /> Imagen
+                        </>
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-1.5 border-b border-gray-50">
+                    <span className="text-gray-400">Estado en Post:</span>
+                    <span
+                      className={`font-sora font-bold ${previewMedia.en_uso ? "text-purple-600" : "text-emerald-600"
+                        }`}
+                    >
+                      {previewMedia.en_uso ? "En uso en publicación" : "Disponible (Sin usar)"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-1.5 border-b border-gray-50">
+                    <span className="text-gray-400">Fecha de Subida:</span>
+                    <span className="font-mono text-gray-700">
+                      {new Date(previewMedia.created_at).toLocaleDateString("es-MX", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric"
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-4 border-t border-gray-100">
+                <button
+                  onClick={(e) => copyMediaUrl(previewMedia, e)}
+                  className="w-full h-11 bg-gray-100 hover:bg-gray-200 text-gray-800 font-sora font-bold text-xs rounded-full inline-flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  {copiedId === previewMedia.id ? (
+                    <>
+                      <Check className="w-4 h-4 text-green-600" /> Link Copiado
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" /> Copiar Enlace Directo
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setDeletingMedia(previewMedia)}
+                  className="w-full h-11 bg-red-50 hover:bg-red-500 text-red-600 hover:text-white font-sora font-bold text-xs rounded-full inline-flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4" /> Eliminar de Galería
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {deletingMedia && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] p-6 md:p-8 max-w-md w-full shadow-2xl border border-gray-100 relative text-center">
+            <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-4 text-red-500">
+              <Trash2 className="w-7 h-7" />
+            </div>
+
+            <h3 className="text-xl font-sora font-extrabold text-gray-900 mb-2">
+              ¿Eliminar archivo?
+            </h3>
+
+            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+              Estás a punto de eliminar el archivo{" "}
+              <span className="font-bold text-gray-900 font-sora break-all">
+                "{deletingMedia.nombre_archivo}"
+              </span>{" "}
+              de la galería del calendario. Esta acción eliminará el archivo del almacenamiento y no se podrá deshacer.
+            </p>
+
+            <div className="flex items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setDeletingMedia(null)}
+                disabled={isDeleting}
+                className="h-11 px-6 rounded-full border border-gray-300 hover:bg-gray-100 text-gray-700 font-sora font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="h-11 px-6 rounded-full bg-red-500 hover:bg-red-600 text-white font-sora font-bold text-xs uppercase tracking-wider shadow-lg shadow-red-200 transition-all cursor-pointer inline-flex items-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" /> Eliminando...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" /> Eliminar Definitivamente
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
