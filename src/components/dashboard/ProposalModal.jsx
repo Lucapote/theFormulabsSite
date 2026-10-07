@@ -93,13 +93,13 @@ export default function ProposalModal({
       proposalTitle,
       greeting,
       vision,
-      priceEsencial,
-      priceCrecimiento,
-      priceEscala,
-      pricePauMarca,
-      pricePauCreadora,
-      priceManejoRedes,
-      priceMetaAds,
+      priceEsencial: Number(priceEsencial) || 0,
+      priceCrecimiento: Number(priceCrecimiento) || 0,
+      priceEscala: Number(priceEscala) || 0,
+      pricePauMarca: Number(pricePauMarca) || 0,
+      pricePauCreadora: Number(pricePauCreadora) || 0,
+      priceManejoRedes: Number(priceManejoRedes) || 0,
+      priceMetaAds: Number(priceMetaAds) || 0,
       existingContent: initialData?.contenido || defaultTemplate,
       id: initialData?.id
     });
@@ -107,7 +107,7 @@ export default function ProposalModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="bg-white rounded-[2rem] border border-gray-100 w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl my-auto overflow-hidden">
+      <div className="bg-white rounded-[2rem] border border-gray-100 w-full max-w-xl max-h-[90vh] flex flex-col shadow-2xl my-auto overflow-hidden">
         {/* Header */}
         <div className="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-900 text-white">
           <div>
@@ -257,8 +257,12 @@ export default function ProposalModal({
                     <input
                       type="number"
                       value={priceEsencial}
-                      onChange={(e) => setPriceEsencial(e.target.value)}
-                      className="w-full h-11 px-3 border border-gray-200 rounded-xl text-sm font-mono focus:border-pink-500 focus:bg-white focus:outline-none"
+                      onWheel={(e) => e.target.blur()}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setPriceEsencial(val === "" ? "" : Math.max(0, parseInt(val, 10) || 0));
+                      }}
+                      className="w-full h-11 px-3 border border-gray-200 rounded-xl text-sm font-mono focus:border-pink-500 focus:bg-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                   <div className="bg-pink-50/40 p-4 rounded-2xl border border-pink-200/80">
@@ -268,8 +272,12 @@ export default function ProposalModal({
                     <input
                       type="number"
                       value={priceCrecimiento}
-                      onChange={(e) => setPriceCrecimiento(e.target.value)}
-                      className="w-full h-11 px-3 border border-pink-200 rounded-xl text-sm font-mono focus:border-pink-500 focus:bg-white focus:outline-none font-bold"
+                      onWheel={(e) => e.target.blur()}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setPriceCrecimiento(val === "" ? "" : Math.max(0, parseInt(val, 10) || 0));
+                      }}
+                      className="w-full h-11 px-3 border border-pink-200 rounded-xl text-sm font-mono focus:border-pink-500 focus:bg-white focus:outline-none font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                   <div className="bg-gray-50/60 p-4 rounded-2xl border border-gray-200/80">
@@ -279,8 +287,12 @@ export default function ProposalModal({
                     <input
                       type="number"
                       value={priceEscala}
-                      onChange={(e) => setPriceEscala(e.target.value)}
-                      className="w-full h-11 px-3 border border-gray-200 rounded-xl text-sm font-mono focus:border-pink-500 focus:bg-white focus:outline-none"
+                      onWheel={(e) => e.target.blur()}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setPriceEscala(val === "" ? "" : Math.max(0, parseInt(val, 10) || 0));
+                      }}
+                      className="w-full h-11 px-3 border border-gray-200 rounded-xl text-sm font-mono focus:border-pink-500 focus:bg-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                 </div>
@@ -298,8 +310,12 @@ export default function ProposalModal({
                     <input
                       type="number"
                       value={pricePauMarca}
-                      onChange={(e) => setPricePauMarca(e.target.value)}
-                      className="w-full h-11 px-3 border border-gray-200 rounded-xl text-sm font-mono focus:border-pink-500 focus:bg-white focus:outline-none"
+                      onWheel={(e) => e.target.blur()}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setPricePauMarca(val === "" ? "" : Math.max(0, parseInt(val, 10) || 0));
+                      }}
+                      className="w-full h-11 px-3 border border-gray-200 rounded-xl text-sm font-mono focus:border-pink-500 focus:bg-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                   <div className="bg-gray-50/60 p-4 rounded-2xl border border-gray-200/80">
@@ -309,8 +325,12 @@ export default function ProposalModal({
                     <input
                       type="number"
                       value={pricePauCreadora}
-                      onChange={(e) => setPricePauCreadora(e.target.value)}
-                      className="w-full h-11 px-3 border border-gray-200 rounded-xl text-sm font-mono focus:border-pink-500 focus:bg-white focus:outline-none"
+                      onWheel={(e) => e.target.blur()}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setPricePauCreadora(val === "" ? "" : Math.max(0, parseInt(val, 10) || 0));
+                      }}
+                      className="w-full h-11 px-3 border border-gray-200 rounded-xl text-sm font-mono focus:border-pink-500 focus:bg-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                   <div className="bg-gray-50/60 p-4 rounded-2xl border border-gray-200/80">
@@ -320,8 +340,12 @@ export default function ProposalModal({
                     <input
                       type="number"
                       value={priceManejoRedes}
-                      onChange={(e) => setPriceManejoRedes(e.target.value)}
-                      className="w-full h-11 px-3 border border-gray-200 rounded-xl text-sm font-mono focus:border-pink-500 focus:bg-white focus:outline-none"
+                      onWheel={(e) => e.target.blur()}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setPriceManejoRedes(val === "" ? "" : Math.max(0, parseInt(val, 10) || 0));
+                      }}
+                      className="w-full h-11 px-3 border border-gray-200 rounded-xl text-sm font-mono focus:border-pink-500 focus:bg-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                   <div className="bg-gray-50/60 p-4 rounded-2xl border border-gray-200/80">
@@ -331,8 +355,12 @@ export default function ProposalModal({
                     <input
                       type="number"
                       value={priceMetaAds}
-                      onChange={(e) => setPriceMetaAds(e.target.value)}
-                      className="w-full h-11 px-3 border border-gray-200 rounded-xl text-sm font-mono focus:border-pink-500 focus:bg-white focus:outline-none"
+                      onWheel={(e) => e.target.blur()}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setPriceMetaAds(val === "" ? "" : Math.max(0, parseInt(val, 10) || 0));
+                      }}
+                      className="w-full h-11 px-3 border border-gray-200 rounded-xl text-sm font-mono focus:border-pink-500 focus:bg-white focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                 </div>

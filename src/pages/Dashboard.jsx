@@ -229,7 +229,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-inter pb-20">
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-inter pb-20 w-full max-w-full overflow-x-hidden">
       {/* Top Navigation Bar matching ProposalView style */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-xs py-2">
         <div className="max-w-6xl mx-auto px-5 md:px-8 h-14 flex items-center justify-between">
@@ -247,91 +247,51 @@ export default function Dashboard() {
 
             <button
               onClick={handleLogout}
-              className="h-10 px-5 rounded-full border border-gray-300 hover:border-gray-900 text-gray-800 hover:bg-gray-900 hover:text-white font-sora font-bold text-xs tracking-wider uppercase transition-all inline-flex items-center gap-2 cursor-pointer shadow-2xs"
+              className="h-10 px-3.5 sm:px-5 rounded-full border border-gray-300 hover:border-gray-900 text-gray-800 hover:bg-gray-900 hover:text-white font-sora font-bold text-xs tracking-wider uppercase transition-all inline-flex items-center gap-2 cursor-pointer shadow-2xs"
             >
               <LogOut className="w-3.5 h-3.5 shrink-0" />
-              Cerrar Sesión
+              <span className="hidden sm:inline">Cerrar Sesión</span>
             </button>
           </div>
         </div>
       </header>
 
       {/* Main Content Container */}
-      <main className="max-w-6xl mx-auto px-5 md:px-8 pt-10">
-        {/* Hero Welcome Card matching ProposalView */}
-        <div className="bg-white rounded-[2rem] p-8 md:p-10 shadow-xl border border-gray-100 relative overflow-hidden mb-8">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-pink-50 rounded-bl-[100%] -z-10 opacity-70" />
-
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <p className="text-pink-500 font-bold tracking-widest uppercase text-xs mb-2 font-sora">
-                PANEL DE CONTROL GENERAL
-              </p>
-              <h1 className="text-3xl md:text-5xl font-black text-gray-900 tracking-tight font-sora">
-                Gestor de <span className="text-brand-blue">Estrategias</span>
-              </h1>
-              <p className="text-gray-600 text-base mt-2 font-medium">
-                Crea, personaliza y supervisa las propuestas enviadas a tus clientes.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                onClick={() => {
-                  loadDiagnostics();
-                  loadProposals();
-                }}
-                className="h-11 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-sora font-bold text-xs rounded-full transition-all flex items-center gap-2 cursor-pointer"
-              >
-                <RefreshCw className={`w-4 h-4 ${loadingProposals || loadingDb ? "animate-spin text-pink-500" : ""}`} />
-                Actualizar
-              </button>
-
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="h-11 px-6 bg-pink-500 hover:bg-pink-600 text-white font-sora font-bold text-xs rounded-full shadow-lg shadow-pink-200 transition-all flex items-center gap-2 cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                Nueva Propuesta
-              </button>
-            </div>
-          </div>
-        </div>
-
+      <main className="max-w-6xl mx-auto px-4 sm:px-8 pt-6 sm:pt-8">
         {/* Navigation Tabs Pill Style */}
-        <div className="flex flex-wrap gap-3 mb-8">
+        <div className="flex flex-wrap gap-2 sm:gap-3 mb-6 sm:mb-8">
           <button
             onClick={() => setActiveTab("proposals")}
-            className={`py-3 px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-2.5 ${
+            className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === "proposals"
                 ? "bg-gray-900 text-white shadow-md"
                 : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
             }`}
           >
             <FileText className="w-4 h-4 text-pink-400" />
-            Propuestas Activas ({proposals.length})
+            Propuestas ({proposals.length})
           </button>
           <button
             onClick={() => setActiveTab("calendars")}
-            className={`py-3 px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-2.5 ${
+            className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === "calendars"
                 ? "bg-gray-900 text-white shadow-md"
                 : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
             }`}
           >
             <Users className="w-4 h-4 text-pink-500" />
-            Clientes y Calendarios
+            Calendarios
           </button>
           <button
             onClick={() => setActiveTab("diagnostics")}
-            className={`py-3 px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-2.5 ${
+            className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === "diagnostics"
                 ? "bg-gray-900 text-white shadow-md"
                 : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
             }`}
           >
             <BarChart2 className="w-4 h-4 text-brand-blue" />
-            Diagnósticos Recibidos ({diagnostics.length})
+            Diagnósticos ({diagnostics.length})
           </button>
         </div>
 
@@ -340,7 +300,47 @@ export default function Dashboard() {
 
         {/* TAB 1: PROPUESTAS TABLE */}
         {activeTab === "proposals" && (
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Hero Welcome Card matching ProposalView */}
+            <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-10 shadow-xl border border-gray-100 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-pink-50 rounded-bl-[100%] -z-10 opacity-70" />
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
+                <div>
+                  <p className="hidden sm:block text-pink-500 font-bold tracking-widest uppercase text-xs mb-2 font-sora">
+                    PANEL DE CONTROL GENERAL
+                  </p>
+                  <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-gray-900 tracking-tight font-sora">
+                    Gestor de <span className="text-brand-blue">Estrategias</span>
+                  </h1>
+                  <p className="hidden sm:block text-gray-600 text-base mt-2 font-medium">
+                    Crea, personaliza y supervisa las propuestas enviadas a tus clientes.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+                  <button
+                    onClick={() => {
+                      loadDiagnostics();
+                      loadProposals();
+                    }}
+                    className="h-10 sm:h-11 px-3 sm:px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-sora font-bold text-xs rounded-full transition-all flex items-center gap-2 cursor-pointer"
+                    title="Actualizar datos"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${loadingProposals || loadingDb ? "animate-spin text-pink-500" : ""}`} />
+                    <span className="hidden sm:inline">Actualizar</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="h-10 sm:h-11 px-4 sm:px-6 bg-pink-500 hover:bg-pink-600 text-white font-sora font-bold text-xs rounded-full shadow-lg shadow-pink-200 transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>+ Propuesta</span>
+                  </button>
+                </div>
+              </div>
+            </div>
             {loadingProposals ? (
               <div className="bg-white rounded-[2rem] p-12 text-center border border-gray-100 shadow-lg">
                 <Sparkles className="w-8 h-8 text-pink-500 animate-spin mx-auto mb-3" />

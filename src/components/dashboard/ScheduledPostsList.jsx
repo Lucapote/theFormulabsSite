@@ -203,24 +203,24 @@ export default function ScheduledPostsList({
   return (
     <div className="space-y-6 font-inter">
       {/* Action Bar & Toolbar */}
-      <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-gray-100 space-y-4">
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+      <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 shadow-xl border border-gray-100 space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className="inline-flex items-center gap-2 text-pink-500 font-bold tracking-widest uppercase text-xs mb-1 font-sora">
+            <div className="hidden sm:inline-flex items-center gap-2 text-pink-500 font-bold tracking-widest uppercase text-xs mb-1 font-sora">
               <Film className="w-4 h-4 text-brand-blue" />
               <span>{showOnlyDrafts ? "CAJAS VACÍAS PENDIENTES" : "PUBLICACIONES Y CAJAS EDITORIALES"}</span>
             </div>
-            <h3 className="text-2xl font-sora font-extrabold text-gray-900 tracking-tight">
-              {calendarioNombre} ({filteredPosts.length} {showOnlyDrafts ? "cajas vacías" : "posts"})
+            <h3 className="text-xl sm:text-2xl font-sora font-extrabold text-gray-900 tracking-tight">
+              {calendarioNombre} ({filteredPosts.length} {showOnlyDrafts ? "cajas" : "posts"})
             </h3>
-            <p className="text-xs text-gray-500 font-medium mt-0.5">
+            <p className="hidden sm:block text-xs text-gray-500 font-medium mt-0.5">
               {showOnlyDrafts
-                ? "Cajas vacías pendientes de asignar medios, fecha y copy. Al completarse pasarán automáticamente a la vista de Calendario."
-                : "Administra, filtra y organiza tus publicaciones programadas, borradores y publicadas."}
+                ? "Asigna medios, fecha y copy a cada caja para programarla en el calendario."
+                : "Gestiona publicaciones programadas, borradores y publicadas."}
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex items-center gap-2 self-start sm:self-auto">
             {/* Single Add Post Button - Opens PostModal to select format & details */}
             {!showOnlyDrafts && estadoFilter !== "publicado" && (
               <button
@@ -228,11 +228,10 @@ export default function ScheduledPostsList({
                   setEditingPost(null);
                   setShowModal(true);
                 }}
-                className="h-9 px-4 bg-[#188ff0] hover:bg-blue-600 text-white font-sora font-bold text-xs rounded-full shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+                className="h-9 px-3.5 sm:px-4 bg-[#188ff0] hover:bg-blue-600 text-white font-sora font-bold text-xs rounded-full shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
                 title="Crear o programar una nueva publicación"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Agregar Post</span>
+                <Plus className="w-4 h-4" />
               </button>
             )}
 
@@ -241,7 +240,7 @@ export default function ScheduledPostsList({
               <div className="flex items-center bg-gray-100 p-1 rounded-full border border-gray-200">
                 <button
                   onClick={() => setViewMode("list")}
-                  className={`h-8 px-3.5 rounded-full font-sora text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  className={`h-7 sm:h-8 px-2.5 sm:px-3.5 rounded-full font-sora text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
                     viewMode === "list"
                       ? "bg-gray-900 text-white shadow-sm"
                       : "text-gray-600 hover:text-gray-900"
@@ -249,12 +248,12 @@ export default function ScheduledPostsList({
                   title="Vista Lista de Posts"
                 >
                   <ListFilter className="w-3.5 h-3.5" />
-                  <span>Lista</span>
+                  <span className="hidden sm:inline">Lista</span>
                 </button>
 
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`h-8 px-3.5 rounded-full font-sora text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  className={`h-7 sm:h-8 px-2.5 sm:px-3.5 rounded-full font-sora text-xs font-bold transition-all flex items-center gap-1 cursor-pointer ${
                     viewMode === "grid"
                       ? "bg-gray-900 text-white shadow-sm"
                       : "text-gray-600 hover:text-gray-900"
@@ -262,14 +261,14 @@ export default function ScheduledPostsList({
                   title="Vista Cuadrícula Mensual"
                 >
                   <LayoutGrid className="w-3.5 h-3.5" />
-                  <span>Cuadrícula</span>
+                  <span className="hidden sm:inline">Cuadrícula</span>
                 </button>
               </div>
             )}
 
             <button
               onClick={loadPosts}
-              className="h-9 p-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-sora font-bold text-xs rounded-full transition-all flex items-center gap-1.5 cursor-pointer"
+              className="h-9 w-9 p-0 bg-gray-100 hover:bg-gray-200 text-gray-700 font-sora font-bold text-xs rounded-full transition-all flex items-center justify-center cursor-pointer shrink-0"
               title="Recargar publicaciones"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-pink-500" : ""}`} />
@@ -279,15 +278,15 @@ export default function ScheduledPostsList({
 
         {/* Filter Controls Row (Shown in Calendario tab) */}
         {!showOnlyDrafts && (
-          <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-100">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-3 border-t border-gray-100 max-w-full overflow-hidden">
             {/* Estado Filter */}
-            <div className="flex items-center gap-1.5 bg-gray-50 p-1 rounded-full border border-gray-200 text-xs font-sora font-bold">
-              <span className="text-gray-400 pl-2 text-[10px] uppercase tracking-wider font-extrabold">
+            <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-full border border-gray-200 text-xs font-sora font-bold max-w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden shrink-0">
+              <span className="hidden sm:inline-block text-gray-400 pl-2 text-[10px] uppercase tracking-wider font-extrabold shrink-0">
                 Estado:
               </span>
               <button
                 onClick={() => setEstadoFilter("all")}
-                className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
                   estadoFilter === "all"
                     ? "bg-gray-900 text-white shadow-xs"
                     : "text-gray-600 hover:text-gray-900"
@@ -297,7 +296,7 @@ export default function ScheduledPostsList({
               </button>
               <button
                 onClick={() => setEstadoFilter("borrador")}
-                className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
                   estadoFilter === "borrador"
                     ? "bg-amber-500 text-white shadow-xs"
                     : "text-gray-600 hover:text-gray-900"
@@ -307,7 +306,7 @@ export default function ScheduledPostsList({
               </button>
               <button
                 onClick={() => setEstadoFilter("programado")}
-                className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
                   estadoFilter === "programado"
                     ? "bg-emerald-600 text-white shadow-xs"
                     : "text-gray-600 hover:text-gray-900"
@@ -317,7 +316,7 @@ export default function ScheduledPostsList({
               </button>
               <button
                 onClick={() => setEstadoFilter("publicado")}
-                className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
                   estadoFilter === "publicado"
                     ? "bg-purple-600 text-white shadow-xs"
                     : "text-gray-600 hover:text-gray-900"
@@ -328,13 +327,13 @@ export default function ScheduledPostsList({
             </div>
 
             {/* Formato Filter */}
-            <div className="flex items-center gap-1.5 bg-gray-50 p-1 rounded-full border border-gray-200 text-xs font-sora font-bold">
-              <span className="text-gray-400 pl-2 text-[10px] uppercase tracking-wider font-extrabold">
+            <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-full border border-gray-200 text-xs font-sora font-bold max-w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden shrink-0">
+              <span className="hidden sm:inline-block text-gray-400 pl-2 text-[10px] uppercase tracking-wider font-extrabold shrink-0">
                 Formato:
               </span>
               <button
                 onClick={() => setFormatoFilter("all")}
-                className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
                   formatoFilter === "all"
                     ? "bg-gray-900 text-white shadow-xs"
                     : "text-gray-600 hover:text-gray-900"
@@ -344,7 +343,7 @@ export default function ScheduledPostsList({
               </button>
               <button
                 onClick={() => setFormatoFilter("reel")}
-                className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
                   formatoFilter === "reel"
                     ? "bg-pink-600 text-white shadow-xs"
                     : "text-gray-600 hover:text-gray-900"
@@ -354,7 +353,7 @@ export default function ScheduledPostsList({
               </button>
               <button
                 onClick={() => setFormatoFilter("carrousel")}
-                className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
                   formatoFilter === "carrousel"
                     ? "bg-[#188ff0] text-white shadow-xs"
                     : "text-gray-600 hover:text-gray-900"
@@ -409,10 +408,10 @@ export default function ScheduledPostsList({
             </h4>
             <p className="text-xs text-gray-500 max-w-sm mx-auto mb-6">
               {showOnlyDrafts
-                ? "¡Excelente! Todas tus cajas vacías han sido completadas o no se han creado más cajas."
+                ? "Todas las cajas vacías han sido completadas."
                 : estadoFilter === "publicado"
-                ? "Las publicaciones o cajas programadas pasarán automáticamente a esta lista una vez que hayan sido publicadas."
-                : "Intenta cambiar los filtros de estado o formato para ver tus publicaciones."}
+                ? "Las publicaciones pasarán aquí al publicarse."
+                : "No hay elementos con los filtros seleccionados."}
             </p>
             {!showOnlyDrafts && estadoFilter !== "publicado" && (
               <div className="flex justify-center gap-3">
@@ -548,7 +547,7 @@ export default function ScheduledPostsList({
                       <p className="text-xs text-gray-700 font-medium line-clamp-2 leading-relaxed">
                         {post.caption || (
                           <em className="text-gray-400 font-normal">
-                            Pendiente de asignar medios, fecha y copywriting.
+                            Pendiente de medios, fecha y copy.
                           </em>
                         )}
                       </p>

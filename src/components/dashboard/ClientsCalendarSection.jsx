@@ -244,8 +244,8 @@ export default function ClientsCalendarSection() {
       // Automatic generation of placeholder empty boxes
       const draftRes = await createDraftPlaceholderPosts({
         calendarioId: res.data.id,
-        cantReels: calendarForm.cantReels,
-        cantCarruseles: calendarForm.cantCarruseles,
+        cantReels: Number(calendarForm.cantReels) || 0,
+        cantCarruseles: Number(calendarForm.cantCarruseles) || 0,
         mes: calendarForm.mes,
         anio: calendarForm.anio
       });
@@ -350,18 +350,18 @@ export default function ClientsCalendarSection() {
           </div>
 
           {/* Sub Tab Switcher Pills & Share Link */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
             <button
               onClick={() => copyCalendarLink(activeCalendar.slug)}
-              className="h-10 px-4 bg-pink-50 hover:bg-pink-100 text-pink-600 font-sora font-bold text-xs rounded-full border border-pink-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              className="h-9 sm:h-10 px-3 sm:px-4 bg-pink-50 hover:bg-pink-100 text-pink-600 font-sora font-bold text-xs rounded-full border border-pink-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
               {copiedSlug === activeCalendar.slug ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-green-600" /> Copiado
+                  <Check className="w-3.5 h-3.5 text-green-600" /> <span className="hidden sm:inline">Copiado</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-3.5 h-3.5 text-pink-500" /> Copiar Enlace Público
+                  <Copy className="w-3.5 h-3.5 text-pink-500" /> <span className="hidden sm:inline">Copiar Enlace</span><span className="sm:hidden">Enlace</span>
                 </>
               )}
             </button>
@@ -370,10 +370,10 @@ export default function ClientsCalendarSection() {
               href={`/calendario/${activeCalendar.slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="h-10 px-3.5 bg-blue-50 hover:bg-blue-100 text-brand-blue font-sora font-bold text-xs rounded-full border border-blue-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+              className="h-9 sm:h-10 px-3 sm:px-3.5 bg-blue-50 hover:bg-blue-100 text-brand-blue font-sora font-bold text-xs rounded-full border border-blue-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
               title="Abrir vista pública del cliente"
             >
-              <ExternalLink className="w-3.5 h-3.5" /> Ver Vista Pública
+              <ExternalLink className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Ver Vista Pública</span><span className="sm:hidden">Ver</span>
             </a>
 
             <button
@@ -451,12 +451,12 @@ export default function ClientsCalendarSection() {
           <h2 className="text-2xl md:text-4xl font-extrabold text-gray-900 font-sora tracking-tight">
             Clientes y <span className="text-brand-blue">Calendarios</span>
           </h2>
-          <p className="text-gray-600 text-sm mt-1 font-medium">
-            Organiza tus marcas de clientes y administra sus calendarios editoriales interactivos.
+          <p className="text-gray-500 text-xs sm:text-sm mt-1 font-medium">
+            Organiza tus clientes y gestiona sus calendarios de contenido.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 self-start sm:self-auto">
           <button
             onClick={() => loadClientes(selectedCliente?.id)}
             className="h-11 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-sora font-bold text-xs rounded-full transition-all flex items-center gap-2 cursor-pointer"
@@ -730,8 +730,8 @@ export default function ClientsCalendarSection() {
 
       {/* MODAL 1: CREAR CLIENTE */}
       {showClientModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-[2rem] p-6 md:p-8 max-w-md w-full shadow-2xl border border-gray-100 relative">
+        <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-full h-full min-h-[100dvh] bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-6 font-inter animate-in fade-in duration-200 overflow-x-hidden">
+          <div className="bg-white rounded-[2rem] p-6 md:p-8 max-w-md w-full max-w-[calc(100vw-1.5rem)] mx-auto shadow-2xl border border-gray-100 relative">
             <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-full bg-pink-50 flex items-center justify-center text-pink-500">
@@ -819,8 +819,8 @@ export default function ClientsCalendarSection() {
 
       {/* MODAL 2: CREAR CALENDARIO */}
       {showCalendarModal && selectedCliente && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6 font-inter animate-in fade-in duration-200">
-          <div className="bg-white rounded-[2.5rem] max-w-lg w-full shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[90vh] relative">
+        <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-full h-full min-h-[100dvh] bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-6 font-inter animate-in fade-in duration-200 overflow-x-hidden">
+          <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] max-w-lg w-full max-w-[calc(100vw-1.5rem)] mx-auto shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[90vh] relative">
             {/* Fixed Header */}
             <div className="flex items-center justify-between px-6 py-5 md:px-8 border-b border-gray-100 bg-white shrink-0">
               <div className="flex items-center gap-3">
@@ -978,11 +978,17 @@ export default function ClientsCalendarSection() {
                       type="number"
                       min="0"
                       max="30"
+                      placeholder="0"
                       value={calendarForm.cantReels}
-                      onChange={(e) =>
-                        setCalendarForm({ ...calendarForm, cantReels: Math.max(0, Number(e.target.value)) })
-                      }
-                      className="w-full h-10 px-3 rounded-xl border border-gray-200 focus:border-brand-blue outline-none text-xs font-sora font-bold text-gray-900 bg-white"
+                      onWheel={(e) => e.target.blur()}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCalendarForm({
+                          ...calendarForm,
+                          cantReels: val === "" ? "" : Math.max(0, parseInt(val, 10) || 0)
+                        });
+                      }}
+                      className="w-full h-10 px-3 rounded-xl border border-gray-200 focus:border-brand-blue outline-none text-xs font-sora font-bold text-gray-900 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
 
@@ -994,11 +1000,17 @@ export default function ClientsCalendarSection() {
                       type="number"
                       min="0"
                       max="30"
+                      placeholder="0"
                       value={calendarForm.cantCarruseles}
-                      onChange={(e) =>
-                        setCalendarForm({ ...calendarForm, cantCarruseles: Math.max(0, Number(e.target.value)) })
-                      }
-                      className="w-full h-10 px-3 rounded-xl border border-gray-200 focus:border-brand-blue outline-none text-xs font-sora font-bold text-gray-900 bg-white"
+                      onWheel={(e) => e.target.blur()}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCalendarForm({
+                          ...calendarForm,
+                          cantCarruseles: val === "" ? "" : Math.max(0, parseInt(val, 10) || 0)
+                        });
+                      }}
+                      className="w-full h-10 px-3 rounded-xl border border-gray-200 focus:border-brand-blue outline-none text-xs font-sora font-bold text-gray-900 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                 </div>

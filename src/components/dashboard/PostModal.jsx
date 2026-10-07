@@ -178,65 +178,65 @@ export default function PostModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6 font-inter animate-in fade-in duration-200">
+    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-6 font-inter animate-in fade-in duration-200 overflow-y-auto">
       {/* Modal Container: Flex Col with Fixed Header/Footer and Scrollable Form Body */}
-      <div className="bg-white rounded-[2.5rem] max-w-2xl w-full shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[90vh] relative">
+      <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full max-w-[calc(100vw-1.25rem)] my-auto shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[85dvh] sm:max-h-[88dvh] relative">
         
         {/* Fixed Modal Header */}
-        <div className="flex items-center justify-between px-6 py-5 md:px-8 border-b border-gray-100 bg-white shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 sm:px-8 sm:py-5 border-b border-gray-100 bg-white shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-brand-blue">
-              <Film className="w-5 h-5" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-brand-blue shrink-0">
+              <Film className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h3 className="font-sora font-extrabold text-gray-900 text-lg md:text-xl tracking-tight leading-tight">
-                {isEditing ? "Editar Publicación" : "Programar Nueva Publicación"}
+              <h3 className="font-sora font-extrabold text-gray-900 text-base sm:text-xl tracking-tight leading-tight">
+                {isEditing ? "Editar Publicación" : "Programar Publicación"}
               </h3>
-              <p className="text-xs text-gray-500 font-medium">
-                Selecciona formato, copy, horario y asigna medios del banco.
+              <p className="text-[11px] sm:text-xs text-gray-500 font-medium line-clamp-1">
+                Selecciona formato, copy, horario y asigna medios.
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 font-bold p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+            className="text-gray-400 hover:text-gray-700 font-bold p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Scrollable Form Body */}
-        <form id="post-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+        <form id="post-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 sm:p-8 space-y-5 sm:space-y-6">
           {/* 1. TIPO DE FORMATO (TOGGLE SWITCH) */}
           <div>
             <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-2">
               Formato de Publicación *
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={() => handleFormatChange("reel")}
-                className={`py-3 px-4 rounded-2xl border font-sora text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-2xl border font-sora text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
                   tipoPost === "reel"
                     ? "bg-gray-900 text-white border-gray-900 shadow-md"
                     : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
                 }`}
               >
-                <VideoIcon className={`w-4 h-4 ${tipoPost === "reel" ? "text-pink-400" : "text-gray-400"}`} />
-                <span>Reel (1 Video)</span>
+                <VideoIcon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${tipoPost === "reel" ? "text-pink-400" : "text-gray-400"}`} />
+                <span className="truncate">Reel (1 Video)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleFormatChange("carrousel")}
-                className={`py-3 px-4 rounded-2xl border font-sora text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-2xl border font-sora text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
                   tipoPost === "carrousel"
                     ? "bg-gray-900 text-white border-gray-900 shadow-md"
                     : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
                 }`}
               >
-                <Layers className={`w-4 h-4 ${tipoPost === "carrousel" ? "text-brand-blue" : "text-gray-400"}`} />
-                <span>Carrusel (Múltiple)</span>
+                <Layers className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${tipoPost === "carrousel" ? "text-brand-blue" : "text-gray-400"}`} />
+                <span className="truncate">Carrusel (Múltiple)</span>
               </button>
             </div>
           </div>
@@ -258,7 +258,7 @@ export default function PostModal({
 
             <div>
               <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-brand-blue" /> Hora Programada *
+                <Clock className="w-3.5 h-3.5 text-brand-blue" /> Hora <br />Programada *
               </label>
               <input
                 type="time"
@@ -271,7 +271,7 @@ export default function PostModal({
 
             <div>
               <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5">
-                Estado
+                Estado <br />Publicación
               </label>
               {/* CLEAN SELECT OPTIONS WITH NO OS EMOJIS */}
               <select

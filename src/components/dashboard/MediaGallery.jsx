@@ -193,13 +193,13 @@ export default function MediaGallery({
 
   return (
     <div className="space-y-6 font-inter">
-      {/* INTEGRATED HEADER BAR WITH FILTERS & TITLE */}
-      <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-gray-100 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+      {/* INTEGRATED HEADER BAR */}
+      <div className="bg-white rounded-[2rem] p-5 sm:p-6 shadow-xl border border-gray-100 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           {onBack && (
             <button
               onClick={onBack}
-              className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all cursor-pointer"
+              className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all cursor-pointer shrink-0"
               title="Volver a los calendarios"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -208,95 +208,22 @@ export default function MediaGallery({
           <div>
             <div className="inline-flex items-center gap-2 text-pink-500 font-bold tracking-widest uppercase text-xs mb-1 font-sora">
               <Film className="w-4 h-4" />
-              <span>BANCO DE MEDIOS • GALERÍA INTERNA</span>
+              <span>BANCO DE MEDIOS Y GALERÍA</span>
             </div>
-            <h2 className="text-2xl font-sora font-extrabold text-gray-900 tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-sora font-extrabold text-gray-900 tracking-tight">
               {calendarioNombre}
             </h2>
           </div>
         </div>
 
-        {/* Integrated Filter List Controls */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Status Filter Tabs */}
-          <div className="flex items-center bg-gray-100 p-1 rounded-full border border-gray-200">
-            <button
-              onClick={() => setStatusFilter("all")}
-              className={`px-3 py-1.5 rounded-full font-sora text-xs font-bold transition-all cursor-pointer ${
-                statusFilter === "all"
-                  ? "bg-gray-900 text-white shadow-xs"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Todos ({archivos.length})
-            </button>
-            <button
-              onClick={() => setStatusFilter("disponibles")}
-              className={`px-3 py-1.5 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                statusFilter === "disponibles"
-                  ? "bg-emerald-600 text-white shadow-xs"
-                  : "text-gray-600 hover:text-emerald-700"
-              }`}
-            >
-              <CheckCircle className="w-3.5 h-3.5" />
-              Disponibles ({disponiblesCount})
-            </button>
-            <button
-              onClick={() => setStatusFilter("en_uso")}
-              className={`px-3 py-1.5 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                statusFilter === "en_uso"
-                  ? "bg-purple-600 text-white shadow-xs"
-                  : "text-gray-600 hover:text-purple-700"
-              }`}
-            >
-              <Clock className="w-3.5 h-3.5" />
-              En uso ({enUsoCount})
-            </button>
-          </div>
-
-          {/* Type Filter Tabs */}
-          <div className="flex items-center bg-gray-100 p-1 rounded-full border border-gray-200">
-            <button
-              onClick={() => setTypeFilter("all")}
-              className={`px-3 py-1.5 rounded-full text-xs font-sora font-bold cursor-pointer transition-all ${
-                typeFilter === "all"
-                  ? "bg-[#188ff0] text-white shadow-xs"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Todos
-            </button>
-            <button
-              onClick={() => setTypeFilter("image")}
-              className={`px-3 py-1.5 rounded-full text-xs font-sora font-bold cursor-pointer transition-all flex items-center gap-1 ${
-                typeFilter === "image"
-                  ? "bg-[#188ff0] text-white shadow-xs"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              <ImageIcon className="w-3.5 h-3.5" /> Imágenes
-            </button>
-            <button
-              onClick={() => setTypeFilter("video")}
-              className={`px-3 py-1.5 rounded-full text-xs font-sora font-bold cursor-pointer transition-all flex items-center gap-1 ${
-                typeFilter === "video"
-                  ? "bg-[#188ff0] text-white shadow-xs"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              <VideoIcon className="w-3.5 h-3.5" /> Videos
-            </button>
-          </div>
-
-          {/* Refresh Button */}
-          <button
-            onClick={fetchGallery}
-            className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all cursor-pointer"
-            title="Actualizar banco de medios"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-pink-500" : ""}`} />
-          </button>
-        </div>
+        {/* Refresh Button */}
+        <button
+          onClick={fetchGallery}
+          className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all cursor-pointer shrink-0"
+          title="Actualizar banco de medios"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-pink-500" : ""}`} />
+        </button>
       </div>
 
       {/* 2-COLUMN MAIN CONTENT (1/3 Upload, 2/3 Gallery Grid) */}
@@ -342,10 +269,10 @@ export default function MediaGallery({
                 <h4 className="font-sora font-extrabold text-gray-900 text-sm">
                   {isUploading
                     ? `Subiendo (${uploadProgress.current} / ${uploadProgress.total})...`
-                    : "Arrastra archivos aquí"}
+                    : "Selecciona o arrastra archivos"}
                 </h4>
                 <p className="text-[11px] text-gray-500 mt-1 leading-relaxed">
-                  Admite imágenes (.PNG, .JPG, .WEBP) y videos (.MP4, .MOV, .WEBM) para alimentar los posts del calendario.
+                  Imágenes (PNG, JPG, WEBP) y videos (MP4, MOV).
                 </p>
               </div>
 
@@ -372,6 +299,78 @@ export default function MediaGallery({
 
         {/* RIGHT COLUMN (2/3 Width: lg:col-span-8) - MEDIA GALLERY GRID */}
         <div className="lg:col-span-8 space-y-4">
+          {/* Integrated Filter Controls Directly Above Gallery */}
+          <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-gray-100 flex flex-wrap items-center justify-between gap-3">
+            {/* Status Filter Tabs */}
+            <div className="flex items-center bg-gray-100 p-1 rounded-full border border-gray-200 overflow-x-auto max-w-full">
+              <button
+                onClick={() => setStatusFilter("all")}
+                className={`px-3 py-1.5 rounded-full font-sora text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  statusFilter === "all"
+                    ? "bg-gray-900 text-white shadow-xs"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Todos ({archivos.length})
+              </button>
+              <button
+                onClick={() => setStatusFilter("disponibles")}
+                className={`px-3 py-1.5 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                  statusFilter === "disponibles"
+                    ? "bg-emerald-600 text-white shadow-xs"
+                    : "text-gray-600 hover:text-emerald-700"
+                }`}
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                Disponibles ({disponiblesCount})
+              </button>
+              <button
+                onClick={() => setStatusFilter("en_uso")}
+                className={`px-3 py-1.5 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                  statusFilter === "en_uso"
+                    ? "bg-purple-600 text-white shadow-xs"
+                    : "text-gray-600 hover:text-purple-700"
+                }`}
+              >
+                <Clock className="w-3.5 h-3.5" />
+                En uso ({enUsoCount})
+              </button>
+            </div>
+
+            {/* Type Filter Tabs */}
+            <div className="flex items-center bg-gray-100 p-1 rounded-full border border-gray-200 overflow-x-auto max-w-full">
+              <button
+                onClick={() => setTypeFilter("all")}
+                className={`px-3 py-1.5 rounded-full text-xs font-sora font-bold cursor-pointer transition-all whitespace-nowrap ${
+                  typeFilter === "all"
+                    ? "bg-[#188ff0] text-white shadow-xs"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                Todos
+              </button>
+              <button
+                onClick={() => setTypeFilter("image")}
+                className={`px-3 py-1.5 rounded-full text-xs font-sora font-bold cursor-pointer transition-all flex items-center gap-1 whitespace-nowrap ${
+                  typeFilter === "image"
+                    ? "bg-[#188ff0] text-white shadow-xs"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                <ImageIcon className="w-3.5 h-3.5" /> Imágenes
+              </button>
+              <button
+                onClick={() => setTypeFilter("video")}
+                className={`px-3 py-1.5 rounded-full text-xs font-sora font-bold cursor-pointer transition-all flex items-center gap-1 whitespace-nowrap ${
+                  typeFilter === "video"
+                    ? "bg-[#188ff0] text-white shadow-xs"
+                    : "text-gray-600 hover:text-gray-900"
+                }`}
+              >
+                <VideoIcon className="w-3.5 h-3.5" /> Videos
+              </button>
+            </div>
+          </div>
           {loading ? (
             <div className="bg-white rounded-[2rem] p-12 text-center shadow-xl border border-gray-100">
               <Sparkles className="w-8 h-8 text-pink-500 animate-spin mx-auto mb-3" />
@@ -450,39 +449,48 @@ export default function MediaGallery({
 
       {/* LIGHTBOX PREVIEW MODAL */}
       {previewMedia && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-[2rem] max-w-3xl w-full overflow-hidden shadow-2xl relative border border-gray-100 flex flex-col md:flex-row max-h-[90vh]">
+        <div
+          onClick={() => setPreviewMedia(null)}
+          className="fixed inset-0 bg-black/85 backdrop-blur-md z-[100] flex items-center justify-center p-3 sm:p-4 font-inter animate-in fade-in duration-200 overflow-y-auto"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-[2rem] max-w-2xl w-full my-auto overflow-hidden shadow-2xl relative border border-gray-100 flex flex-col md:flex-row max-h-[85dvh] sm:max-h-[88dvh]"
+          >
+            {/* Top Floating Close Button for Mobile & Desktop */}
+            <button
+              onClick={() => setPreviewMedia(null)}
+              className="absolute top-3 right-3 z-30 w-9 h-9 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md flex items-center justify-center transition-all cursor-pointer shadow-lg"
+              title="Cerrar (Esc)"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
             {/* Media Player / Image Area */}
-            <div className="md:w-3/5 bg-gray-950 flex items-center justify-center relative p-4 min-h-[300px]">
+            <div className="md:w-3/5 bg-gray-950 flex items-center justify-center relative p-3 sm:p-4 shrink-0 max-h-[42vh] md:max-h-full overflow-hidden">
               {previewMedia.tipo === "video" ? (
                 <video
                   src={previewMedia.url}
                   controls
                   autoPlay
-                  className="max-h-[70vh] w-full object-contain rounded-xl"
+                  className="max-h-[38vh] md:max-h-[65vh] w-full object-contain rounded-xl"
                 />
               ) : (
                 <img
                   src={previewMedia.url}
                   alt={previewMedia.nombre_archivo}
-                  className="max-h-[70vh] w-full object-contain rounded-xl"
+                  className="max-h-[38vh] md:max-h-[65vh] w-full object-contain rounded-xl"
                 />
               )}
             </div>
 
             {/* Details Side Area */}
-            <div className="md:w-2/5 p-6 flex flex-col justify-between space-y-6 bg-white">
+            <div className="md:w-2/5 p-5 sm:p-6 flex flex-col justify-between space-y-4 bg-white overflow-y-auto">
               <div>
-                <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
+                <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
                   <span className="inline-block text-[10px] font-sora font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-pink-50 text-pink-600">
                     DETALLES DE MEDIO
                   </span>
-                  <button
-                    onClick={() => setPreviewMedia(null)}
-                    className="text-gray-400 hover:text-gray-700 font-bold p-1 rounded-full hover:bg-gray-100"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
                 </div>
 
                 <h3 className="font-sora font-extrabold text-gray-900 text-lg mb-2 break-all">
