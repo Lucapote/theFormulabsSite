@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Video as VideoIcon,
   Layers,
@@ -12,6 +12,8 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   Eye,
   Film,
   Edit2
@@ -41,6 +43,39 @@ export default function CalendarGridView({
   const [selectedPost, setSelectedPost] = useState(null);
   const [copied, setCopied] = useState(false);
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+  const [isCaptionExpanded, setIsCaptionExpanded] = useState(false);
+  const carouselRef = useRef(null);
+
+  const scrollToSlide = (idx) => {
+    setActiveMediaIndex(idx);
+    if (carouselRef.current) {
+      const slideWidth = carouselRef.current.clientWidth;
+      carouselRef.current.scrollTo({
+        left: idx * slideWidth,
+        behavior: "smooth"
+      });
+    }
+  };
+
+  const handleCarouselScroll = () => {
+    if (!carouselRef.current) return;
+    const slideWidth = carouselRef.current.clientWidth;
+    if (slideWidth > 0) {
+      const idx = Math.round(carouselRef.current.scrollLeft / slideWidth);
+      if (idx >= 0 && idx < (selectedPost?.archivos?.length || 0)) {
+        setActiveMediaIndex(idx);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (selectedPost) {
+      setIsCaptionExpanded(false);
+      if (carouselRef.current) {
+        carouselRef.current.scrollLeft = 0;
+      }
+    }
+  }, [selectedPost]);
 
   // Post Navigation State (Instagram style navigation between posts)
   const sortedPosts = [...posts].sort((a, b) => {
@@ -68,6 +103,44 @@ export default function CalendarGridView({
     if (hasNextPost) {
       setSelectedPost(sortedPosts[currentPostIndex + 1]);
       setActiveMediaIndex(0);
+    }
+  };
+
+  const touchStartPos = useRef({ x: 0, y: 0 });
+
+  const handleModalTouchStart = (e) => {
+    touchStartPos.current = {
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY,
+    };
+  };
+
+  const handleModalTouchEnd = (e) => {
+    if (!touchStartPos.current) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartPos.current.x;
+    const deltaY = e.changedTouches[0].clientY - touchStartPos.current.y;
+
+    // Detect vertical swipe gesture (distance >= 55px and predominantly vertical)
+    if (Math.abs(deltaY) > 55 && Math.abs(deltaY) > Math.abs(deltaX) * 1.3) {
+      if (deltaY < 0 && hasNextPost) {
+        goToNextPost();
+      } else if (deltaY > 0 && hasPrevPost) {
+        goToPrevPost();
+      }
+    }
+  };
+
+  const drawerTouchStartPos = useRef({ y: 0 });
+
+  const handleDrawerTouchStart = (e) => {
+    drawerTouchStartPos.current = { y: e.touches[0].clientY };
+  };
+
+  const handleDrawerTouchEnd = (e) => {
+    if (!drawerTouchStartPos.current) return;
+    const deltaY = e.changedTouches[0].clientY - drawerTouchStartPos.current.y;
+    if (deltaY > 35) {
+      setIsCaptionExpanded(false);
     }
   };
 
@@ -327,75 +400,7 @@ export default function CalendarGridView({
 
       {/* MOBILE NATIVE-STYLE CALENDAR (block md:hidden) */}
       <div className="block md:hidden space-y-4">
-        <div className="bg-white rounded-[2rem] p-4 shadow-xl border border-gray-100 space-y-3">
-          {/* Weekday Header */}
-          <div className="grid grid-cols-7 text-gray-500 font-sora text-[11px] font-extrabold text-center">
-            {WEEKDAYS.map((w, idx) => (
-              <div key={idx} className="py-1">
-                {w}
-              </div>
-            ))}
-          </div>
-
-          {/* Compact Mobile Grid Days */}
-          <div className="grid grid-cols-7 gap-1">
-            {gridCells.map((cell, idx) => {
-              const dayPosts = cell.isCurrentMonth
-                ? posts.filter((p) => p.fecha_programada === cell.dateString)
-                : [];
-              const hasPosts = dayPosts.length > 0;
-              const isSelected = cell.isCurrentMonth && cell.dateString === selectedMobileDate;
-
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  disabled={!cell.isCurrentMonth}
-                  onClick={() => {
-                    if (cell.isCurrentMonth) {
-                      setSelectedMobileDate(cell.dateString);
-                    }
-                  }}
-                  className={`h-11 rounded-2xl flex flex-col items-center justify-center relative transition-all cursor-pointer ${
-                    !cell.isCurrentMonth
-                      ? "text-gray-300 opacity-20 cursor-default"
-                      : isSelected
-                      ? "bg-[#188ff0] text-white font-sora font-extrabold shadow-md scale-105 z-10"
-                      : cell.isToday
-                      ? "bg-pink-100 text-pink-700 font-sora font-extrabold border border-pink-300"
-                      : hasPosts
-                      ? "bg-pink-500 text-white font-sora font-extrabold shadow-xs"
-                      : "bg-sky-50/60 text-sky-900 font-sora font-bold hover:bg-sky-100"
-                  }`}
-                >
-                  <span className="text-xs leading-none">{cell.dayNumber}</span>
-
-                  {/* Indicator Dot for Days with Posts if not selected or highlighted */}
-                  {hasPosts && !isSelected && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-white mt-1 shadow-xs" />
-                  )}
-                  {hasPosts && isSelected && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-white mt-1" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Mobile Color Legend Bar */}
-          <div className="pt-2 border-t border-gray-100 flex items-center justify-around font-sora text-[10px] font-bold text-gray-600">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-pink-500" />
-              <span>Con publicaciones</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#188ff0]" />
-              <span>Seleccionado</span>
-            </div>
-          </div>
-        </div>
-
-        {/* MOBILE SELECTED DAY AGENDA DRAWER */}
+        {/* MOBILE SELECTED DAY AGENDA DRAWER (Rendered FIRST on top) */}
         {selectedMobileDate && (
           <div className="bg-white rounded-[2rem] p-5 shadow-xl border border-gray-100 space-y-3">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
@@ -541,6 +546,78 @@ export default function CalendarGridView({
             })()}
           </div>
         )}
+
+        {/* MOBILE COMPACT CALENDAR GRID (Rendered SECOND below agenda) */}
+        <div className="bg-white rounded-[2rem] p-4 shadow-xl border border-gray-100 space-y-3">
+          {/* Weekday Header */}
+          <div className="grid grid-cols-7 text-gray-500 font-sora text-[11px] font-extrabold text-center">
+            {WEEKDAYS.map((w, idx) => (
+              <div key={idx} className="py-1">
+                {w}
+              </div>
+            ))}
+          </div>
+
+          {/* Compact Mobile Grid Days */}
+          <div className="grid grid-cols-7 gap-1">
+            {gridCells.map((cell, idx) => {
+              const dayPosts = cell.isCurrentMonth
+                ? posts.filter((p) => p.fecha_programada === cell.dateString)
+                : [];
+              const hasPosts = dayPosts.length > 0;
+              const isSelected = cell.isCurrentMonth && cell.dateString === selectedMobileDate;
+
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  disabled={!cell.isCurrentMonth}
+                  onClick={(e) => {
+                    if (cell.isCurrentMonth) {
+                      setSelectedMobileDate(cell.dateString);
+                      if (hasPosts && dayPosts.length > 0) {
+                        handlePostCardClick(dayPosts[0], e);
+                      }
+                    }
+                  }}
+                  className={`h-11 rounded-2xl flex flex-col items-center justify-center relative transition-all cursor-pointer ${
+                    !cell.isCurrentMonth
+                      ? "text-gray-300 opacity-20 cursor-default"
+                      : isSelected
+                      ? "bg-[#188ff0] text-white font-sora font-extrabold shadow-md scale-105 z-10"
+                      : cell.isToday
+                      ? "bg-pink-100 text-pink-700 font-sora font-extrabold border border-pink-300"
+                      : hasPosts
+                      ? "bg-pink-500 text-white font-sora font-extrabold shadow-xs"
+                      : "bg-sky-50/60 text-sky-900 font-sora font-bold hover:bg-sky-100"
+                  }`}
+                >
+                  <span className="text-xs leading-none">{cell.dayNumber}</span>
+
+                  {/* Indicator Dot for Days with Posts if not selected or highlighted */}
+                  {hasPosts && !isSelected && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-white mt-1 shadow-xs" />
+                  )}
+                  {hasPosts && isSelected && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-white mt-1" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Mobile Color Legend Bar */}
+          <div className="pt-2 border-t border-gray-100 flex items-center justify-around font-sora text-[10px] font-bold text-gray-600">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-pink-500" />
+              <span>Con publicaciones</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#188ff0]" />
+              <span>Seleccionado</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* POST DETAIL / LIGHTBOX MODAL */}
@@ -549,11 +626,11 @@ export default function CalendarGridView({
           onClick={() => setSelectedPost(null)}
           className="fixed inset-0 bg-black/85 backdrop-blur-md z-[100] flex items-center justify-center p-3 sm:p-4 font-inter animate-in fade-in duration-200 overflow-y-auto"
         >
-          {/* Post-to-Post Instagram Navigation Arrows */}
+          {/* Post-to-Post Instagram Navigation Arrows (Desktop only to prevent mobile overlap) */}
           {hasPrevPost && (
             <button
               onClick={goToPrevPost}
-              className="fixed left-3 sm:left-6 top-1/2 -translate-y-1/2 z-[120] w-12 h-12 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md flex items-center justify-center transition-all cursor-pointer border border-white/20 shadow-2xl group hover:scale-110"
+              className="hidden md:flex fixed left-3 md:left-6 top-1/2 -translate-y-1/2 z-[120] w-12 h-12 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md items-center justify-center transition-all cursor-pointer border border-white/20 shadow-2xl group hover:scale-110"
               title="Publicación anterior (Flecha izquierda ←)"
             >
               <ChevronLeft className="w-7 h-7 group-hover:-translate-x-0.5 transition-transform text-white" />
@@ -563,7 +640,7 @@ export default function CalendarGridView({
           {hasNextPost && (
             <button
               onClick={goToNextPost}
-              className="fixed right-3 sm:right-6 top-1/2 -translate-y-1/2 z-[120] w-12 h-12 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md flex items-center justify-center transition-all cursor-pointer border border-white/20 shadow-2xl group hover:scale-110"
+              className="hidden md:flex fixed right-3 md:right-6 top-1/2 -translate-y-1/2 z-[120] w-12 h-12 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md items-center justify-center transition-all cursor-pointer border border-white/20 shadow-2xl group hover:scale-110"
               title="Siguiente publicación (Flecha derecha →)"
             >
               <ChevronRight className="w-7 h-7 group-hover:translate-x-0.5 transition-transform text-white" />
@@ -572,7 +649,9 @@ export default function CalendarGridView({
 
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-[2rem] max-w-2xl w-full my-auto overflow-hidden shadow-2xl relative border border-gray-100 flex flex-col md:flex-row max-h-[85dvh] sm:max-h-[88dvh]"
+            onTouchStart={handleModalTouchStart}
+            onTouchEnd={handleModalTouchEnd}
+            className="bg-white rounded-[2rem] max-w-2xl w-full h-[90vh] md:h-auto my-auto overflow-hidden shadow-2xl relative border border-gray-100 flex flex-col md:flex-row md:max-h-[88dvh]"
           >
             {/* Top Floating Close Button for Mobile & Desktop */}
             <button
@@ -583,49 +662,68 @@ export default function CalendarGridView({
               <X className="w-5 h-5" />
             </button>
 
-            {/* Media Area */}
-            <div className="md:w-3/5 bg-gray-950 flex flex-col items-center justify-center relative p-3 sm:p-4 min-h-[220px] max-h-[42vh] md:max-h-full shrink-0 overflow-hidden">
+            {/* Media Area - Horizontal Touch Swipe Snap Carousel */}
+            <div className="flex-1 md:w-3/5 bg-gray-950 flex flex-col items-center justify-center relative w-full h-full min-h-0 overflow-hidden">
               {selectedPost.archivos && selectedPost.archivos.length > 0 ? (
                 <>
-                  {selectedPost.archivos[activeMediaIndex]?.tipo === "video" ? (
-                    <video
-                      src={selectedPost.archivos[activeMediaIndex].url}
-                      controls
-                      autoPlay
-                      preload="metadata"
-                      playsInline
-                      poster={selectedPost.archivos[activeMediaIndex]?.thumbnail_url || undefined}
-                      className="max-h-[38vh] md:max-h-[65vh] w-full object-contain rounded-xl"
-                    />
-                  ) : (
-                    <img
-                      src={selectedPost.archivos[activeMediaIndex]?.url}
-                      alt="Media detail"
-                      className="max-h-[38vh] md:max-h-[65vh] w-full object-contain rounded-xl"
-                    />
-                  )}
+                  <div
+                    ref={carouselRef}
+                    onScroll={handleCarouselScroll}
+                    className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scroll-smooth touch-pan-x"
+                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                  >
+                    {selectedPost.archivos.map((file, idx) => (
+                      <div
+                        key={file.id || idx}
+                        className="w-full h-full flex-none snap-center flex items-center justify-center relative p-3 sm:p-4"
+                      >
+                        {file.tipo === "video" ? (
+                          <video
+                            src={file.url}
+                            controls
+                            autoPlay={idx === activeMediaIndex}
+                            preload="metadata"
+                            playsInline
+                            poster={file.thumbnail_url || undefined}
+                            className="max-h-full md:max-h-[65vh] w-full h-full object-contain rounded-xl"
+                          />
+                        ) : (
+                          <img
+                            src={file.url}
+                            alt={`Media ${idx + 1}`}
+                            loading="eager"
+                            className="max-h-full md:max-h-[65vh] w-full h-full object-contain rounded-xl select-none"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
 
-                  {/* Carousel navigation controls */}
+                  {/* Desktop Carousel navigation controls */}
                   {selectedPost.archivos.length > 1 && (
-                    <div className="absolute inset-x-3 top-1/2 -translate-y-1/2 flex items-center justify-between pointer-events-none">
+                    <div className="absolute inset-x-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center justify-between pointer-events-none z-10">
                       <button
                         onClick={() =>
-                          setActiveMediaIndex((prev) =>
-                            prev === 0 ? selectedPost.archivos.length - 1 : prev - 1
+                          scrollToSlide(
+                            activeMediaIndex === 0
+                              ? selectedPost.archivos.length - 1
+                              : activeMediaIndex - 1
                           )
                         }
-                        className="p-2 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md pointer-events-auto cursor-pointer transition-all"
+                        className="p-2 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md pointer-events-auto cursor-pointer transition-all shadow-md"
                       >
                         <ChevronLeft className="w-5 h-5" />
                       </button>
 
                       <button
                         onClick={() =>
-                          setActiveMediaIndex((prev) =>
-                            prev === selectedPost.archivos.length - 1 ? 0 : prev + 1
+                          scrollToSlide(
+                            activeMediaIndex === selectedPost.archivos.length - 1
+                              ? 0
+                              : activeMediaIndex + 1
                           )
                         }
-                        className="p-2 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md pointer-events-auto cursor-pointer transition-all"
+                        className="p-2 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md pointer-events-auto cursor-pointer transition-all shadow-md"
                       >
                         <ChevronRight className="w-5 h-5" />
                       </button>
@@ -634,13 +732,13 @@ export default function CalendarGridView({
 
                   {/* Carousel indicator dots */}
                   {selectedPost.archivos.length > 1 && (
-                    <div className="absolute bottom-3 flex items-center gap-1.5 bg-black/50 px-3 py-1 rounded-full backdrop-blur-md">
+                    <div className="absolute bottom-3 z-10 flex items-center gap-1.5 bg-black/50 px-3 py-1 rounded-full backdrop-blur-md">
                       {selectedPost.archivos.map((_, idx) => (
                         <button
                           key={idx}
-                          onClick={() => setActiveMediaIndex(idx)}
-                          className={`w-2 h-2 rounded-full transition-all ${
-                            idx === activeMediaIndex ? "bg-white w-4" : "bg-white/40"
+                          onClick={() => scrollToSlide(idx)}
+                          className={`h-2 rounded-full transition-all cursor-pointer ${
+                            idx === activeMediaIndex ? "bg-white w-4" : "bg-white/40 w-2"
                           }`}
                         />
                       ))}
@@ -655,8 +753,27 @@ export default function CalendarGridView({
               )}
             </div>
 
-            {/* Content Details Area */}
-            <div className="md:w-2/5 p-6 flex flex-col justify-between bg-white space-y-6">
+            {/* Mobile Instagram-Style Teaser Card (Visible only on mobile md:hidden) */}
+            <div
+              onClick={() => setIsCaptionExpanded(true)}
+              className="md:hidden p-4 bg-gray-900 text-white border-t border-gray-800 cursor-pointer flex flex-col gap-1.5 transition-all hover:bg-black shrink-0"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-sora font-extrabold px-2.5 py-0.5 rounded-full bg-pink-500/20 text-pink-400 border border-pink-500/30 uppercase">
+                  {selectedPost.tipo_post === "reel" ? "Reel" : `Carrusel (${selectedPost.archivos?.length || 0})`}
+                </span>
+                <span className="text-[10px] font-mono text-gray-400 font-semibold">
+                  {selectedPost.fecha_programada} • {formatTimeHHMM(selectedPost.hora_programada)}
+                </span>
+              </div>
+
+              <p className="text-xs text-gray-200 line-clamp-2 font-medium leading-relaxed">
+                {selectedPost.caption || <em className="text-gray-500 font-normal">Sin copy en esta publicación.</em>}
+              </p>
+            </div>
+
+            {/* Content Details Area - Desktop view (hidden on mobile md:flex) */}
+            <div className="hidden md:flex md:w-2/5 p-6 flex-col justify-between bg-white space-y-6">
               <div>
                 <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
                   <div className="flex items-center gap-2">
@@ -691,7 +808,7 @@ export default function CalendarGridView({
                 <div className="flex flex-wrap items-center gap-2 mb-4">
                   <span className="inline-flex items-center gap-1.5 text-xs font-sora font-bold text-gray-800 bg-gray-100 px-3 py-1 rounded-full">
                     <CalendarIcon className="w-3.5 h-3.5 text-gray-500" />
-                    {selectedPost.fecha_programada} • {formatTimeHHMM(selectedPost.hora_programada)} hrs
+                    {selectedPost.fecha_programada} • {formatTimeHHMM(selectedPost.hora_programada)}
                   </span>
 
                   <span
@@ -764,6 +881,51 @@ export default function CalendarGridView({
               </div>
             </div>
           </div>
+
+          {/* Instagram-style Expandable Caption Bottom Sheet (Mobile) */}
+          {isCaptionExpanded && (
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsCaptionExpanded(false);
+              }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[150] flex flex-col justify-end animate-in fade-in duration-200 md:hidden"
+            >
+              <div
+                onClick={(e) => e.stopPropagation()}
+                onTouchStart={handleDrawerTouchStart}
+                onTouchEnd={handleDrawerTouchEnd}
+                className="bg-gray-900 text-white rounded-t-[2.5rem] p-6 space-y-4 max-h-[78vh] flex flex-col border-t border-gray-800 shadow-2xl animate-in slide-in-from-bottom duration-300 relative"
+              >
+                {/* Header / Drag Handle (Clicking handle closes drawer) */}
+                <div
+                  onClick={() => setIsCaptionExpanded(false)}
+                  className="flex flex-col items-center cursor-pointer shrink-0 space-y-2 pb-2 border-b border-gray-800"
+                >
+                  <div className="w-12 h-1.5 bg-gray-600 hover:bg-gray-400 rounded-full mx-auto" />
+                  <span className="text-[11px] font-mono text-gray-400 px-3 py-0.5 rounded-full bg-gray-800 font-semibold">
+                    {selectedPost.fecha_programada} • {formatTimeHHMM(selectedPost.hora_programada)}
+                  </span>
+                </div>
+
+                <div className="overflow-y-auto flex-1 pr-1 space-y-3">
+                  <p className="text-sm text-gray-100 font-normal whitespace-pre-wrap leading-relaxed">
+                    {selectedPost.caption || <em className="text-gray-500 font-normal">Sin copy redactado.</em>}
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-gray-800 flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => copyCaption(selectedPost.caption)}
+                    className="flex-1 h-11 bg-pink-500 hover:bg-pink-600 text-white font-sora font-bold text-xs uppercase tracking-wider rounded-full inline-flex items-center justify-center gap-2 shadow-md shadow-pink-500/20"
+                  >
+                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {copied ? "Copy Copiado" : "Copiar Copywriting"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

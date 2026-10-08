@@ -277,6 +277,8 @@ export async function compressMediaFile(file, options = {}) {
   }
 }
 
+export const compressImage = compressMediaFile;
+
 /**
  * Formatea bytes a cadena legible (ej: 450 KB, 4.2 MB)
  */

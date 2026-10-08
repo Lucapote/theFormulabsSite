@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { getR2PresignedUploadUrl, deleteR2Object } from "@/services/r2Service";
-import { generateVideoThumbnail, compressVideo } from "@/utils/mediaCompressor";
+import { generateVideoThumbnail, compressVideo, compressImage } from "@/utils/mediaCompressor";
 
 /**
  * Service for Clientes and Calendarios management (Fase 2)
@@ -390,6 +390,16 @@ export async function uploadMediaFile(calendarioId, file, onProgress) {
         }
       } catch (transcodeErr) {
         console.warn("Aviso: Transcodificación omitida, usando video original:", transcodeErr);
+      }
+    } else {
+      // 3. Optimizar imágenes antes de subir a Cloudflare R2 (~200-350 KB)
+      try {
+        const imgCompressRes = await compressImage(file);
+        if (imgCompressRes?.file) {
+          fileToUpload = imgCompressRes.file;
+        }
+      } catch (imgErr) {
+        console.warn("Aviso: No se pudo comprimir la imagen, usando original:", imgErr);
       }
     }
 
