@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { getR2PresignedUploadUrl, deleteR2Object } from "@/services/r2Service";
 
 /**
  * Service for Clientes and Calendarios management (Fase 2)
@@ -16,6 +17,32 @@ export function generateSlug(text) {
     .replace(/[^a-z0-9 -]/g, "") // Remove invalid chars
     .replace(/\s+/g, "-") // Replace spaces with -
     .replace(/-+/g, "-"); // Replace multiple - with single -
+}
+
+/**
+ * Helper to format clean calendar public URL path like /client-slug/calendar-slug
+ * Example: 'yamamoto-octubre-2026' -> '/yamamoto/octubre-2026'
+ */
+export function formatCalendarUrlPath(slug, clientName = "") {
+  if (!slug) return "";
+
+  const cSlug = clientName ? generateSlug(clientName) : "";
+
+  if (cSlug && slug.startsWith(cSlug + "-")) {
+    const calendarPart = slug.substring(cSlug.length + 1);
+    return `/${cSlug}/${calendarPart}`;
+  }
+
+  if (slug.includes("-")) {
+    const parts = slug.split("-");
+    const firstPart = parts[0];
+    const restPart = parts.slice(1).join("-");
+    if (firstPart && restPart) {
+      return `/${firstPart}/${restPart}`;
+    }
+  }
+
+  return `/${slug}`;
 }
 
 /**
@@ -82,11 +109,15 @@ export async function createCliente({ nombre, empresa = "", email = "" }) {
   }
 }
 
-const BUCKET_NAME = "media-calendario";
+const BUCKET_NAME = "media-videos-calendario";
 
 // Helper to extract relative storage path from full URL or relative path
 function extractStoragePath(urlOrPath) {
   if (!urlOrPath) return "";
+  if (urlOrPath.includes("calendarios/")) {
+    const idx = urlOrPath.indexOf("calendarios/");
+    return urlOrPath.substring(idx);
+  }
   if (urlOrPath.includes("public/")) {
     const parts = urlOrPath.split("public/");
     const pathAndBucket = parts[1];
@@ -99,7 +130,7 @@ function extractStoragePath(urlOrPath) {
 }
 
 /**
- * Elimina un cliente por ID y limpia de forma segura TODOS los calendarios y archivos físicos en Storage asociados
+ * Elimina un cliente por ID y limpia de forma segura TODOS los calendarios y archivos físicos en Cloudflare R2 asociados
  */
 export async function deleteCliente(clienteId) {
   if (!clienteId) return { success: false, error: "ID de cliente no provisto" };
@@ -128,8 +159,10 @@ export async function deleteCliente(clienteId) {
           .filter(Boolean);
 
         if (storagePaths.length > 0) {
-          // Remove all physical files from Supabase Storage bucket media-calendario
-          await supabase.storage.from(BUCKET_NAME).remove(storagePaths);
+          // Remove all physical files from Cloudflare R2 bucket
+          for (const path of storagePaths) {
+            await deleteR2Object(path);
+          }
         }
       }
     }
@@ -177,19 +210,61 @@ export async function getCalendariosByCliente(clienteId) {
 /**
  * Inserta un nuevo calendario en la tabla calendarios
  */
-export async function createCalendario({ cliente_id, nombre, mes, anio, slug, tipo_contenido, plataformas }) {
+export async function createCalendario({ cliente_id, clienteNombre = "", nombre, mes, anio, slug, tipo_contenido, plataformas }) {
   if (!cliente_id) return { success: false, error: "Cliente no seleccionado" };
   if (!nombre || !nombre.trim()) return { success: false, error: "El nombre del calendario es obligatorio" };
-
-  const cleanSlug = slug
-    ? generateSlug(slug)
-    : generateSlug(nombre);
-
-  if (!cleanSlug) return { success: false, error: "El slug del calendario es obligatorio" };
 
   try {
     if (!supabase) {
       return { success: false, error: "Supabase no configurado" };
+    }
+
+    // 1. Determine client name if not provided directly
+    let finalClientName = clienteNombre;
+    if (!finalClientName) {
+      const { data: clientData } = await supabase
+        .from("clientes")
+        .select("nombre")
+        .eq("id", cliente_id)
+        .maybeSingle();
+
+      if (clientData?.nombre) {
+        finalClientName = clientData.nombre;
+      }
+    }
+
+    // 2. Generate Base Slug combining Client Name and Calendar Name
+    // Example: Client "Mau", Calendar "Octubre 2026" -> mau-octubre-2026
+    const clientSlugPart = generateSlug(finalClientName || "");
+    const calendarSlugPart = slug ? generateSlug(slug) : generateSlug(nombre);
+
+    let baseSlug = calendarSlugPart;
+    if (clientSlugPart && !calendarSlugPart.startsWith(clientSlugPart)) {
+      baseSlug = `${clientSlugPart}-${calendarSlugPart}`;
+    }
+
+    if (!baseSlug) {
+      baseSlug = `calendario-${Date.now()}`;
+    }
+
+    // 3. Ensure slug uniqueness by checking existing database records iteratively
+    let candidateSlug = baseSlug;
+    let counter = 1;
+    let isUnique = false;
+
+    while (!isUnique && counter <= 20) {
+      const { data: existing } = await supabase
+        .from("calendarios")
+        .select("id")
+        .eq("slug", candidateSlug)
+        .maybeSingle();
+
+      if (!existing) {
+        isUnique = true;
+      } else {
+        counter++;
+        candidateSlug = `${baseSlug}-${counter}`;
+      }
     }
 
     const payload = {
@@ -197,7 +272,7 @@ export async function createCalendario({ cliente_id, nombre, mes, anio, slug, ti
       nombre: nombre.trim(),
       mes: Number(mes) || new Date().getMonth() + 1,
       anio: Number(anio) || new Date().getFullYear(),
-      slug: cleanSlug,
+      slug: candidateSlug,
       tipo_contenido: tipo_contenido || "Reels y Carruseles",
       plataformas: plataformas || "Instagram y Facebook",
       created_at: new Date().toISOString()
@@ -221,7 +296,7 @@ export async function createCalendario({ cliente_id, nombre, mes, anio, slug, ti
 }
 
 /**
- * Elimina un calendario por ID y limpia de forma segura todos sus archivos en Supabase Storage
+ * Elimina un calendario por ID y limpia de forma segura todos sus archivos en Cloudflare R2
  */
 export async function deleteCalendario(calendarioId) {
   if (!calendarioId) return { success: false, error: "ID de calendario no provisto" };
@@ -241,7 +316,9 @@ export async function deleteCalendario(calendarioId) {
         .filter(Boolean);
 
       if (storagePaths.length > 0) {
-        await supabase.storage.from(BUCKET_NAME).remove(storagePaths);
+        for (const path of storagePaths) {
+          await deleteR2Object(path);
+        }
       }
     }
 
@@ -257,7 +334,8 @@ export async function deleteCalendario(calendarioId) {
 }
 
 /**
- * Uploads a media file (image/video) to Supabase Storage and inserts record in archivos_galeria
+ * Subes un archivo multimedia (imagen/video) a Cloudflare R2 mediante URL prefirmada
+ * e insertas el registro con la URL pública en la tabla archivos_galeria de Supabase.
  */
 export async function uploadMediaFile(calendarioId, file) {
   if (!calendarioId) return { success: false, error: "calendarioId no provisto" };
@@ -268,28 +346,63 @@ export async function uploadMediaFile(calendarioId, file) {
 
     const isVideo = file.type.startsWith("video/") || /\.(mp4|mov|webm|m4v|avi)$/i.test(file.name);
     const mediaType = isVideo ? "video" : "image";
+    const contentType = file.type || (isVideo ? "video/mp4" : "image/jpeg");
 
-    const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
-    const storagePath = `calendarios/${calendarioId}/${Date.now()}_${cleanFileName}`;
+    let publicUrl = "";
 
-    // 1. Upload to Supabase Storage
-    const uploadRes = await supabase.storage
-      .from(BUCKET_NAME)
-      .upload(storagePath, file, { cacheControl: "3600", upsert: true });
+    // 1. Subida del binario a Cloudflare R2 mediante el endpoint /api/upload-r2 (Seguro contra CORS)
+    try {
+      const apiRes = await fetch("/api/upload-r2", {
+        method: "POST",
+        headers: {
+          "x-file-name": encodeURIComponent(file.name),
+          "x-file-type": contentType,
+          "x-calendario-id": calendarioId,
+        },
+        body: file,
+      });
 
-    if (uploadRes.error) {
-      console.error("uploadMediaFile storage error:", uploadRes.error);
-      return { success: false, error: uploadRes.error.message };
+      if (apiRes.ok) {
+        const json = await apiRes.json();
+        if (json.success && json.publicUrl) {
+          publicUrl = json.publicUrl;
+        }
+      }
+    } catch (apiErr) {
+      console.warn("Aviso: Subida /api/upload-r2 no disponible, intentando URL prefirmada:", apiErr);
     }
 
-    // 2. Obtain Public URL
-    const { data: urlData } = supabase.storage
-      .from(BUCKET_NAME)
-      .getPublicUrl(storagePath);
+    // 2. Fallback a URL prefirmada si /api/upload-r2 fallara
+    if (!publicUrl) {
+      const presignedRes = await getR2PresignedUploadUrl({
+        fileName: file.name,
+        fileType: contentType,
+        calendarioId,
+      });
 
-    const publicUrl = urlData?.publicUrl || "";
+      if (!presignedRes.success || !presignedRes.uploadUrl) {
+        console.error("uploadMediaFile R2 presigned error:", presignedRes.error);
+        return { success: false, error: presignedRes.error || "No se pudo obtener URL prefirmada de R2" };
+      }
 
-    // 3. Insert record in DB table archivos_galeria
+      const uploadRes = await fetch(presignedRes.uploadUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": contentType,
+        },
+        body: file,
+      });
+
+      if (!uploadRes.ok) {
+        const errText = await uploadRes.text().catch(() => "");
+        console.error("uploadMediaFile R2 PUT upload error:", uploadRes.status, errText);
+        return { success: false, error: `Error al subir archivo a R2 (HTTP ${uploadRes.status})` };
+      }
+
+      publicUrl = presignedRes.publicUrl;
+    }
+
+    // 3. Registrar el metadato con la URL pública de R2 en la tabla archivos_galeria de Supabase
     const payload = {
       calendario_id: calendarioId,
       nombre_archivo: file.name,
@@ -344,7 +457,7 @@ export async function getArchivosByCalendario(calendarioId) {
 }
 
 /**
- * Deletes a media file from Supabase Storage and DB table archivos_galeria
+ * Elimina un archivo multimedia de Cloudflare R2 y de la tabla archivos_galeria en Supabase
  */
 export async function deleteArchivo(archivoId, storageUrlOrPath = "") {
   if (!archivoId) return { success: false, error: "archivoId no provisto" };
@@ -352,18 +465,10 @@ export async function deleteArchivo(archivoId, storageUrlOrPath = "") {
   try {
     if (!supabase) return { success: false, error: "Supabase no configurado" };
 
-    let relativePath = storageUrlOrPath;
-    if (storageUrlOrPath.includes("public/")) {
-      const parts = storageUrlOrPath.split("public/");
-      const pathAndBucket = parts[1];
-      const slashIdx = pathAndBucket.indexOf("/");
-      if (slashIdx !== -1) {
-        relativePath = pathAndBucket.substring(slashIdx + 1);
-      }
-    }
+    const relativePath = extractStoragePath(storageUrlOrPath);
 
     if (relativePath) {
-      await supabase.storage.from(BUCKET_NAME).remove([relativePath]);
+      await deleteR2Object(relativePath);
     }
 
     const { error: dbError } = await supabase
@@ -682,4 +787,108 @@ export async function createDraftPlaceholderPosts({ calendarioId, cantReels = 0,
     return { success: false, error: err.message };
   }
 }
+
+/**
+ * Aplica publicaciones importadas desde un archivo Word (.docx) a un calendario.
+ * Rellena las "cajas vacías" (borradores sin caption o sin fecha) existentes.
+ * Si sobran publicaciones en el Word, crea nuevas filas en la tabla posts.
+ */
+export async function applyImportedPostsToCalendar(calendarioId, parsedPosts = []) {
+  if (!calendarioId) return { success: false, error: "calendarioId es requerido" };
+  if (!parsedPosts || parsedPosts.length === 0) {
+    return { success: false, error: "No hay publicaciones para importar" };
+  }
+
+  try {
+    if (!supabase) return { success: false, error: "Supabase no configurado" };
+
+    // 1. Fetch current posts for this calendar
+    const { data: currentPosts, error: fetchErr } = await supabase
+      .from("posts")
+      .select("*")
+      .eq("calendario_id", calendarioId)
+      .order("created_at", { ascending: true });
+
+    if (fetchErr) {
+      console.error("applyImportedPostsToCalendar fetch error:", fetchErr);
+      return { success: false, error: fetchErr.message };
+    }
+
+    // 2. Identify "empty box" posts (caption empty/null or draft placeholder)
+    const emptyBoxes = (currentPosts || []).filter((p) => {
+      const isCaptionEmpty = !p.caption || !p.caption.trim();
+      return isCaptionEmpty;
+    });
+
+    let countUpdated = 0;
+    let countInserted = 0;
+
+    const postsToInsert = [];
+
+    // 3. Match parsed posts to empty boxes, or queue for insert
+    for (let i = 0; i < parsedPosts.length; i++) {
+      const parsed = parsedPosts[i];
+      const targetBox = emptyBoxes[i];
+
+      if (targetBox) {
+        // Update existing empty box
+        const payload = {
+          tipo_post: parsed.tipo_post || targetBox.tipo_post || "reel",
+          caption: parsed.caption || "",
+          fecha_programada: parsed.fecha_programada || targetBox.fecha_programada,
+          hora_programada: parsed.hora_programada || targetBox.hora_programada || "18:00:00",
+          estado: "borrador",
+        };
+
+        const { error: updateErr } = await supabase
+          .from("posts")
+          .update(payload)
+          .eq("id", targetBox.id);
+
+        if (updateErr) {
+          console.error(`Error updating post ${targetBox.id}:`, updateErr);
+        } else {
+          countUpdated++;
+        }
+      } else {
+        // Queue for new post insertion
+        postsToInsert.push({
+          calendario_id: calendarioId,
+          tipo_post: parsed.tipo_post || "reel",
+          caption: parsed.caption || "",
+          fecha_programada: parsed.fecha_programada || null,
+          hora_programada: parsed.hora_programada || "18:00:00",
+          archivos: [],
+          estado: "borrador",
+          created_at: new Date().toISOString(),
+        });
+      }
+    }
+
+    // Insert remaining overflow posts if any
+    if (postsToInsert.length > 0) {
+      const { data: insertedData, error: insertErr } = await supabase
+        .from("posts")
+        .insert(postsToInsert)
+        .select();
+
+      if (insertErr) {
+        console.error("Error inserting overflow posts:", insertErr);
+      } else {
+        countInserted = insertedData ? insertedData.length : postsToInsert.length;
+      }
+    }
+
+    return {
+      success: true,
+      countUpdated,
+      countInserted,
+      totalProcessed: countUpdated + countInserted,
+    };
+  } catch (err) {
+    console.error("applyImportedPostsToCalendar catch error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
 

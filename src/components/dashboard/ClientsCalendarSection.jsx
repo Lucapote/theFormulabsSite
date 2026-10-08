@@ -26,6 +26,7 @@ import {
   createCalendario,
   deleteCalendario,
   generateSlug,
+  formatCalendarUrlPath,
   createDraftPlaceholderPosts
 } from "@/services/calendarService";
 import MediaGallery from "@/components/dashboard/MediaGallery";
@@ -81,6 +82,16 @@ export default function ClientsCalendarSection() {
   // Form states - Client
   const [clientForm, setClientForm] = useState({ nombre: "", empresa: "", email: "" });
   const [isSavingClient, setIsSavingClient] = useState(false);
+
+  // Custom Confirm Modal State
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    confirmText: "Eliminar",
+    onConfirm: null,
+    isProcessing: false,
+  });
 
   // Form states - Calendar
   const currentMonth = new Date().getMonth() + 1;
@@ -232,10 +243,11 @@ export default function ClientsCalendarSection() {
 
     const res = await createCalendario({
       cliente_id: selectedCliente.id,
+      clienteNombre: selectedCliente.nombre,
       nombre: calendarForm.nombre,
       mes: Number(calendarForm.mes),
       anio: Number(calendarForm.anio),
-      slug: calendarForm.slug || generateSlug(calendarForm.nombre),
+      slug: calendarForm.slug,
       tipo_contenido: strTipo,
       plataformas: strPlataformas
     });
@@ -274,52 +286,79 @@ export default function ClientsCalendarSection() {
     setIsSavingCalendar(false);
   };
 
-  // Auto-generate slug as calendar name changes
+  // Auto-generate slug as calendar name changes with client prefix
   const handleCalendarNameChange = (e) => {
     const val = e.target.value;
+    const clientPrefix = selectedCliente?.nombre ? generateSlug(selectedCliente.nombre) : "";
+    const calSlug = generateSlug(val);
+    const combinedSlug = clientPrefix && calSlug && !calSlug.startsWith(clientPrefix)
+      ? `${clientPrefix}-${calSlug}`
+      : calSlug;
+
     setCalendarForm((prev) => ({
       ...prev,
       nombre: val,
-      slug: prev.isSlugModified ? prev.slug : generateSlug(val)
+      slug: prev.isSlugModified ? prev.slug : combinedSlug
     }));
   };
 
-  // Delete Client
-  const handleDeleteClient = async (clientItem, e) => {
-    e.stopPropagation();
-    if (!window.confirm(`¿Estás seguro de eliminar el cliente "${clientItem.nombre}"? Esto eliminará también todos sus calendarios.`)) {
-      return;
-    }
-    setDeletingId(clientItem.id);
-    const res = await deleteCliente(clientItem.id);
-    if (res.success) {
-      toast.success(`Cliente "${clientItem.nombre}" eliminado.`);
-      loadClientes();
-    } else {
-      toast.error(res.error || "Error al eliminar el cliente.");
-    }
-    setDeletingId(null);
+  // Delete Client Confirmation
+  const handleDeleteClient = (clientItem, e) => {
+    if (e) e.stopPropagation();
+    setConfirmModal({
+      isOpen: true,
+      title: `¿Eliminar cliente "${clientItem.nombre}"?`,
+      message: `Esta acción eliminará permanentemente al cliente "${clientItem.nombre}" y todos sus calendarios de contenido asociados.`,
+      confirmText: "Eliminar Cliente",
+      isProcessing: false,
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isProcessing: true }));
+        setDeletingId(clientItem.id);
+        const res = await deleteCliente(clientItem.id);
+        if (res.success) {
+          toast.success(`Cliente "${clientItem.nombre}" eliminado.`);
+          if (selectedCliente?.id === clientItem.id) {
+            setSelectedCliente(null);
+          }
+          loadClientes();
+        } else {
+          toast.error(res.error || "Error al eliminar el cliente.");
+        }
+        setDeletingId(null);
+        setConfirmModal({ isOpen: false, title: "", message: "", confirmText: "Eliminar", onConfirm: null, isProcessing: false });
+      },
+    });
   };
 
-  // Delete Calendar
-  const handleDeleteCalendar = async (calId, calNombre) => {
-    if (!window.confirm(`¿Deseas eliminar el calendario "${calNombre}"?`)) {
-      return;
-    }
-    const res = await deleteCalendario(calId);
-    if (res.success) {
-      toast.success(`Calendario "${calNombre}" eliminado.`);
-      if (selectedCliente?.id) {
-        loadCalendarios(selectedCliente.id);
-      }
-    } else {
-      toast.error(res.error || "Error al eliminar calendario.");
-    }
+  // Delete Calendar Confirmation
+  const handleDeleteCalendar = (calId, calNombre, e) => {
+    if (e) e.stopPropagation();
+    setConfirmModal({
+      isOpen: true,
+      title: `¿Eliminar calendario "${calNombre}"?`,
+      message: `Estás a punto de eliminar el calendario "${calNombre}". Se eliminarán sus publicaciones y se liberarán sus archivos en galería.`,
+      confirmText: "Eliminar Calendario",
+      isProcessing: false,
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, isProcessing: true }));
+        const res = await deleteCalendario(calId);
+        if (res.success) {
+          toast.success(`Calendario "${calNombre}" eliminado.`);
+          if (selectedCliente?.id) {
+            loadCalendarios(selectedCliente.id);
+          }
+        } else {
+          toast.error(res.error || "Error al eliminar calendario.");
+        }
+        setConfirmModal({ isOpen: false, title: "", message: "", confirmText: "Eliminar", onConfirm: null, isProcessing: false });
+      },
+    });
   };
 
   // Copy Calendar Link
   const copyCalendarLink = (slug) => {
-    const fullUrl = `${window.location.origin}/calendario/${slug}`;
+    const path = formatCalendarUrlPath(slug, selectedCliente?.nombre);
+    const fullUrl = `${window.location.origin}${path}`;
     navigator.clipboard.writeText(fullUrl);
     setCopiedSlug(slug);
     toast.success("Enlace del calendario copiado al portapapeles.");
@@ -655,7 +694,7 @@ export default function ClientsCalendarSection() {
                               {cal.nombre}
                             </h5>
                             <button
-                              onClick={() => handleDeleteCalendar(cal.id, cal.nombre)}
+                              onClick={(e) => handleDeleteCalendar(cal.id, cal.nombre, e)}
                               className="p-1.5 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-all opacity-0 group-hover:opacity-100"
                               title="Eliminar calendario"
                             >
@@ -669,7 +708,7 @@ export default function ClientsCalendarSection() {
                               {MONTH_NAMES[(cal.mes || 1) - 1]} {cal.anio}
                             </span>
                             <span className="inline-block font-mono text-[11px] font-semibold text-pink-600 bg-pink-50 border border-pink-100 px-3 py-1 rounded-full">
-                              /calendario/{cal.slug}
+                              {formatCalendarUrlPath(cal.slug, selectedCliente?.nombre)}
                             </span>
                           </div>
                         </div>
@@ -698,7 +737,7 @@ export default function ClientsCalendarSection() {
                             </button>
 
                             <a
-                              href={`/calendario/${cal.slug}`}
+                              href={formatCalendarUrlPath(cal.slug, selectedCliente?.nombre)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="h-8 px-3 bg-blue-50 hover:bg-[#188ff0] text-[#188ff0] hover:text-white rounded-full text-xs font-sora font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
@@ -1022,25 +1061,32 @@ export default function ClientsCalendarSection() {
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono text-gray-400">
-                    /calendario/
+                    /{selectedCliente ? generateSlug(selectedCliente.nombre) : "cliente"}/
                   </span>
                   <input
                     type="text"
                     required
-                    placeholder="campana-noviembre"
-                    value={calendarForm.slug}
-                    onChange={(e) =>
+                    placeholder="octubre-2026"
+                    value={
+                      calendarForm.slug.startsWith(generateSlug(selectedCliente?.nombre || "") + "-")
+                        ? calendarForm.slug.replace(generateSlug(selectedCliente?.nombre || "") + "-", "")
+                        : calendarForm.slug
+                    }
+                    onChange={(e) => {
+                      const clientPrefix = selectedCliente?.nombre ? generateSlug(selectedCliente.nombre) : "";
+                      const calSlug = generateSlug(e.target.value);
+                      const combined = clientPrefix ? `${clientPrefix}-${calSlug}` : calSlug;
                       setCalendarForm({
                         ...calendarForm,
-                        slug: generateSlug(e.target.value),
+                        slug: combined,
                         isSlugModified: true
-                      })
-                    }
-                    className="w-full h-11 pl-28 pr-4 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-blue-100 outline-none text-sm font-mono text-pink-600 transition-all"
+                      });
+                    }}
+                    className="w-full h-11 pl-32 pr-4 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-blue-100 outline-none text-sm font-mono text-pink-600 transition-all"
                   />
                 </div>
                 <p className="text-[11px] text-gray-400 mt-1">
-                  Enlace público de acceso: <code>theformulab.io/calendario/{calendarForm.slug || "..."}</code>
+                  Enlace público de acceso: <code>theformulab.io{formatCalendarUrlPath(calendarForm.slug || "octubre-2026", selectedCliente?.nombre)}</code>
                 </p>
               </div>
             </form>
@@ -1066,6 +1112,56 @@ export default function ClientsCalendarSection() {
                   </>
                 ) : (
                   "Crear Calendario"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CUSTOM CONFIRMATION MODAL OVERLAY */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white max-w-md w-full rounded-[2.5rem] p-6 text-center space-y-4 shadow-2xl border border-gray-100">
+            <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mx-auto text-red-500 shadow-sm">
+              <Trash2 className="w-7 h-7" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-xl font-sora font-extrabold text-gray-900">
+                {confirmModal.title}
+              </h3>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                {confirmModal.message}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setConfirmModal({ isOpen: false, title: "", message: "", confirmText: "Eliminar", onConfirm: null, isProcessing: false })}
+                disabled={confirmModal.isProcessing}
+                className="h-10 px-5 rounded-full border border-gray-200 hover:bg-gray-100 text-gray-700 font-sora font-bold text-xs transition-all cursor-pointer"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={() => confirmModal.onConfirm && confirmModal.onConfirm()}
+                disabled={confirmModal.isProcessing}
+                className="h-10 px-5 rounded-full bg-red-500 hover:bg-red-600 text-white font-sora font-bold text-xs shadow-md shadow-red-200 transition-all cursor-pointer inline-flex items-center gap-2 disabled:opacity-50"
+              >
+                {confirmModal.isProcessing ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>Eliminando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>{confirmModal.confirmText}</span>
+                  </>
                 )}
               </button>
             </div>

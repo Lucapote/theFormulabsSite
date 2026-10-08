@@ -16,16 +16,19 @@ import {
   AlertCircle,
   LayoutGrid,
   ListFilter,
-  ExternalLink
+  ExternalLink,
+  FileText
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   getPostsByCalendario,
   createPost,
   updatePost,
-  deletePost
+  deletePost,
+  formatCalendarUrlPath
 } from "@/services/calendarService";
 import PostModal from "./PostModal";
+import ImportWordModal from "./ImportWordModal";
 import CalendarGridView, { formatTimeHHMM } from "@/components/calendar/CalendarGridView";
 
 export default function ScheduledPostsList({
@@ -59,6 +62,7 @@ export default function ScheduledPostsList({
 
   // Modals state
   const [showModal, setShowModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -193,7 +197,8 @@ export default function ScheduledPostsList({
       toast.error("Este calendario no tiene un slug válido.");
       return;
     }
-    const publicUrl = `${window.location.origin}/calendario/${calendarioSlug}`;
+    const path = formatCalendarUrlPath(calendarioSlug);
+    const publicUrl = `${window.location.origin}${path}`;
     navigator.clipboard.writeText(publicUrl);
     setCopiedPublicLink(true);
     toast.success("Enlace público copiado al portapapeles.");
@@ -234,6 +239,16 @@ export default function ScheduledPostsList({
                 <Plus className="w-4 h-4" />
               </button>
             )}
+
+            {/* Import Word (.docx) Button */}
+            <button
+              onClick={() => setShowImportModal(true)}
+              className="h-9 px-3.5 sm:px-4 bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-200 font-sora font-bold text-xs rounded-full transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-sm"
+              title="Importar publicaciones desde archivo Word (.docx)"
+            >
+              <FileText className="w-4 h-4 text-pink-500" />
+              <span className="hidden sm:inline">Importar Word (.docx)</span>
+            </button>
 
             {/* View Mode Switcher Pills */}
             {!hideViewModeSwitcher && (
@@ -670,6 +685,16 @@ export default function ScheduledPostsList({
           </div>
         </div>
       )}
+      {/* Import Word Modal */}
+      <ImportWordModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        calendarioId={calendarioId}
+        onSuccess={() => {
+          loadPosts();
+          if (onPostUpdated) onPostUpdated();
+        }}
+      />
     </div>
   );
 }

@@ -25,6 +25,7 @@ import {
   deleteArchivo
 } from "@/services/calendarService";
 import { compressMediaFile, formatBytes } from "@/utils/mediaCompressor";
+import { useUpload } from "@/context/UploadContext";
 
 export default function MediaGallery({
   calendarioId,
@@ -39,11 +40,16 @@ export default function MediaGallery({
   const [statusFilter, setStatusFilter] = useState("all"); // 'all' | 'disponible' | 'en_uso'
   const [typeFilter, setTypeFilter] = useState("all"); // 'all' | 'image' | 'video'
 
-  // Drag & drop / Upload state
+  // Global Upload Context
+  const { startUpload, addUploadListener, uploadState } = useUpload();
+
+  // Drag & drop state
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const fileInputRef = useRef(null);
+
+  // Computed upload state for this calendar
+  const isUploading = uploadState.isUploading && uploadState.calendarId === calendarioId;
+  const uploadProgress = { current: uploadState.current, total: uploadState.total };
 
   // Lightbox / Delete Modal
   const [previewMedia, setPreviewMedia] = useState(null);
@@ -68,59 +74,19 @@ export default function MediaGallery({
     fetchGallery();
   }, [calendarioId, refreshTrigger]);
 
-  // Handle batch file upload with automatic compression
-  const handleUploadFiles = async (filesList) => {
-    const files = Array.from(filesList).filter((file) => {
-      const isImg = file.type.startsWith("image/");
-      const isVid = file.type.startsWith("video/") || /\.(mp4|mov|webm|m4v|avi)$/i.test(file.name);
-      return isImg || isVid;
-    });
-
-    if (files.length === 0) {
-      toast.error("Selecciona archivos de imagen (.png, .jpg, .webp) o video (.mp4, .mov, .webm).");
-      return;
-    }
-
-    setIsUploading(true);
-    setUploadProgress({ current: 0, total: files.length });
-
-    let successCount = 0;
-    let failCount = 0;
-
-    for (let i = 0; i < files.length; i++) {
-      const originalFile = files[i];
-      setUploadProgress({ current: i + 1, total: files.length });
-
-      // Compresión automática de imágenes antes de subir
-      const compressResult = await compressMediaFile(originalFile);
-      const fileToUpload = compressResult.file;
-
-      const res = await uploadMediaFile(calendarioId, fileToUpload);
-      if (res.success) {
-        successCount++;
-        if (compressResult.compressed && compressResult.savedPercentage > 10) {
-          toast.success(
-            `"${originalFile.name}" comprimido: ${formatBytes(compressResult.originalSize)} → ${formatBytes(compressResult.compressedSize)} (-${compressResult.savedPercentage}%)`,
-            { duration: 3500 }
-          );
-        }
-      } else {
-        failCount++;
-        console.error(`Error subiendo ${originalFile.name}:`, res.error);
+  // Real-time listener for background uploads
+  useEffect(() => {
+    const removeListener = addUploadListener((updatedCalId) => {
+      if (updatedCalId === calendarioId) {
+        fetchGallery();
       }
-    }
+    });
+    return () => removeListener();
+  }, [calendarioId]);
 
-    setIsUploading(false);
-    setUploadProgress({ current: 0, total: 0 });
-
-    if (successCount > 0) {
-      toast.success(`${successCount} archivo(s) subido(s) a la galería con éxito.`);
-      fetchGallery();
-    }
-    if (failCount > 0) {
-      toast.error(`${failCount} archivo(s) no se pudieron subir.`);
-    }
-
+  // Trigger batch file upload with persistent background processing
+  const handleUploadFiles = (filesList) => {
+    startUpload(calendarioId, calendarioNombre, filesList, fetchGallery);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }

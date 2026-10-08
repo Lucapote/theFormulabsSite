@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Calendar as CalendarIcon,
   LayoutGrid,
@@ -24,7 +24,7 @@ import {
   Monitor
 } from "lucide-react";
 import { toast } from "sonner";
-import { getPublicCalendarioBySlug } from "@/services/calendarService";
+import { getPublicCalendarioBySlug, generateSlug } from "@/services/calendarService";
 import CalendarGridView, { formatTimeHHMM } from "@/components/calendar/CalendarGridView";
 
 const MONTH_NAMES = [
@@ -43,7 +43,9 @@ const MONTH_NAMES = [
 ];
 
 export default function PublicCalendarPage() {
-  const { slug } = useParams();
+  const { slug, clientSlug, calendarSlug } = useParams();
+  const activeSlug = slug || (clientSlug && calendarSlug ? `${clientSlug}-${calendarSlug}` : "");
+
   const [calendario, setCalendario] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -59,20 +61,26 @@ export default function PublicCalendarPage() {
 
   useEffect(() => {
     async function loadPublicCalendar() {
-      if (!slug) return;
+      if (!activeSlug) return;
       setLoading(true);
       setErrorMsg(null);
-      const res = await getPublicCalendarioBySlug(slug);
+      let res = await getPublicCalendarioBySlug(activeSlug);
+
+      // Fallback if clientSlug/calendarSlug was accessed directly as calendarSlug
+      if (!res.success && calendarSlug) {
+        res = await getPublicCalendarioBySlug(calendarSlug);
+      }
+
       if (res.success && res.data) {
         setCalendario(res.data);
       } else {
-        setErrorMsg(res.error || `No se encontró el calendario editorial en "/calendario/${slug}".`);
+        setErrorMsg(res.error || "No se encontró el calendario editorial solicitado.");
       }
       setLoading(false);
     }
 
     loadPublicCalendar();
-  }, [slug]);
+  }, [activeSlug, calendarSlug]);
 
   const copyCaption = (text, postId = null) => {
     if (!text) {
