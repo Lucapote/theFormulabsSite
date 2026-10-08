@@ -30,6 +30,7 @@ import {
 import PostModal from "./PostModal";
 import ImportWordModal from "./ImportWordModal";
 import CalendarGridView, { formatTimeHHMM } from "@/components/calendar/CalendarGridView";
+import InstagramPostPreviewModal from "@/components/common/InstagramPostPreviewModal";
 
 export default function ScheduledPostsList({
   calendarioId,
@@ -64,6 +65,7 @@ export default function ScheduledPostsList({
   const [showModal, setShowModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
+  const [selectedPreviewPost, setSelectedPreviewPost] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
   // Delete modal state
@@ -451,17 +453,28 @@ export default function ScheduledPostsList({
               return (
                 <div
                   key={post.id}
-                  className={`bg-white rounded-[2rem] p-5 border shadow-md hover:shadow-xl transition-all flex flex-col justify-between gap-4 group ${
+                  onClick={() => {
+                    if (!isEmptyBox) {
+                      setSelectedPreviewPost(post);
+                    } else {
+                      setEditingPost(post);
+                      setShowModal(true);
+                    }
+                  }}
+                  className={`bg-white rounded-[2rem] p-5 border shadow-md hover:shadow-xl transition-all flex flex-col justify-between gap-4 group cursor-pointer ${
                     isEmptyBox
                       ? "border-pink-200/80 hover:border-pink-300 bg-gradient-to-br from-pink-50/30 via-white to-white"
-                      : "border-gray-100 hover:border-blue-200"
+                      : "border-gray-100 hover:border-blue-200 hover:border-blue-300"
                   }`}
+                  title={isEmptyBox ? "Completar información de la caja" : "Ver vista previa de la publicación"}
                 >
                   {/* Top Section: Thumbnail & Post Details */}
                   <div className="flex items-start gap-3.5">
                     {/* Thumbnail */}
                     {firstFile ? (
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-gray-900 shrink-0 relative border border-gray-100 shadow-xs">
+                      <div
+                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-gray-900 shrink-0 relative border border-gray-100 shadow-xs group-hover:scale-[1.03] transition-all group-hover:ring-2 group-hover:ring-pink-400"
+                      >
                         {firstFile.tipo === "video" ? (
                           <div className="w-full h-full relative bg-gray-950 flex items-center justify-center">
                             {firstFile.thumbnail_url ? (
@@ -479,7 +492,7 @@ export default function ScheduledPostsList({
                                 className="w-full h-full object-cover"
                               />
                             )}
-                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/10 transition-colors">
                               <Play className="w-4 h-4 text-white fill-current" />
                             </div>
                           </div>
@@ -602,7 +615,8 @@ export default function ScheduledPostsList({
                       )}
 
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setEditingPost(post);
                           setShowModal(true);
                         }}
@@ -617,7 +631,10 @@ export default function ScheduledPostsList({
                       </button>
 
                       <button
-                        onClick={() => setDeletingPost(post)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeletingPost(post);
+                        }}
                         className="h-8 w-8 bg-pink-50 hover:bg-pink-100 text-pink-600 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0"
                         title="Eliminar publicación"
                       >
@@ -705,6 +722,20 @@ export default function ScheduledPostsList({
           if (onPostUpdated) onPostUpdated();
         }}
       />
+
+      {/* Instagram Post Preview Lightbox Modal */}
+      {selectedPreviewPost && (
+        <InstagramPostPreviewModal
+          post={selectedPreviewPost}
+          onClose={() => setSelectedPreviewPost(null)}
+          isInternal={true}
+          onEdit={(p) => {
+            setEditingPost(p);
+            setShowModal(true);
+          }}
+          onDelete={(p) => setDeletingPost(p)}
+        />
+      )}
     </div>
   );
 }

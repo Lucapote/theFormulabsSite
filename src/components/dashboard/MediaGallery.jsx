@@ -21,11 +21,15 @@ import {
 import { toast } from "sonner";
 import {
   getArchivosByCalendario,
+  getPostsByCalendario,
   uploadMediaFile,
-  deleteArchivo
+  deleteArchivo,
+  updatePost
 } from "@/services/calendarService";
 import { compressMediaFile, formatBytes } from "@/utils/mediaCompressor";
 import { useUpload } from "@/context/UploadContext";
+import MediaDetailModal from "@/components/common/MediaDetailModal";
+import PostModal from "./PostModal";
 
 export default function MediaGallery({
   calendarioId,
@@ -34,6 +38,7 @@ export default function MediaGallery({
   refreshTrigger = 0
 }) {
   const [archivos, setArchivos] = useState([]);
+  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Filters
@@ -51,22 +56,46 @@ export default function MediaGallery({
   const isUploading = uploadState.isUploading && uploadState.calendarId === calendarioId;
   const uploadProgress = { current: uploadState.current, total: uploadState.total };
 
-  // Lightbox / Delete Modal
+  // Lightbox / Delete / Edit Post Modal
   const [previewMedia, setPreviewMedia] = useState(null);
   const [deletingMedia, setDeletingMedia] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
+  const [editingPost, setEditingPost] = useState(null);
+  const [isSavingPost, setIsSavingPost] = useState(false);
 
-  // Load gallery files
+  const handleSavePostFromGallery = async (formData) => {
+    setIsSavingPost(true);
+    const res = await updatePost(formData.id, formData, editingPost?.archivos || []);
+    if (res.success) {
+      toast.success("Publicación actualizada correctamente.");
+      setEditingPost(null);
+      fetchGallery();
+    } else {
+      toast.error(res.error || "No se pudo actualizar la publicación.");
+    }
+    setIsSavingPost(false);
+  };
+
+  // Load gallery files & posts
   const fetchGallery = async () => {
     if (!calendarioId) return;
     setLoading(true);
-    const res = await getArchivosByCalendario(calendarioId);
-    if (res.success) {
-      setArchivos(res.data || []);
+    const [resArchivos, resPosts] = await Promise.all([
+      getArchivosByCalendario(calendarioId),
+      getPostsByCalendario(calendarioId)
+    ]);
+
+    if (resArchivos.success) {
+      setArchivos(resArchivos.data || []);
     } else {
-      toast.error(res.error || "No se pudieron cargar los archivos de la galería.");
+      toast.error(resArchivos.error || "No se pudieron cargar los archivos de la galería.");
     }
+
+    if (resPosts.success) {
+      setPosts(resPosts.data || []);
+    }
+
     setLoading(false);
   };
 
@@ -424,122 +453,26 @@ export default function MediaGallery({
 
       {/* LIGHTBOX PREVIEW MODAL */}
       {previewMedia && (
-        <div
-          onClick={() => setPreviewMedia(null)}
-          className="fixed inset-0 bg-black/85 backdrop-blur-md z-[100] flex items-center justify-center p-3 sm:p-4 font-inter animate-in fade-in duration-200 overflow-y-auto"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-[2rem] max-w-2xl w-full my-auto overflow-hidden shadow-2xl relative border border-gray-100 flex flex-col md:flex-row max-h-[85dvh] sm:max-h-[88dvh]"
-          >
-            {/* Top Floating Close Button for Mobile & Desktop */}
-            <button
-              onClick={() => setPreviewMedia(null)}
-              className="absolute top-3 right-3 z-30 w-9 h-9 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md flex items-center justify-center transition-all cursor-pointer shadow-lg"
-              title="Cerrar (Esc)"
-            >
-              <X className="w-5 h-5" />
-            </button>
+        <MediaDetailModal
+          media={previewMedia}
+          posts={posts}
+          onClose={() => setPreviewMedia(null)}
+          onDelete={(media) => setDeletingMedia(media)}
+          showDelete={true}
+          onEditPost={(p) => setEditingPost(p)}
+        />
+      )}
 
-            {/* Media Player / Image Area */}
-            <div className="md:w-3/5 bg-gray-950 flex items-center justify-center relative p-3 sm:p-4 shrink-0 max-h-[42vh] md:max-h-full overflow-hidden">
-              {previewMedia.tipo === "video" ? (
-                <video
-                  src={previewMedia.url}
-                  controls
-                  autoPlay
-                  preload="metadata"
-                  playsInline
-                  poster={previewMedia.thumbnail_url || undefined}
-                  className="max-h-[38vh] md:max-h-[65vh] w-full object-contain rounded-xl"
-                />
-              ) : (
-                <img
-                  src={previewMedia.url}
-                  alt={previewMedia.nombre_archivo}
-                  className="max-h-[38vh] md:max-h-[65vh] w-full object-contain rounded-xl"
-                />
-              )}
-            </div>
-
-            {/* Details Side Area */}
-            <div className="md:w-2/5 p-5 sm:p-6 flex flex-col justify-between space-y-4 bg-white overflow-y-auto">
-              <div>
-                <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
-                  <span className="inline-block text-[10px] font-sora font-bold uppercase tracking-widest px-3 py-1 rounded-full bg-pink-50 text-pink-600">
-                    DETALLES DE MEDIO
-                  </span>
-                </div>
-
-                <h3 className="font-sora font-extrabold text-gray-900 text-lg mb-2 break-all">
-                  {previewMedia.nombre_archivo}
-                </h3>
-
-                <div className="space-y-2 text-xs text-gray-600 font-medium">
-                  <div className="flex items-center justify-between py-1.5 border-b border-gray-50">
-                    <span className="text-gray-400">Tipo de Archivo:</span>
-                    <span className="font-sora font-bold text-gray-900 uppercase flex items-center gap-1.5">
-                      {previewMedia.tipo === "video" ? (
-                        <>
-                          <VideoIcon className="w-3.5 h-3.5 text-pink-500" /> Video / Reel
-                        </>
-                      ) : (
-                        <>
-                          <ImageIcon className="w-3.5 h-3.5 text-brand-blue" /> Imagen
-                        </>
-                      )}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between py-1.5 border-b border-gray-50">
-                    <span className="text-gray-400">Estado en Post:</span>
-                    <span
-                      className={`font-sora font-bold ${previewMedia.en_uso ? "text-purple-600" : "text-emerald-600"
-                        }`}
-                    >
-                      {previewMedia.en_uso ? "En uso en publicación" : "Disponible (Sin usar)"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between py-1.5 border-b border-gray-50">
-                    <span className="text-gray-400">Fecha de Subida:</span>
-                    <span className="font-mono text-gray-700">
-                      {new Date(previewMedia.created_at).toLocaleDateString("es-MX", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric"
-                      })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-4 border-t border-gray-100">
-                <button
-                  onClick={(e) => copyMediaUrl(previewMedia, e)}
-                  className="w-full h-11 bg-gray-100 hover:bg-gray-200 text-gray-800 font-sora font-bold text-xs rounded-full inline-flex items-center justify-center gap-2 transition-all cursor-pointer"
-                >
-                  {copiedId === previewMedia.id ? (
-                    <>
-                      <Check className="w-4 h-4 text-green-600" /> Link Copiado
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4" /> Copiar Enlace Directo
-                    </>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => setDeletingMedia(previewMedia)}
-                  className="w-full h-11 bg-red-50 hover:bg-red-500 text-red-600 hover:text-white font-sora font-bold text-xs rounded-full inline-flex items-center justify-center gap-2 transition-all cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4" /> Eliminar de Galería
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* EDIT POST MODAL */}
+      {editingPost && (
+        <PostModal
+          isOpen={Boolean(editingPost)}
+          onClose={() => setEditingPost(null)}
+          onSave={handleSavePostFromGallery}
+          calendarioId={calendarioId}
+          initialData={editingPost}
+          isSaving={isSavingPost}
+        />
       )}
 
       {/* DELETE CONFIRMATION MODAL */}

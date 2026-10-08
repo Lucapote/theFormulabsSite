@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { getPublicCalendarioBySlug, generateSlug } from "@/services/calendarService";
 import CalendarGridView, { formatTimeHHMM } from "@/components/calendar/CalendarGridView";
 import MediaCarousel from "@/components/common/MediaCarousel";
+import InstagramPostPreviewModal from "@/components/common/InstagramPostPreviewModal";
 
 const MONTH_NAMES = [
   "Enero",
@@ -501,181 +502,15 @@ export default function PublicCalendarPage() {
 
       {/* FEED PREVIEW LIGHTBOX MODAL */}
       {selectedPost && (
-        <div
-          onClick={() => setSelectedPost(null)}
-          className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200 overflow-y-auto"
-        >
-          {/* Post-to-Post Instagram Navigation Arrows (Desktop only) */}
-          {hasPrevPost && (
-            <button
-              onClick={goToPrevPost}
-              className="hidden md:flex fixed left-3 md:left-6 top-1/2 -translate-y-1/2 z-[120] w-12 h-12 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md items-center justify-center transition-all cursor-pointer border border-white/20 shadow-2xl group hover:scale-110"
-              title="Publicación anterior (Flecha izquierda ←)"
-            >
-              <ChevronLeft className="w-7 h-7 group-hover:-translate-x-0.5 transition-transform text-white" />
-            </button>
-          )}
-
-          {hasNextPost && (
-            <button
-              onClick={goToNextPost}
-              className="hidden md:flex fixed right-3 md:right-6 top-1/2 -translate-y-1/2 z-[120] w-12 h-12 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md items-center justify-center transition-all cursor-pointer border border-white/20 shadow-2xl group hover:scale-110"
-              title="Siguiente publicación (Flecha derecha →)"
-            >
-              <ChevronRight className="w-7 h-7 group-hover:translate-x-0.5 transition-transform text-white" />
-            </button>
-          )}
-
-          <div
-            onClick={(e) => e.stopPropagation()}
-            onTouchStart={handleModalTouchStart}
-            onTouchEnd={handleModalTouchEnd}
-            className="bg-white rounded-[2.5rem] max-w-4xl w-full h-[90vh] md:h-auto my-auto overflow-hidden shadow-2xl relative border border-gray-100 flex flex-col md:flex-row md:max-h-[90vh]"
-          >
-            {/* Top Floating Close Button for Mobile & Desktop */}
-            <button
-              onClick={() => setSelectedPost(null)}
-              className="absolute top-3 right-3 z-30 w-9 h-9 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md flex items-center justify-center transition-all cursor-pointer shadow-lg"
-              title="Cerrar (Esc)"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Media Area - Reusable Media Carousel */}
-            <div className="flex-1 md:w-3/5 bg-gray-950 flex flex-col items-center justify-center relative w-full h-full min-h-0 overflow-hidden">
-              <MediaCarousel
-                files={selectedPost.archivos}
-                initialIndex={activeMediaIndex}
-                onIndexChange={setActiveMediaIndex}
-                containerClassName="w-full h-full min-h-0"
-                imageClassName="max-h-full md:max-h-[65vh] w-full h-full object-contain rounded-xl select-none"
-                showControls={true}
-                showDots={true}
-                activeDotColorClass="bg-pink-500 w-5"
-              />
-            </div>
-
-            {/* Mobile Instagram-Style Teaser Card (Visible only on mobile md:hidden) */}
-            <div
-              onClick={() => setIsCaptionExpanded(true)}
-              className="md:hidden p-4 bg-gray-900 text-white border-t border-gray-800 cursor-pointer flex flex-col gap-1.5 transition-all hover:bg-black shrink-0"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-sora font-extrabold px-2.5 py-0.5 rounded-full bg-pink-500/20 text-pink-400 border border-pink-500/30 uppercase">
-                  {selectedPost.tipo_post === "reel" ? "Reel" : `Carrusel (${selectedPost.archivos?.length || 0})`}
-                </span>
-                <span className="text-[10px] font-mono text-gray-400 font-semibold">
-                  {selectedPost.fecha_programada} • {formatTimeHHMM(selectedPost.hora_programada)}
-                </span>
-              </div>
-
-              <p className="text-xs text-gray-200 line-clamp-2 font-medium leading-relaxed">
-                {selectedPost.caption || <em className="text-gray-500 font-normal">Sin copy en esta publicación.</em>}
-              </p>
-            </div>
-
-            {/* Content Details Area - Desktop view (hidden on mobile md:flex) */}
-            <div className="hidden md:flex md:w-2/5 p-6 flex-col justify-between bg-white space-y-6">
-              <div>
-                <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
-                  <span
-                    className={`inline-flex items-center gap-1 font-sora font-bold text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
-                      selectedPost.tipo_post === "reel"
-                        ? "bg-pink-50 text-pink-600 border border-pink-200"
-                        : "bg-blue-50 text-[#188ff0] border border-blue-200"
-                    }`}
-                  >
-                    {selectedPost.tipo_post === "reel" ? "Reel" : `Carrusel (${selectedPost.archivos?.length || 0})`}
-                  </span>
-
-                  <button
-                    onClick={() => setSelectedPost(null)}
-                    className="text-gray-400 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 font-bold"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="mb-4">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-sora font-bold text-gray-800 bg-gray-100 px-3 py-1 rounded-full">
-                    <CalendarIcon className="w-3.5 h-3.5 text-gray-500" /> {selectedPost.fecha_programada} • {formatTimeHHMM(selectedPost.hora_programada)}
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  <h4 className="text-xs font-sora font-bold uppercase text-gray-400">
-                    Copywriting
-                  </h4>
-                  <p className="text-sm text-gray-800 font-medium whitespace-pre-wrap leading-relaxed max-h-[240px] overflow-y-auto pr-1">
-                    {selectedPost.caption || <em className="text-gray-400 font-normal">Sin copy en esta publicación.</em>}
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-gray-100">
-                <button
-                  onClick={() => copyCaption(selectedPost.caption)}
-                  className="w-full h-11 bg-pink-500 hover:bg-pink-600 text-white font-sora font-bold text-xs uppercase tracking-wider rounded-full shadow-md shadow-pink-200 inline-flex items-center justify-center gap-2 transition-all cursor-pointer"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-4 h-4" /> Copy Copiado
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4" /> Copiar Copywriting
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Instagram-style Expandable Caption Bottom Sheet (Mobile) */}
-          {isCaptionExpanded && (
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsCaptionExpanded(false);
-              }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[150] flex flex-col justify-end animate-in fade-in duration-200 md:hidden"
-            >
-              <div
-                onClick={(e) => e.stopPropagation()}
-                onTouchStart={handleDrawerTouchStart}
-                onTouchEnd={handleDrawerTouchEnd}
-                className="bg-gray-900 text-white rounded-t-[2.5rem] p-6 space-y-4 max-h-[78vh] flex flex-col border-t border-gray-800 shadow-2xl animate-in slide-in-from-bottom duration-300 relative"
-              >
-                {/* Header / Drag Handle (Clicking handle closes drawer) */}
-                <div
-                  onClick={() => setIsCaptionExpanded(false)}
-                  className="flex flex-col items-center cursor-pointer shrink-0 space-y-2 pb-2 border-b border-gray-800"
-                >
-                  <div className="w-12 h-1.5 bg-gray-600 hover:bg-gray-400 rounded-full mx-auto" />
-                  <span className="text-[11px] font-mono text-gray-400 px-3 py-0.5 rounded-full bg-gray-800 font-semibold">
-                    {selectedPost.fecha_programada} • {formatTimeHHMM(selectedPost.hora_programada)}
-                  </span>
-                </div>
-
-                <div className="overflow-y-auto flex-1 pr-1 space-y-3">
-                  <p className="text-sm text-gray-100 font-normal whitespace-pre-wrap leading-relaxed">
-                    {selectedPost.caption || <em className="text-gray-500 font-normal">Sin copy redactado.</em>}
-                  </p>
-                </div>
-
-                <div className="pt-3 border-t border-gray-800 flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => copyCaption(selectedPost.caption)}
-                    className="flex-1 h-11 bg-pink-500 hover:bg-pink-600 text-white font-sora font-bold text-xs uppercase tracking-wider rounded-full inline-flex items-center justify-center gap-2 shadow-md shadow-pink-500/20"
-                  >
-                    {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    {copied ? "Copy Copiado" : "Copiar Copywriting"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        <InstagramPostPreviewModal
+          post={selectedPost}
+          onClose={() => setSelectedPost(null)}
+          isInternal={false}
+          hasPrevPost={hasPrevPost}
+          hasNextPost={hasNextPost}
+          onPrevPost={goToPrevPost}
+          onNextPost={goToNextPost}
+        />
       )}
     </div>
   );
