@@ -68,7 +68,7 @@ export default function MediaCarousel({
       <div
         ref={carouselRef}
         onScroll={handleScroll}
-        className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scroll-smooth touch-pan-x"
+        className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scroll-smooth touch-pan-x touch-pan-y"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {files.map((file, idx) => (
