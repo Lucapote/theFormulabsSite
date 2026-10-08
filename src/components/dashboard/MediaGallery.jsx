@@ -24,12 +24,15 @@ import {
   getPostsByCalendario,
   uploadMediaFile,
   deleteArchivo,
+  createPost,
   updatePost
 } from "@/services/calendarService";
 import { compressMediaFile, formatBytes } from "@/utils/mediaCompressor";
 import { useUpload } from "@/context/UploadContext";
+import { useLongPress } from "@/hooks/useLongPress";
 import MediaDetailModal from "@/components/common/MediaDetailModal";
 import PostModal from "./PostModal";
+import GalleryItemCard from "./GalleryItemCard";
 
 export default function MediaGallery({
   calendarioId,
@@ -64,17 +67,146 @@ export default function MediaGallery({
   const [editingPost, setEditingPost] = useState(null);
   const [isSavingPost, setIsSavingPost] = useState(false);
 
+  // Multi-selection state
+  const [selectedFileIds, setSelectedFileIds] = useState([]);
+  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
+  const selectedFileIdsRef = useRef(selectedFileIds);
+
+  useEffect(() => {
+    selectedFileIdsRef.current = selectedFileIds;
+  }, [selectedFileIds]);
+
+  const isSelectMode = selectedFileIds.length > 0;
+
+  const handleCardLongPress = (item) => {
+    setSelectedFileIds((prev) => {
+      if (prev.includes(item.id)) return prev;
+      return [...prev, item.id];
+    });
+  };
+
+  const handleCardClick = (item) => {
+    if (selectedFileIdsRef.current.length > 0) {
+      setSelectedFileIds((prev) => {
+        if (prev.includes(item.id)) {
+          return prev.filter((id) => id !== item.id);
+        } else {
+          return [...prev, item.id];
+        }
+      });
+    } else {
+      setPreviewMedia(item);
+    }
+  };
+
+  // Close selection mode on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape" && selectedFileIds.length > 0) {
+        setSelectedFileIds([]);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedFileIds.length]);
+
+  const handleSelectAll = () => {
+    if (selectedFileIds.length === filteredArchivos.length) {
+      setSelectedFileIds([]);
+    } else {
+      setSelectedFileIds(filteredArchivos.map((a) => a.id));
+    }
+  };
+
+  const handleConfirmBatchDelete = async () => {
+    if (selectedFileIds.length === 0) return;
+    setIsDeleting(true);
+
+    const filesToDelete = archivos.filter((a) => selectedFileIds.includes(a.id));
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const file of filesToDelete) {
+      const res = await deleteArchivo(file.id, file.url, file.thumbnail_url);
+      if (res.success) {
+        successCount++;
+      } else {
+        failCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      toast.success(`${successCount} archivo(s) eliminado(s) correctamente.`);
+    }
+    if (failCount > 0) {
+      toast.error(`${failCount} archivo(s) no se pudieron eliminar.`);
+    }
+
+    setSelectedFileIds([]);
+    setShowBatchDeleteConfirm(false);
+    setIsDeleting(false);
+    fetchGallery();
+  };
+
   const handleSavePostFromGallery = async (formData) => {
     setIsSavingPost(true);
-    const res = await updatePost(formData.id, formData, editingPost?.archivos || []);
+    let res;
+    if (formData.id) {
+      res = await updatePost(formData.id, formData, editingPost?.archivos || []);
+    } else {
+      res = await createPost({
+        ...formData,
+        calendario_id: calendarioId
+      });
+    }
+
     if (res.success) {
-      toast.success("Publicación actualizada correctamente.");
+      toast.success(
+        formData.id
+          ? "Publicación actualizada correctamente."
+          : "Publicación creada correctamente."
+      );
       setEditingPost(null);
       fetchGallery();
     } else {
-      toast.error(res.error || "No se pudo actualizar la publicación.");
+      toast.error(res.error || "No se pudo guardar la publicación.");
     }
     setIsSavingPost(false);
+  };
+
+  const handleAssignPost = (mediaFile, targetType) => {
+    setPreviewMedia(null);
+    setEditingPost({
+      tipo_post: targetType,
+      archivos: [mediaFile],
+      caption: "",
+      estado: "programado",
+      fecha_programada: new Date().toISOString().split("T")[0],
+      hora_programada: "18:00"
+    });
+  };
+
+  const handleAddToExistingPost = (mediaFile, targetPost) => {
+    setPreviewMedia(null);
+    const currentFiles = Array.isArray(targetPost.archivos) ? targetPost.archivos : [];
+    if (currentFiles.some((a) => a.id === mediaFile.id || a.url === mediaFile.url)) {
+      toast.info("El archivo ya está asignado a esta publicación.");
+      setEditingPost(targetPost);
+      return;
+    }
+
+    const maxAllowed = targetPost.tipo_post === "reel" ? 1 : 20;
+    if (currentFiles.length >= maxAllowed) {
+      toast.error(
+        `Esta publicación (${targetPost.tipo_post}) ya alcanzó el límite máximo de ${maxAllowed} archivo(s).`
+      );
+      return;
+    }
+
+    setEditingPost({
+      ...targetPost,
+      archivos: [...currentFiles, mediaFile]
+    });
   };
 
   // Load gallery files & posts
@@ -170,11 +302,24 @@ export default function MediaGallery({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  // Dynamic check if a media item is referenced in any post or marked in DB
+  const isMediaInUse = (item) => {
+    if (!item) return false;
+    if (item.en_uso) return true;
+    if (!posts || !Array.isArray(posts)) return false;
+    return posts.some(
+      (p) =>
+        Array.isArray(p.archivos) &&
+        p.archivos.some((a) => (a.id && a.id === item.id) || (a.url && a.url === item.url))
+    );
+  };
+
   // Filtered files
   const filteredArchivos = archivos.filter((item) => {
+    const inUse = isMediaInUse(item);
     // Status filter
-    if ((statusFilter === "disponible" || statusFilter === "disponibles") && item.en_uso) return false;
-    if (statusFilter === "en_uso" && !item.en_uso) return false;
+    if ((statusFilter === "disponible" || statusFilter === "disponibles") && inUse) return false;
+    if (statusFilter === "en_uso" && !inUse) return false;
 
     // Type filter
     if (typeFilter === "image" && item.tipo !== "image") return false;
@@ -183,16 +328,17 @@ export default function MediaGallery({
     return true;
   });
 
-  const disponiblesCount = archivos.filter((a) => !a.en_uso).length;
-  const enUsoCount = archivos.filter((a) => a.en_uso).length;
+  const enUsoCount = archivos.filter((a) => isMediaInUse(a)).length;
+  const disponiblesCount = archivos.length - enUsoCount;
 
   return (
-    <div className="space-y-6 font-inter">
+    <div className="space-y-6 font-inter relative pb-12">
       {/* INTEGRATED HEADER BAR */}
       <div className="bg-white rounded-[2rem] p-5 sm:p-6 shadow-xl border border-gray-100 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           {onBack && (
             <button
+              type="button"
               onClick={onBack}
               className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all cursor-pointer shrink-0"
               title="Volver a los calendarios"
@@ -213,6 +359,7 @@ export default function MediaGallery({
 
         {/* Refresh Button */}
         <button
+          type="button"
           onClick={fetchGallery}
           className="p-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all cursor-pointer shrink-0"
           title="Actualizar banco de medios"
@@ -236,71 +383,73 @@ export default function MediaGallery({
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`rounded-2xl p-6 text-center transition-all border-2 border-dashed relative overflow-hidden ${
+            onClick={() => fileInputRef.current?.click()}
+            className={`p-6 border-2 border-dashed rounded-2xl text-center cursor-pointer transition-all ${
               isDragging
-                ? "border-pink-500 bg-pink-50/80 scale-[1.01]"
-                : "border-gray-200 hover:border-pink-300 bg-gray-50/50 hover:bg-pink-50/20"
+                ? "border-pink-500 bg-pink-50/50 scale-[1.02]"
+                : "border-gray-200 hover:border-pink-300 hover:bg-pink-50/20"
             }`}
           >
             <input
               type="file"
               ref={fileInputRef}
               multiple
-              accept="image/png,image/jpeg,image/webp,video/mp4,video/quicktime,video/webm"
-              onChange={(e) => e.target.files && handleUploadFiles(e.target.files)}
+              accept="image/*,video/*"
               className="hidden"
+              onChange={(e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                  handleUploadFiles(e.target.files);
+                }
+              }}
             />
-
-            <div className="space-y-3">
-              <div className="w-12 h-12 rounded-full bg-pink-50 border border-pink-100 text-pink-500 flex items-center justify-center mx-auto transition-transform hover:scale-110">
-                {isUploading ? (
-                  <RefreshCw className="w-6 h-6 animate-spin" />
-                ) : (
-                  <UploadCloud className="w-6 h-6" />
-                )}
-              </div>
-
-              <div>
-                <h4 className="font-sora font-extrabold text-gray-900 text-sm">
-                  {isUploading
-                    ? `Subiendo (${uploadProgress.current} / ${uploadProgress.total})...`
-                    : "Selecciona o arrastra archivos"}
-                </h4>
-                <p className="text-[11px] text-gray-500 mt-1 leading-relaxed">
-                  Imágenes (PNG, JPG, WEBP) y videos (MP4, MOV).
-                </p>
-              </div>
-
-              {isUploading ? (
-                <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden max-w-xs mx-auto">
-                  <div
-                    className="bg-pink-500 h-2 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${(uploadProgress.current / (uploadProgress.total || 1)) * 100}%`
-                    }}
-                  />
-                </div>
-              ) : (
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="h-10 px-5 bg-pink-500 hover:bg-pink-600 text-white font-sora font-bold text-xs uppercase tracking-wider rounded-full shadow-md shadow-pink-200 transition-all inline-flex items-center gap-2 cursor-pointer w-full justify-center"
-                >
-                  <UploadCloud className="w-4 h-4" /> Seleccionar Archivos
-                </button>
-              )}
+            <div className="w-12 h-12 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center mx-auto mb-3">
+              <UploadCloud className="w-6 h-6" />
             </div>
+            <p className="text-xs font-sora font-bold text-gray-800 mb-1">
+              Arrastra tus archivos aquí
+            </p>
+            <p className="text-[11px] text-gray-400">
+              o haz clic para examinar desde tu equipo (Imágenes o Videos)
+            </p>
           </div>
+
+          {/* Uploading Status Panel */}
+          {isUploading && (
+            <div className="p-4 bg-pink-50 border border-pink-200 rounded-2xl space-y-2 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between text-xs font-sora font-bold text-pink-700">
+                <span className="flex items-center gap-1.5">
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Subiendo archivos...
+                </span>
+                <span>
+                  {uploadProgress.current} de {uploadProgress.total}
+                </span>
+              </div>
+              <div className="w-full h-2 bg-pink-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-pink-500 transition-all duration-300"
+                  style={{
+                    width: `${
+                      uploadProgress.total > 0
+                        ? Math.round((uploadProgress.current / uploadProgress.total) * 100)
+                        : 0
+                    }%`
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* RIGHT COLUMN (2/3 Width: lg:col-span-8) - MEDIA GALLERY GRID */}
+        {/* RIGHT COLUMN (2/3 Width: lg:col-span-8) - GALLERY GRID */}
         <div className="lg:col-span-8 space-y-4">
-          {/* Integrated Filter Controls Directly Above Gallery */}
-          <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-gray-100 flex flex-wrap items-center justify-between gap-3">
-            {/* Status Filter Tabs */}
-            <div className="flex items-center bg-gray-100 p-1 rounded-full border border-gray-200 overflow-x-auto max-w-full">
+          {/* FILTER BAR & COUNTS */}
+          <div className="bg-white rounded-[2rem] p-4 shadow-xl border border-gray-100 flex flex-wrap items-center justify-between gap-3">
+            {/* Status Pills */}
+            <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-full border border-gray-200 overflow-x-auto max-w-full">
               <button
+                type="button"
                 onClick={() => setStatusFilter("all")}
-                className={`px-3 py-1.5 rounded-full font-sora text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-sora font-extrabold cursor-pointer transition-all whitespace-nowrap ${
                   statusFilter === "all"
                     ? "bg-gray-900 text-white shadow-xs"
                     : "text-gray-600 hover:text-gray-900"
@@ -308,33 +457,36 @@ export default function MediaGallery({
               >
                 Todos ({archivos.length})
               </button>
+
               <button
+                type="button"
                 onClick={() => setStatusFilter("disponibles")}
-                className={`px-3 py-1.5 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-                  statusFilter === "disponibles"
+                className={`px-3.5 py-1.5 rounded-full text-xs font-sora font-extrabold cursor-pointer transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                  statusFilter === "disponibles" || statusFilter === "disponible"
                     ? "bg-emerald-600 text-white shadow-xs"
-                    : "text-gray-600 hover:text-emerald-700"
+                    : "text-gray-600 hover:text-gray-900"
                 }`}
               >
-                <CheckCircle className="w-3.5 h-3.5" />
-                Disponibles ({disponiblesCount})
+                <CheckCircle className="w-3.5 h-3.5" /> Disponibles ({disponiblesCount})
               </button>
+
               <button
+                type="button"
                 onClick={() => setStatusFilter("en_uso")}
-                className={`px-3 py-1.5 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-sora font-extrabold cursor-pointer transition-all flex items-center gap-1.5 whitespace-nowrap ${
                   statusFilter === "en_uso"
                     ? "bg-purple-600 text-white shadow-xs"
-                    : "text-gray-600 hover:text-purple-700"
+                    : "text-gray-600 hover:text-gray-900"
                 }`}
               >
-                <Clock className="w-3.5 h-3.5" />
-                En uso ({enUsoCount})
+                <Clock className="w-3.5 h-3.5" /> En uso ({enUsoCount})
               </button>
             </div>
 
-            {/* Type Filter Tabs */}
+            {/* Type Filters */}
             <div className="flex items-center bg-gray-100 p-1 rounded-full border border-gray-200 overflow-x-auto max-w-full">
               <button
+                type="button"
                 onClick={() => setTypeFilter("all")}
                 className={`px-3 py-1.5 rounded-full text-xs font-sora font-bold cursor-pointer transition-all whitespace-nowrap ${
                   typeFilter === "all"
@@ -345,6 +497,7 @@ export default function MediaGallery({
                 Todos
               </button>
               <button
+                type="button"
                 onClick={() => setTypeFilter("image")}
                 className={`px-3 py-1.5 rounded-full text-xs font-sora font-bold cursor-pointer transition-all flex items-center gap-1 whitespace-nowrap ${
                   typeFilter === "image"
@@ -355,6 +508,7 @@ export default function MediaGallery({
                 <ImageIcon className="w-3.5 h-3.5" /> Imágenes
               </button>
               <button
+                type="button"
                 onClick={() => setTypeFilter("video")}
                 className={`px-3 py-1.5 rounded-full text-xs font-sora font-bold cursor-pointer transition-all flex items-center gap-1 whitespace-nowrap ${
                   typeFilter === "video"
@@ -366,6 +520,8 @@ export default function MediaGallery({
               </button>
             </div>
           </div>
+
+          {/* GRID RENDER */}
           {loading ? (
             <div className="bg-white rounded-[2rem] p-12 text-center shadow-xl border border-gray-100">
               <Sparkles className="w-8 h-8 text-pink-500 animate-spin mx-auto mb-3" />
@@ -386,70 +542,69 @@ export default function MediaGallery({
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
               {filteredArchivos.map((item) => (
-                <div
+                <GalleryItemCard
                   key={item.id}
-                  onClick={() => setPreviewMedia(item)}
-                  className="group bg-gray-900 rounded-[1.5rem] overflow-hidden relative aspect-square shadow-md hover:shadow-xl transition-all cursor-pointer border border-gray-100"
-                >
-                  {/* Image or Video Preview */}
-                  {item.tipo === "video" ? (
-                    <div className="w-full h-full relative bg-gray-950 flex items-center justify-center">
-                      {item.thumbnail_url ? (
-                        <img
-                          src={item.thumbnail_url}
-                          alt={item.nombre_archivo}
-                          className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
-                        />
-                      ) : (
-                        <video
-                          src={item.url}
-                          muted
-                          preload="metadata"
-                          playsInline
-                          className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-black/30 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <div className="w-12 h-12 rounded-full bg-white/95 text-gray-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                          <Play className="w-5 h-5 fill-current ml-0.5 text-gray-900" />
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="w-full h-full relative">
-                      <img
-                        src={item.url}
-                        alt={item.nombre_archivo}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <div className="w-12 h-12 rounded-full bg-white/95 text-gray-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                          <Eye className="w-5 h-5 text-gray-900" />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Clean Bottom-Right Delete Button */}
-                  <div className="absolute bottom-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeletingMedia(item);
-                      }}
-                      className="w-9 h-9 rounded-full bg-black/60 hover:bg-red-500 text-white backdrop-blur-md flex items-center justify-center transition-all shadow-md cursor-pointer"
-                      title="Eliminar de la galería"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
+                  item={item}
+                  isSelectMode={isSelectMode}
+                  isSelected={selectedFileIds.includes(item.id)}
+                  isInUse={isMediaInUse(item)}
+                  onLongPress={handleCardLongPress}
+                  onClickItem={handleCardClick}
+                  onSingleDelete={(media) => setDeletingMedia(media)}
+                />
               ))}
             </div>
           )}
         </div>
       </div>
 
+      {/* FLOATING BATCH SELECTION TOOLBAR */}
+      {selectedFileIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900/95 border border-gray-800 text-white rounded-full px-4 py-2 shadow-2xl backdrop-blur-md flex items-center gap-3 animate-in slide-in-from-bottom duration-200 font-sora max-w-[90vw] sm:max-w-md">
+          {/* Selected Badge & Counter */}
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-pink-500 text-white text-xs font-extrabold flex items-center justify-center shadow-xs">
+              {selectedFileIds.length}
+            </span>
+            <span className="text-xs font-bold text-gray-200">
+              {selectedFileIds.length === 1 ? "seleccionado" : "seleccionados"}
+            </span>
+          </div>
+
+          <div className="h-4 w-px bg-gray-750 mx-0.5" />
+
+          {/* Select All Toggle */}
+          <button
+            type="button"
+            onClick={handleSelectAll}
+            className="text-xs font-bold text-gray-300 hover:text-white transition-colors cursor-pointer"
+          >
+            {selectedFileIds.length === filteredArchivos.length ? "Deseleccionar" : "Todos"}
+          </button>
+
+          <div className="h-4 w-px bg-gray-750 mx-0.5" />
+
+          {/* Cancel Action (Icon) */}
+          <button
+            type="button"
+            onClick={() => setSelectedFileIds([])}
+            className="p-1.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-white transition-colors cursor-pointer"
+            title="Cancelar selección"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          {/* Delete Action (Icon Button) */}
+          <button
+            type="button"
+            onClick={() => setShowBatchDeleteConfirm(true)}
+            className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-all shadow-md shadow-red-500/20 cursor-pointer shrink-0"
+            title={`Eliminar ${selectedFileIds.length} archivo(s)`}
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* LIGHTBOX PREVIEW MODAL */}
       {previewMedia && (
@@ -460,6 +615,8 @@ export default function MediaGallery({
           onDelete={(media) => setDeletingMedia(media)}
           showDelete={true}
           onEditPost={(p) => setEditingPost(p)}
+          onAssignPost={handleAssignPost}
+          onAddToExistingPost={handleAddToExistingPost}
         />
       )}
 
@@ -475,9 +632,9 @@ export default function MediaGallery({
         />
       )}
 
-      {/* DELETE CONFIRMATION MODAL */}
+      {/* SINGLE DELETE CONFIRMATION MODAL */}
       {deletingMedia && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[110] flex items-center justify-center p-4 animate-in fade-in duration-200 font-inter">
           <div className="bg-white rounded-[2rem] p-6 md:p-8 max-w-md w-full shadow-2xl border border-gray-100 relative text-center">
             <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-4 text-red-500">
               <Trash2 className="w-7 h-7" />
@@ -487,12 +644,10 @@ export default function MediaGallery({
               ¿Eliminar archivo?
             </h3>
 
-            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-              Estás a punto de eliminar el archivo{" "}
-              <span className="font-bold text-gray-900 font-sora break-all">
-                "{deletingMedia.nombre_archivo}"
-              </span>{" "}
-              de la galería del calendario. Esta acción eliminará el archivo del almacenamiento y no se podrá deshacer.
+            <p className="text-xs text-gray-500 mb-6 leading-relaxed">
+              ¿Estás seguro de que deseas eliminar{" "}
+              <strong className="text-gray-800">{deletingMedia.nombre_archivo}</strong> de la galería?
+              Esta acción no se puede deshacer.
             </p>
 
             <div className="flex items-center justify-center gap-3">
@@ -517,7 +672,55 @@ export default function MediaGallery({
                   </>
                 ) : (
                   <>
-                    <Trash2 className="w-4 h-4" /> Eliminar Definitivamente
+                    <Trash2 className="w-4 h-4" /> Eliminar
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BATCH DELETE CONFIRMATION MODAL */}
+      {showBatchDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-[110] flex items-center justify-center p-4 animate-in fade-in duration-200 font-inter">
+          <div className="bg-white rounded-[2.5rem] p-6 md:p-8 max-w-md w-full shadow-2xl border border-gray-100 relative text-center space-y-4">
+            <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mx-auto text-red-500">
+              <AlertTriangle className="w-7 h-7" />
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="font-sora font-extrabold text-gray-900 text-lg">
+                ¿Eliminar {selectedFileIds.length} archivo(s)?
+              </h3>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Esta acción eliminará de forma permanente los {selectedFileIds.length} archivos seleccionados de la galería y de Cloudflare R2.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowBatchDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="h-11 px-5 rounded-full border border-gray-300 hover:bg-gray-100 text-gray-700 font-sora font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={handleConfirmBatchDelete}
+                disabled={isDeleting}
+                className="h-11 px-5 rounded-full bg-red-500 hover:bg-red-600 text-white font-sora font-bold text-xs uppercase tracking-wider shadow-lg shadow-red-200 transition-all cursor-pointer inline-flex items-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" /> Eliminando...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" /> Confirmar Borrado
                   </>
                 )}
               </button>
