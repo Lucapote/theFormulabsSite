@@ -28,6 +28,7 @@ import {
 import { toast } from "sonner";
 import { getPublicCalendarioBySlug, generateSlug } from "@/services/calendarService";
 import CalendarGridView, { formatTimeHHMM } from "@/components/calendar/CalendarGridView";
+import MediaCarousel from "@/components/common/MediaCarousel";
 
 const MONTH_NAMES = [
   "Enero",
@@ -422,82 +423,60 @@ export default function PublicCalendarPage() {
                   return (
                     <div
                       key={post.id}
-                      className="bg-white border border-gray-100 rounded-[2.5rem] overflow-hidden shadow-xl hover:border-pink-200 transition-all group"
+                      className="bg-white border border-gray-100 rounded-[2rem] md:rounded-[2.5rem] overflow-hidden shadow-xl hover:border-pink-200 transition-all group"
                     >
-                      {/* Media Container */}
-                      <div className="bg-gray-950 min-h-[300px] md:min-h-[400px] max-h-[500px] flex items-center justify-center relative overflow-hidden">
-                        {firstFile ? (
-                          firstFile.tipo === "video" ? (
-                            <div className="w-full h-full relative flex items-center justify-center bg-gray-950">
-                              <video
-                                src={firstFile.url}
-                                controls
-                                preload="metadata"
-                                playsInline
-                                poster={firstFile.thumbnail_url || undefined}
-                                className="max-h-[480px] w-full object-contain"
-                              />
-                            </div>
-                          ) : (
-                            <img
-                              src={firstFile.url}
-                              alt="Post media"
-                              className="max-h-[480px] w-full object-contain cursor-pointer"
-                              onClick={() => {
-                                setSelectedPost(post);
-                                setActiveMediaIndex(0);
-                              }}
-                            />
-                          )
-                        ) : (
-                          <div className="p-8 text-center text-gray-500">
-                            <Film className="w-12 h-12 mx-auto mb-2 opacity-40" />
-                            <p className="text-xs">Sin archivo multimedia</p>
-                          </div>
-                        )}
-
-                        {/* Badges Overlay */}
-                        <div className="absolute top-4 left-4 flex flex-wrap items-center gap-2">
-                          <span
-                            className={`inline-flex items-center gap-1 font-sora font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full backdrop-blur-md shadow-md ${
-                              post.tipo_post === "reel"
-                                ? "bg-pink-500 text-white"
-                                : "bg-blue-600 text-white"
-                            }`}
-                          >
-                            {post.tipo_post === "reel" ? (
-                              <>
-                                <VideoIcon className="w-3 h-3" /> Reel
-                              </>
-                            ) : (
-                              <>
-                                <Layers className="w-3 h-3" /> Carrusel ({post.archivos?.length || 0})
-                              </>
-                            )}
-                          </span>
-
-                          <span className="inline-flex items-center gap-1.5 text-xs font-sora font-bold text-white bg-black/70 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                            <CalendarIcon className="w-3.5 h-3.5 text-white" /> {post.fecha_programada} • {formatTimeHHMM(post.hora_programada)}
-                          </span>
+                      {/* Instagram Post Card Header */}
+                      <div className="px-5 py-3.5 flex items-center justify-between border-b border-gray-100 bg-white">
+                        <div className="min-w-0">
+                          <h3 className="font-sora font-extrabold text-sm text-gray-900 leading-tight truncate">
+                            {clientName}
+                          </h3>
+                          <p className="text-[11px] text-gray-500 font-medium">
+                            {post.fecha_programada} • {formatTimeHHMM(post.hora_programada)}
+                          </p>
                         </div>
+
+                        <span
+                          className={`inline-flex items-center gap-1 font-sora font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-full shrink-0 ${
+                            post.tipo_post === "reel"
+                              ? "bg-pink-50 text-pink-600 border border-pink-200"
+                              : "bg-blue-50 text-[#188ff0] border border-blue-200"
+                          }`}
+                        >
+                          {post.tipo_post === "reel" ? (
+                            <>
+                              <VideoIcon className="w-3 h-3" /> Reel
+                            </>
+                          ) : (
+                            <>
+                              <Layers className="w-3 h-3" /> Carrusel
+                            </>
+                          )}
+                        </span>
                       </div>
 
+                      {/* Media Carousel Container */}
+                      <MediaCarousel
+                        files={post.archivos}
+                        containerClassName="min-h-[280px] md:min-h-[400px] max-h-[500px]"
+                        imageClassName="max-h-[480px] w-full object-contain"
+                        showControls={true}
+                        showDots={true}
+                      />
+
                       {/* Content Info & Copywriting */}
-                      <div className="p-6 md:p-8 space-y-6">
-                        <div className="space-y-2">
-                          <h4 className="text-xs font-sora font-bold uppercase text-gray-400 tracking-wider">
-                            Copywriting del Post
-                          </h4>
-                          <p className="text-sm text-gray-800 font-medium whitespace-pre-wrap leading-relaxed bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                      <div className="p-5 md:p-6 space-y-4">
+                        <div className="bg-gray-50/80 p-4 rounded-2xl border border-gray-100">
+                          <p className="text-sm text-gray-800 leading-relaxed font-normal whitespace-pre-wrap">
                             {post.caption || <em className="text-gray-400 font-normal">Sin copy redactado.</em>}
                           </p>
                         </div>
 
-                        {/* Copy Action Button */}
-                        <div className="flex items-center justify-between gap-4 pt-2">
+                        {/* Actions Row */}
+                        <div className="flex items-center justify-start pt-1">
                           <button
                             onClick={() => copyCaption(post.caption, post.id)}
-                            className="h-11 px-6 bg-pink-500 hover:bg-pink-600 text-white font-sora font-bold text-xs uppercase tracking-wider rounded-full shadow-md shadow-pink-200 inline-flex items-center gap-2 transition-all cursor-pointer"
+                            className="h-10 px-5 bg-pink-500 hover:bg-pink-600 text-white font-sora font-bold text-xs uppercase tracking-wider rounded-full shadow-md shadow-pink-200 inline-flex items-center gap-2 transition-all cursor-pointer"
                           >
                             {copiedPostId === post.id ? (
                               <>
@@ -509,18 +488,6 @@ export default function PublicCalendarPage() {
                               </>
                             )}
                           </button>
-
-                          {post.archivos && post.archivos.length > 1 && (
-                            <button
-                              onClick={() => {
-                                setSelectedPost(post);
-                                setActiveMediaIndex(0);
-                              }}
-                              className="h-11 px-5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-sora font-bold text-xs rounded-full inline-flex items-center gap-2 transition-all cursor-pointer"
-                            >
-                              Ver Galería Completa ({post.archivos.length})
-                            </button>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -574,95 +541,18 @@ export default function PublicCalendarPage() {
               <X className="w-5 h-5" />
             </button>
 
-            {/* Media Area - Horizontal Touch Swipe Snap Carousel */}
+            {/* Media Area - Reusable Media Carousel */}
             <div className="flex-1 md:w-3/5 bg-gray-950 flex flex-col items-center justify-center relative w-full h-full min-h-0 overflow-hidden">
-              {selectedPost.archivos && selectedPost.archivos.length > 0 ? (
-                <>
-                  <div
-                    ref={carouselRef}
-                    onScroll={handleCarouselScroll}
-                    className="w-full h-full flex overflow-x-auto snap-x snap-mandatory scroll-smooth touch-pan-x"
-                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                  >
-                    {selectedPost.archivos.map((file, idx) => (
-                      <div
-                        key={file.id || idx}
-                        className="w-full h-full flex-none snap-center flex items-center justify-center relative p-3 sm:p-4"
-                      >
-                        {file.tipo === "video" ? (
-                          <video
-                            src={file.url}
-                            controls
-                            autoPlay={idx === activeMediaIndex}
-                            preload="metadata"
-                            playsInline
-                            poster={file.thumbnail_url || undefined}
-                            className="max-h-full md:max-h-[65vh] w-full h-full object-contain rounded-xl"
-                          />
-                        ) : (
-                          <img
-                            src={file.url}
-                            alt={`Media ${idx + 1}`}
-                            loading="eager"
-                            className="max-h-full md:max-h-[65vh] w-full h-full object-contain rounded-xl select-none"
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Desktop Carousel controls */}
-                  {selectedPost.archivos.length > 1 && (
-                    <div className="absolute inset-x-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center justify-between pointer-events-none z-10">
-                      <button
-                        onClick={() =>
-                          scrollToSlide(
-                            activeMediaIndex === 0
-                              ? selectedPost.archivos.length - 1
-                              : activeMediaIndex - 1
-                          )
-                        }
-                        className="p-2 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md pointer-events-auto cursor-pointer transition-all shadow-md"
-                      >
-                        <ChevronLeft className="w-5 h-5" />
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          scrollToSlide(
-                            activeMediaIndex === selectedPost.archivos.length - 1
-                              ? 0
-                              : activeMediaIndex + 1
-                          )
-                        }
-                        className="p-2 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md pointer-events-auto cursor-pointer transition-all shadow-md"
-                      >
-                        <ChevronRight className="w-5 h-5" />
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Indicators */}
-                  {selectedPost.archivos.length > 1 && (
-                    <div className="absolute bottom-3 z-10 flex items-center gap-1.5 bg-black/50 px-3 py-1 rounded-full backdrop-blur-md">
-                      {selectedPost.archivos.map((_, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => scrollToSlide(idx)}
-                          className={`h-2 rounded-full transition-all cursor-pointer ${
-                            idx === activeMediaIndex ? "bg-pink-500 w-4" : "bg-white/40 w-2"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-gray-400 text-center">
-                  <Film className="w-12 h-12 mx-auto mb-2 opacity-40" />
-                  <p className="text-xs">Sin media disponible</p>
-                </div>
-              )}
+              <MediaCarousel
+                files={selectedPost.archivos}
+                initialIndex={activeMediaIndex}
+                onIndexChange={setActiveMediaIndex}
+                containerClassName="w-full h-full min-h-0"
+                imageClassName="max-h-full md:max-h-[65vh] w-full h-full object-contain rounded-xl select-none"
+                showControls={true}
+                showDots={true}
+                activeDotColorClass="bg-pink-500 w-5"
+              />
             </div>
 
             {/* Mobile Instagram-Style Teaser Card (Visible only on mobile md:hidden) */}

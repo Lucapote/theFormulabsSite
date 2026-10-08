@@ -30,8 +30,6 @@ import {
 } from "@/services/proposalService";
 import ProposalModal from "@/components/dashboard/ProposalModal";
 import ClientsCalendarSection from "@/components/dashboard/ClientsCalendarSection";
-import StorageMonitorSection from "@/components/dashboard/StorageMonitorSection";
-import { HardDrive } from "lucide-react";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -295,21 +293,7 @@ export default function Dashboard() {
             <BarChart2 className="w-4 h-4 text-brand-blue" />
             Diagnósticos ({diagnostics.length})
           </button>
-          <button
-            onClick={() => setActiveTab("storage")}
-            className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
-              activeTab === "storage"
-                ? "bg-gray-900 text-white shadow-md"
-                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
-            }`}
-          >
-            <HardDrive className="w-4 h-4 text-emerald-500" />
-            Almacenamiento & DB
-          </button>
         </div>
-
-        {/* TAB 4: MONITOR DE ALMACENAMIENTO Y BASE DE DATOS */}
-        {activeTab === "storage" && <StorageMonitorSection />}
 
         {/* TAB 2: CLIENTES Y CALENDARIOS */}
         {activeTab === "calendars" && <ClientsCalendarSection />}
