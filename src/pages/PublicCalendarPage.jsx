@@ -59,6 +59,9 @@ export default function PublicCalendarPage() {
   const [copied, setCopied] = useState(false);
   const [copiedPostId, setCopiedPostId] = useState(null);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
   useEffect(() => {
     async function loadPublicCalendar() {
       if (!activeSlug) return;
@@ -73,6 +76,15 @@ export default function PublicCalendarPage() {
 
       if (res.success && res.data) {
         setCalendario(res.data);
+
+        // If accessed via legacy /calendario/... URL, redirect cleanly to /clientSlug/calendarSlug
+        if (location.pathname.startsWith("/calendario/")) {
+          const clientName = res.data.cliente?.nombre || "";
+          const targetPath = formatCalendarUrlPath(res.data.slug || activeSlug, clientName);
+          if (targetPath && targetPath !== location.pathname) {
+            navigate(targetPath, { replace: true });
+          }
+        }
       } else {
         setErrorMsg(res.error || "No se encontró el calendario editorial solicitado.");
       }
@@ -80,7 +92,60 @@ export default function PublicCalendarPage() {
     }
 
     loadPublicCalendar();
-  }, [activeSlug, calendarSlug]);
+  }, [activeSlug, calendarSlug, location.pathname, navigate]);
+
+  // Post Navigation State (Instagram style navigation between posts)
+  const postsList = calendario?.posts || [];
+  const sortedPostsList = [...postsList].sort((a, b) => {
+    const dateA = `${a.fecha_programada || ''} ${a.hora_programada || ''}`;
+    const dateB = `${b.fecha_programada || ''} ${b.hora_programada || ''}`;
+    return dateA.localeCompare(dateB);
+  });
+
+  const currentPostIndex = selectedPost
+    ? sortedPostsList.findIndex((p) => p.id === selectedPost.id)
+    : -1;
+  const hasPrevPost = currentPostIndex > 0;
+  const hasNextPost = currentPostIndex !== -1 && currentPostIndex < sortedPostsList.length - 1;
+
+  const goToPrevPost = (e) => {
+    if (e) e.stopPropagation();
+    if (hasPrevPost) {
+      setSelectedPost(sortedPostsList[currentPostIndex - 1]);
+      setActiveMediaIndex(0);
+    }
+  };
+
+  const goToNextPost = (e) => {
+    if (e) e.stopPropagation();
+    if (hasNextPost) {
+      setSelectedPost(sortedPostsList[currentPostIndex + 1]);
+      setActiveMediaIndex(0);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedPost) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === "ArrowLeft") {
+        if (hasPrevPost) {
+          setSelectedPost(sortedPostsList[currentPostIndex - 1]);
+          setActiveMediaIndex(0);
+        }
+      } else if (e.key === "ArrowRight") {
+        if (hasNextPost) {
+          setSelectedPost(sortedPostsList[currentPostIndex + 1]);
+          setActiveMediaIndex(0);
+        }
+      } else if (e.key === "Escape") {
+        setSelectedPost(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedPost, currentPostIndex, hasPrevPost, hasNextPost, sortedPostsList]);
 
   const copyCaption = (text, postId = null) => {
     if (!text) {
@@ -146,7 +211,6 @@ export default function PublicCalendarPage() {
   const clientEmpresa = calendario.cliente?.empresa || "";
   const monthName = MONTH_NAMES[(calendario.mes || 1) - 1];
   const yearNum = calendario.anio || new Date().getFullYear();
-  const postsList = calendario.posts || [];
   const tipoContenido = calendario.tipo_contenido || "Reels y Carruseles";
   const plataformas = calendario.plataformas || "Instagram y Facebook";
 
@@ -167,7 +231,7 @@ export default function PublicCalendarPage() {
             <div className="hidden sm:flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-xs font-sora font-bold text-brand-blue">
                 <Building2 className="w-3.5 h-3.5 text-brand-blue" />
-                {clientName} {clientEmpresa && `• ${clientEmpresa}`}
+                {clientName}
               </span>
             </div>
           </div>
@@ -221,7 +285,7 @@ export default function PublicCalendarPage() {
             <div className="flex flex-wrap items-center gap-2.5 pt-1">
               <span className="inline-flex items-center gap-1.5 font-sora font-bold text-xs text-white bg-white/20 backdrop-blur-md border border-white/30 px-3.5 py-1 rounded-full shadow-xs">
                 <Building2 className="w-3.5 h-3.5 text-white shrink-0" />
-                {clientName} {clientEmpresa && `(${clientEmpresa})`}
+                {clientName}
               </span>
 
               <span className="inline-flex items-center gap-1.5 font-sora font-bold text-xs text-white bg-white/20 backdrop-blur-md border border-white/30 px-3.5 py-1 rounded-full shadow-xs">
@@ -295,6 +359,9 @@ export default function PublicCalendarPage() {
                               <video
                                 src={firstFile.url}
                                 controls
+                                preload="metadata"
+                                playsInline
+                                poster={firstFile.thumbnail_url || undefined}
                                 className="max-h-[480px] w-full object-contain"
                               />
                             </div>
@@ -394,8 +461,35 @@ export default function PublicCalendarPage() {
 
       {/* FEED PREVIEW LIGHTBOX MODAL */}
       {selectedPost && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-[2.5rem] max-w-4xl w-full overflow-hidden shadow-2xl relative border border-gray-100 flex flex-col md:flex-row max-h-[90vh]">
+        <div
+          onClick={() => setSelectedPost(null)}
+          className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200 overflow-y-auto"
+        >
+          {/* Post-to-Post Instagram Navigation Arrows */}
+          {hasPrevPost && (
+            <button
+              onClick={goToPrevPost}
+              className="fixed left-3 sm:left-6 top-1/2 -translate-y-1/2 z-[120] w-12 h-12 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md flex items-center justify-center transition-all cursor-pointer border border-white/20 shadow-2xl group hover:scale-110"
+              title="Publicación anterior (Flecha izquierda ←)"
+            >
+              <ChevronLeft className="w-7 h-7 group-hover:-translate-x-0.5 transition-transform text-white" />
+            </button>
+          )}
+
+          {hasNextPost && (
+            <button
+              onClick={goToNextPost}
+              className="fixed right-3 sm:right-6 top-1/2 -translate-y-1/2 z-[120] w-12 h-12 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md flex items-center justify-center transition-all cursor-pointer border border-white/20 shadow-2xl group hover:scale-110"
+              title="Siguiente publicación (Flecha derecha →)"
+            >
+              <ChevronRight className="w-7 h-7 group-hover:translate-x-0.5 transition-transform text-white" />
+            </button>
+          )}
+
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-[2.5rem] max-w-4xl w-full overflow-hidden shadow-2xl relative border border-gray-100 flex flex-col md:flex-row max-h-[90vh]"
+          >
             {/* Media Area */}
             <div className="md:w-3/5 bg-gray-950 flex flex-col items-center justify-center relative p-4 min-h-[320px]">
               {selectedPost.archivos && selectedPost.archivos.length > 0 ? (
@@ -405,6 +499,9 @@ export default function PublicCalendarPage() {
                       src={selectedPost.archivos[activeMediaIndex].url}
                       controls
                       autoPlay
+                      preload="metadata"
+                      playsInline
+                      poster={selectedPost.archivos[activeMediaIndex]?.thumbnail_url || undefined}
                       className="max-h-[65vh] w-full object-contain rounded-xl"
                     />
                   ) : (

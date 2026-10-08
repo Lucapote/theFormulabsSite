@@ -17,6 +17,9 @@ export default defineConfig(({ mode }) => {
         overlay: false
       }
     },
+    optimizeDeps: {
+      exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util"],
+    },
     plugins: [react(), viteR2DevServer()],
     resolve: {
       alias: {

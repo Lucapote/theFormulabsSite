@@ -33,6 +33,7 @@ const App = () => (
               }
             />
             <Route path="/propuesta/:slug" element={<ProposalPage />} />
+            <Route path="/calendario/:slug" element={<PublicCalendarPage />} />
             <Route path="/:clientSlug/:calendarSlug" element={<PublicCalendarPage />} />
             <Route path="/:slug" element={<ProposalPage />} />
           </Routes>

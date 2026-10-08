@@ -32,9 +32,15 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  try {
-    const params = req.method === "POST" ? req.body || {} : req.query || {};
-    const { fileName, fileType, calendarioId, action = "put", key } = params;
+    let body = req.body || {};
+    if (typeof body === "string") {
+      try {
+        body = JSON.parse(body);
+      } catch (_) {}
+    }
+    const params = { ...(req.query || {}), ...body };
+    const { fileName, fileType, calendarioId, key } = params;
+    const action = params.action || (req.method === "DELETE" ? "delete" : "put");
     const s3Client = getS3Client();
 
     // Manejar eliminación de objeto en R2 si se solicita action = 'delete'

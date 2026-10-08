@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Video as VideoIcon,
   Layers,
@@ -41,6 +41,58 @@ export default function CalendarGridView({
   const [selectedPost, setSelectedPost] = useState(null);
   const [copied, setCopied] = useState(false);
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+
+  // Post Navigation State (Instagram style navigation between posts)
+  const sortedPosts = [...posts].sort((a, b) => {
+    const dateA = `${a.fecha_programada || ''} ${a.hora_programada || ''}`;
+    const dateB = `${b.fecha_programada || ''} ${b.hora_programada || ''}`;
+    return dateA.localeCompare(dateB);
+  });
+
+  const currentPostIndex = selectedPost
+    ? sortedPosts.findIndex((p) => p.id === selectedPost.id)
+    : -1;
+  const hasPrevPost = currentPostIndex > 0;
+  const hasNextPost = currentPostIndex !== -1 && currentPostIndex < sortedPosts.length - 1;
+
+  const goToPrevPost = (e) => {
+    if (e) e.stopPropagation();
+    if (hasPrevPost) {
+      setSelectedPost(sortedPosts[currentPostIndex - 1]);
+      setActiveMediaIndex(0);
+    }
+  };
+
+  const goToNextPost = (e) => {
+    if (e) e.stopPropagation();
+    if (hasNextPost) {
+      setSelectedPost(sortedPosts[currentPostIndex + 1]);
+      setActiveMediaIndex(0);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedPost) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === "ArrowLeft") {
+        if (hasPrevPost) {
+          setSelectedPost(sortedPosts[currentPostIndex - 1]);
+          setActiveMediaIndex(0);
+        }
+      } else if (e.key === "ArrowRight") {
+        if (hasNextPost) {
+          setSelectedPost(sortedPosts[currentPostIndex + 1]);
+          setActiveMediaIndex(0);
+        }
+      } else if (e.key === "Escape") {
+        setSelectedPost(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedPost, currentPostIndex, hasPrevPost, hasNextPost, sortedPosts]);
 
   // Month navigation or formatting helpers
   const monthIndex = Number(mes) - 1;
@@ -108,9 +160,14 @@ export default function CalendarGridView({
   };
 
   const handlePostCardClick = (post, e) => {
-    e.stopPropagation();
+    if (e && typeof e.stopPropagation === "function") {
+      e.stopPropagation();
+    }
     setSelectedPost(post);
     setActiveMediaIndex(0);
+    if (onPostClick) {
+      onPostClick(post);
+    }
   };
 
   // Mobile selected day state
@@ -140,8 +197,10 @@ export default function CalendarGridView({
             return (
               <div
                 key={idx}
-                onClick={() => {
-                  if (!readOnly && cell.isCurrentMonth && onDayClick) {
+                onClick={(e) => {
+                  if (hasPosts && dayPosts.length > 0) {
+                    handlePostCardClick(dayPosts[0], e);
+                  } else if (!readOnly && cell.isCurrentMonth && onDayClick) {
                     onDayClick(cell.dateString);
                   }
                 }}
@@ -203,7 +262,21 @@ export default function CalendarGridView({
                           {firstFile ? (
                             firstFile.tipo === "video" ? (
                               <div className="w-full h-full relative bg-gray-950 flex items-center justify-center">
-                                <video src={firstFile.url} muted className="w-full h-full object-cover" />
+                                {firstFile.thumbnail_url ? (
+                                  <img
+                                    src={firstFile.thumbnail_url}
+                                    alt="Video thumbnail"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <video
+                                    src={firstFile.url}
+                                    muted
+                                    preload="metadata"
+                                    playsInline
+                                    className="w-full h-full object-cover"
+                                  />
+                                )}
                                 <Play className="w-2.5 h-2.5 text-white absolute fill-current" />
                               </div>
                             ) : (
@@ -395,7 +468,21 @@ export default function CalendarGridView({
                             {firstFile ? (
                               firstFile.tipo === "video" ? (
                                 <div className="w-full h-full relative bg-gray-950 flex items-center justify-center">
-                                  <video src={firstFile.url} muted className="w-full h-full object-cover" />
+                                  {firstFile.thumbnail_url ? (
+                                    <img
+                                      src={firstFile.thumbnail_url}
+                                      alt="Video thumbnail"
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <video
+                                      src={firstFile.url}
+                                      muted
+                                      preload="metadata"
+                                      playsInline
+                                      className="w-full h-full object-cover"
+                                    />
+                                  )}
                                   <Play className="w-3 h-3 text-white absolute fill-current" />
                                 </div>
                               ) : (
@@ -462,6 +549,27 @@ export default function CalendarGridView({
           onClick={() => setSelectedPost(null)}
           className="fixed inset-0 bg-black/85 backdrop-blur-md z-[100] flex items-center justify-center p-3 sm:p-4 font-inter animate-in fade-in duration-200 overflow-y-auto"
         >
+          {/* Post-to-Post Instagram Navigation Arrows */}
+          {hasPrevPost && (
+            <button
+              onClick={goToPrevPost}
+              className="fixed left-3 sm:left-6 top-1/2 -translate-y-1/2 z-[120] w-12 h-12 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md flex items-center justify-center transition-all cursor-pointer border border-white/20 shadow-2xl group hover:scale-110"
+              title="Publicación anterior (Flecha izquierda ←)"
+            >
+              <ChevronLeft className="w-7 h-7 group-hover:-translate-x-0.5 transition-transform text-white" />
+            </button>
+          )}
+
+          {hasNextPost && (
+            <button
+              onClick={goToNextPost}
+              className="fixed right-3 sm:right-6 top-1/2 -translate-y-1/2 z-[120] w-12 h-12 rounded-full bg-black/60 hover:bg-black text-white backdrop-blur-md flex items-center justify-center transition-all cursor-pointer border border-white/20 shadow-2xl group hover:scale-110"
+              title="Siguiente publicación (Flecha derecha →)"
+            >
+              <ChevronRight className="w-7 h-7 group-hover:translate-x-0.5 transition-transform text-white" />
+            </button>
+          )}
+
           <div
             onClick={(e) => e.stopPropagation()}
             className="bg-white rounded-[2rem] max-w-2xl w-full my-auto overflow-hidden shadow-2xl relative border border-gray-100 flex flex-col md:flex-row max-h-[85dvh] sm:max-h-[88dvh]"
@@ -484,6 +592,9 @@ export default function CalendarGridView({
                       src={selectedPost.archivos[activeMediaIndex].url}
                       controls
                       autoPlay
+                      preload="metadata"
+                      playsInline
+                      poster={selectedPost.archivos[activeMediaIndex]?.thumbnail_url || undefined}
                       className="max-h-[38vh] md:max-h-[65vh] w-full object-contain rounded-xl"
                     />
                   ) : (

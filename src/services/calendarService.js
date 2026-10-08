@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { getR2PresignedUploadUrl, deleteR2Object } from "@/services/r2Service";
+import { generateVideoThumbnail, compressVideo } from "@/utils/mediaCompressor";
 
 /**
  * Service for Clientes and Calendarios management (Fase 2)
@@ -109,24 +110,22 @@ export async function createCliente({ nombre, empresa = "", email = "" }) {
   }
 }
 
-const BUCKET_NAME = "media-videos-calendario";
-
-// Helper to extract relative storage path from full URL or relative path
+// Helper to extract relative storage path from full URL or relative path in Cloudflare R2
 function extractStoragePath(urlOrPath) {
   if (!urlOrPath) return "";
-  if (urlOrPath.includes("calendarios/")) {
-    const idx = urlOrPath.indexOf("calendarios/");
-    return urlOrPath.substring(idx);
-  }
-  if (urlOrPath.includes("public/")) {
-    const parts = urlOrPath.split("public/");
-    const pathAndBucket = parts[1];
-    const slashIdx = pathAndBucket.indexOf("/");
-    if (slashIdx !== -1) {
-      return pathAndBucket.substring(slashIdx + 1);
+  let path = urlOrPath;
+  try {
+    if (path.startsWith("http://") || path.startsWith("https://")) {
+      const parsedUrl = new URL(path);
+      path = parsedUrl.pathname.replace(/^\/+/, "");
     }
+  } catch (_) {}
+
+  if (path.includes("calendarios/")) {
+    const idx = path.indexOf("calendarios/");
+    path = path.substring(idx);
   }
-  return urlOrPath;
+  return path.split("?")[0].replace(/^\/+/, "");
 }
 
 /**
@@ -150,17 +149,19 @@ export async function deleteCliente(clienteId) {
       // 2. Fetch all media files for all calendars of this client
       const { data: files } = await supabase
         .from("archivos_galeria")
-        .select("id, url")
+        .select("id, url, thumbnail_url")
         .in("calendario_id", calIds);
 
       if (files && files.length > 0) {
-        const storagePaths = files
-          .map((f) => extractStoragePath(f.url))
-          .filter(Boolean);
+        const storagePaths = [];
+        files.forEach((f) => {
+          if (f.url) storagePaths.push(extractStoragePath(f.url));
+          if (f.thumbnail_url) storagePaths.push(extractStoragePath(f.thumbnail_url));
+        });
 
-        if (storagePaths.length > 0) {
-          // Remove all physical files from Cloudflare R2 bucket
-          for (const path of storagePaths) {
+        const validPaths = storagePaths.filter(Boolean);
+        if (validPaths.length > 0) {
+          for (const path of validPaths) {
             await deleteR2Object(path);
           }
         }
@@ -307,16 +308,19 @@ export async function deleteCalendario(calendarioId) {
     // 1. Fetch all archivos_galeria for this calendar to clean up physical storage files
     const { data: files } = await supabase
       .from("archivos_galeria")
-      .select("id, url")
+      .select("id, url, thumbnail_url")
       .eq("calendario_id", calendarioId);
 
     if (files && files.length > 0) {
-      const storagePaths = files
-        .map((f) => extractStoragePath(f.url))
-        .filter(Boolean);
+      const storagePaths = [];
+      files.forEach((f) => {
+        if (f.url) storagePaths.push(extractStoragePath(f.url));
+        if (f.thumbnail_url) storagePaths.push(extractStoragePath(f.thumbnail_url));
+      });
 
-      if (storagePaths.length > 0) {
-        for (const path of storagePaths) {
+      const validPaths = storagePaths.filter(Boolean);
+      if (validPaths.length > 0) {
+        for (const path of validPaths) {
           await deleteR2Object(path);
         }
       }
@@ -334,10 +338,10 @@ export async function deleteCalendario(calendarioId) {
 }
 
 /**
- * Subes un archivo multimedia (imagen/video) a Cloudflare R2 mediante URL prefirmada
- * e insertas el registro con la URL pública en la tabla archivos_galeria de Supabase.
+ * Sube un archivo multimedia a Cloudflare R2 e inserta el registro en archivos_galeria.
+ * Para videos: genera miniatura WebP, transcodifica con FFmpeg a MP4 FastStart y sube ambos a R2.
  */
-export async function uploadMediaFile(calendarioId, file) {
+export async function uploadMediaFile(calendarioId, file, onProgress) {
   if (!calendarioId) return { success: false, error: "calendarioId no provisto" };
   if (!file) return { success: false, error: "Archivo no provisto" };
 
@@ -346,20 +350,62 @@ export async function uploadMediaFile(calendarioId, file) {
 
     const isVideo = file.type.startsWith("video/") || /\.(mp4|mov|webm|m4v|avi)$/i.test(file.name);
     const mediaType = isVideo ? "video" : "image";
-    const contentType = file.type || (isVideo ? "video/mp4" : "image/jpeg");
 
+    let fileToUpload = file;
+    let thumbnailPublicUrl = null;
+
+    if (isVideo) {
+      // 1. Generar miniatura WebP ligera del video (~40-60 KB)
+      try {
+        const thumbFile = await generateVideoThumbnail(file);
+        if (thumbFile) {
+          const thumbTimestamp = Date.now();
+          const thumbStorageKey = `calendarios/${calendarioId}/thumbnails/${thumbTimestamp}.webp`;
+
+          const thumbRes = await fetch("/api/upload-r2", {
+            method: "POST",
+            headers: {
+              "x-file-name": `${thumbTimestamp}.webp`,
+              "x-file-type": "image/webp",
+              "x-calendario-id": calendarioId,
+              "x-storage-key": thumbStorageKey,
+            },
+            body: thumbFile,
+          });
+
+          if (thumbRes.ok) {
+            const thumbJson = await thumbRes.json();
+            thumbnailPublicUrl = thumbJson.publicUrl || null;
+          }
+        }
+      } catch (thumbErr) {
+        console.warn("Aviso: No se pudo generar la miniatura del video:", thumbErr);
+      }
+
+      // 2. Transcodificar video pesado o .mov a MP4 con índice faststart (moov atom al inicio)
+      try {
+        const compressRes = await compressVideo(file, onProgress);
+        if (compressRes?.file) {
+          fileToUpload = compressRes.file;
+        }
+      } catch (transcodeErr) {
+        console.warn("Aviso: Transcodificación omitida, usando video original:", transcodeErr);
+      }
+    }
+
+    const contentType = fileToUpload.type || (isVideo ? "video/mp4" : "image/jpeg");
     let publicUrl = "";
 
-    // 1. Subida del binario a Cloudflare R2 mediante el endpoint /api/upload-r2 (Seguro contra CORS)
+    // 3. Subida del archivo principal a Cloudflare R2 mediante /api/upload-r2 (Seguro contra CORS)
     try {
       const apiRes = await fetch("/api/upload-r2", {
         method: "POST",
         headers: {
-          "x-file-name": encodeURIComponent(file.name),
+          "x-file-name": encodeURIComponent(fileToUpload.name),
           "x-file-type": contentType,
           "x-calendario-id": calendarioId,
         },
-        body: file,
+        body: fileToUpload,
       });
 
       if (apiRes.ok) {
@@ -372,10 +418,10 @@ export async function uploadMediaFile(calendarioId, file) {
       console.warn("Aviso: Subida /api/upload-r2 no disponible, intentando URL prefirmada:", apiErr);
     }
 
-    // 2. Fallback a URL prefirmada si /api/upload-r2 fallara
+    // 4. Fallback a URL prefirmada si /api/upload-r2 fallara
     if (!publicUrl) {
       const presignedRes = await getR2PresignedUploadUrl({
-        fileName: file.name,
+        fileName: fileToUpload.name,
         fileType: contentType,
         calendarioId,
       });
@@ -390,7 +436,7 @@ export async function uploadMediaFile(calendarioId, file) {
         headers: {
           "Content-Type": contentType,
         },
-        body: file,
+        body: fileToUpload,
       });
 
       if (!uploadRes.ok) {
@@ -402,12 +448,13 @@ export async function uploadMediaFile(calendarioId, file) {
       publicUrl = presignedRes.publicUrl;
     }
 
-    // 3. Registrar el metadato con la URL pública de R2 en la tabla archivos_galeria de Supabase
+    // 5. Registrar el metadato con URL de video y miniatura en archivos_galeria de Supabase
     const payload = {
       calendario_id: calendarioId,
-      nombre_archivo: file.name,
+      nombre_archivo: fileToUpload.name,
       tipo: mediaType,
       url: publicUrl,
+      thumbnail_url: thumbnailPublicUrl,
       en_uso: false,
       created_at: new Date().toISOString()
     };
@@ -459,16 +506,20 @@ export async function getArchivosByCalendario(calendarioId) {
 /**
  * Elimina un archivo multimedia de Cloudflare R2 y de la tabla archivos_galeria en Supabase
  */
-export async function deleteArchivo(archivoId, storageUrlOrPath = "") {
+export async function deleteArchivo(archivoId, storageUrlOrPath = "", thumbnailUrlOrPath = "") {
   if (!archivoId) return { success: false, error: "archivoId no provisto" };
 
   try {
     if (!supabase) return { success: false, error: "Supabase no configurado" };
 
     const relativePath = extractStoragePath(storageUrlOrPath);
-
     if (relativePath) {
       await deleteR2Object(relativePath);
+    }
+
+    const relativeThumbPath = extractStoragePath(thumbnailUrlOrPath);
+    if (relativeThumbPath) {
+      await deleteR2Object(relativeThumbPath);
     }
 
     const { error: dbError } = await supabase

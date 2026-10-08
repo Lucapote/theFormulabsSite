@@ -57,7 +57,7 @@ export default async function handler(req, res) {
     }
 
     const cleanFileName = decodeURIComponent(fileName).replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_.-]/g, "");
-    const storageKey = `calendarios/${calendarioId}/${Date.now()}-${cleanFileName}`;
+    const storageKey = req.headers["x-storage-key"] || req.query.storageKey || `calendarios/${calendarioId}/${Date.now()}-${cleanFileName}`;
 
     const s3Client = getS3Client();
     const command = new PutObjectCommand({

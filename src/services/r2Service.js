@@ -42,10 +42,13 @@ export async function deleteR2Object(storageKey) {
     });
 
     if (!res.ok) {
-      console.warn(`No se pudo eliminar objeto "${storageKey}" de R2 desde el backend.`);
+      const errText = await res.text().catch(() => "");
+      console.warn(`No se pudo eliminar objeto "${storageKey}" de R2 desde el backend:`, errText);
+      return { success: false, error: errText || "Error eliminando objeto de R2" };
     }
 
-    return { success: true };
+    const data = await res.json().catch(() => ({}));
+    return { success: true, ...data };
   } catch (err) {
     console.warn("deleteR2Object catch error:", err);
     return { success: false, error: err.message };

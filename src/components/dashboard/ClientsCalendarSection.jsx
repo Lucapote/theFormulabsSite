@@ -406,7 +406,7 @@ export default function ClientsCalendarSection() {
             </button>
 
             <a
-              href={`/calendario/${activeCalendar.slug}`}
+              href={formatCalendarUrlPath(activeCalendar.slug, selectedCliente?.nombre)}
               target="_blank"
               rel="noopener noreferrer"
               className="h-9 sm:h-10 px-3 sm:px-3.5 bg-blue-50 hover:bg-blue-100 text-brand-blue font-sora font-bold text-xs rounded-full border border-blue-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"

@@ -464,11 +464,21 @@ export default function ScheduledPostsList({
                       <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-gray-900 shrink-0 relative border border-gray-100 shadow-xs">
                         {firstFile.tipo === "video" ? (
                           <div className="w-full h-full relative bg-gray-950 flex items-center justify-center">
-                            <video
-                              src={firstFile.url}
-                              muted
-                              className="w-full h-full object-cover"
-                            />
+                            {firstFile.thumbnail_url ? (
+                              <img
+                                src={firstFile.thumbnail_url}
+                                alt="Post Preview"
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <video
+                                src={firstFile.url}
+                                muted
+                                preload="metadata"
+                                playsInline
+                                className="w-full h-full object-cover"
+                              />
+                            )}
                             <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                               <Play className="w-4 h-4 text-white fill-current" />
                             </div>

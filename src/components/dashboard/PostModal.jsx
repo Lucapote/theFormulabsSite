@@ -366,12 +366,21 @@ export default function PostModal({
                       }`}
                     >
                       {file.tipo === "video" ? (
-                        <video
-                          src={file.url}
-                          muted
-                          preload="metadata"
-                          className="w-full h-full object-cover"
-                        />
+                        file.thumbnail_url ? (
+                          <img
+                            src={file.thumbnail_url}
+                            alt={file.nombre_archivo || "Media"}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <video
+                            src={file.url}
+                            muted
+                            preload="metadata"
+                            playsInline
+                            className="w-full h-full object-cover"
+                          />
+                        )
                       ) : (
                         <img
                           src={file.url}

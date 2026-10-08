@@ -118,7 +118,7 @@ export default function MediaGallery({
   const handleConfirmDelete = async () => {
     if (!deletingMedia) return;
     setIsDeleting(true);
-    const res = await deleteArchivo(deletingMedia.id, deletingMedia.url);
+    const res = await deleteArchivo(deletingMedia.id, deletingMedia.url, deletingMedia.thumbnail_url);
     if (res.success) {
       toast.success(`Archivo "${deletingMedia.nombre_archivo}" eliminado de la galería.`);
       setDeletingMedia(null);
@@ -365,13 +365,22 @@ export default function MediaGallery({
                   {/* Image or Video Preview */}
                   {item.tipo === "video" ? (
                     <div className="w-full h-full relative bg-gray-950 flex items-center justify-center">
-                      <video
-                        src={item.url}
-                        muted
-                        preload="metadata"
-                        className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                      />
-                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      {item.thumbnail_url ? (
+                        <img
+                          src={item.thumbnail_url}
+                          alt={item.nombre_archivo}
+                          className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+                        />
+                      ) : (
+                        <video
+                          src={item.url}
+                          muted
+                          preload="metadata"
+                          playsInline
+                          className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-black/30 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <div className="w-12 h-12 rounded-full bg-white/95 text-gray-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
                           <Play className="w-5 h-5 fill-current ml-0.5 text-gray-900" />
                         </div>
@@ -439,6 +448,9 @@ export default function MediaGallery({
                   src={previewMedia.url}
                   controls
                   autoPlay
+                  preload="metadata"
+                  playsInline
+                  poster={previewMedia.thumbnail_url || undefined}
                   className="max-h-[38vh] md:max-h-[65vh] w-full object-contain rounded-xl"
                 />
               ) : (

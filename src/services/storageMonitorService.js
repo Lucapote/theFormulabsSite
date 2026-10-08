@@ -1,14 +1,14 @@
 import { supabase } from "@/lib/supabase";
 
-const BUCKET_NAME = "media-videos-calendario";
-
 // Límite por defecto de la cuota gratuita de Cloudflare R2 (10 GB storage) y Supabase (500 MB DB)
 export const STORAGE_LIMIT_BYTES = 10 * 1024 * 1024 * 1024; // 10 GB Cloudflare R2
 export const DB_LIMIT_BYTES = 500 * 1024 * 1024; // 500 MB Supabase DB
 
 /**
  * Servicio para consultar y calcular en tiempo real el espacio ocupado
- * en el Bucket de Cloudflare R2 y las tablas de la Base de Datos PostgreSQL en Supabase.
+ * en Cloudflare R2 (archivos_galeria) y las tablas de la Base de Datos PostgreSQL en Supabase.
+ * Nota: Los archivos se almacenan 100% en Cloudflare R2; Supabase se utiliza exclusivamente
+ * como Base de Datos relacional PostgreSQL.
  */
 export async function getStorageAndDatabaseMetrics() {
   try {
@@ -31,54 +31,24 @@ export async function getStorageAndDatabaseMetrics() {
     const archivosEnUso = (archivos || []).filter((a) => a.en_uso);
     const archivosLibres = (archivos || []).filter((a) => !a.en_uso);
 
-    // 2. Escanear pesos reales del Bucket en Supabase Storage
-    let totalBucketBytes = 0;
+    // 2. Calcular pesos en Cloudflare R2 a partir de los metadatos registrados
     let imagesBucketBytes = 0;
     let videosBucketBytes = 0;
+    let totalBucketBytes = 0;
 
-    // Intentar listar objetos desde la carpeta 'calendarios/' en Storage
-    try {
-      const { data: folderList } = await supabase.storage
-        .from(BUCKET_NAME)
-        .list("calendarios", { limit: 100 });
-
-      if (folderList && folderList.length > 0) {
-        for (const item of folderList) {
-          if (!item.id) {
-            // Es un subdirectorio de calendario (ej: calendarios/<calId>/)
-            const { data: subFiles } = await supabase.storage
-              .from(BUCKET_NAME)
-              .list(`calendarios/${item.name}`, { limit: 1000 });
-
-            if (subFiles && subFiles.length > 0) {
-              subFiles.forEach((f) => {
-                const size = f.metadata?.size || f.size || 0;
-                totalBucketBytes += size;
-                const isVid = /\.(mp4|mov|webm|m4v|avi)$/i.test(f.name);
-                if (isVid) {
-                  videosBucketBytes += size;
-                } else {
-                  imagesBucketBytes += size;
-                }
-              });
-            }
-          } else {
-            const size = item.metadata?.size || item.size || 0;
-            totalBucketBytes += size;
-          }
-        }
+    (archivos || []).forEach((archivo) => {
+      // Si el archivo tiene peso guardado en metadatos o peso estimado
+      const fileBytes = archivo.tamano_bytes || archivo.size || 0;
+      if (archivo.tipo === "video") {
+        const estimatedVideoBytes = fileBytes > 0 ? fileBytes : 6 * 1024 * 1024; // ~6MB por video transcodificado
+        videosBucketBytes += estimatedVideoBytes;
+      } else {
+        const estimatedImageBytes = fileBytes > 0 ? fileBytes : 350 * 1024; // ~350KB por imagen WebP/JPEG
+        imagesBucketBytes += estimatedImageBytes;
       }
-    } catch (storageErr) {
-      console.warn("No se pudo escanear Storage directamente por API, aplicando estimación:", storageErr);
-    }
+    });
 
-    // Si la lectura directa del bucket da 0 pero hay archivos registrados, aplicar tamaño promedio por tipo
-    if (totalBucketBytes === 0 && totalArchivosCount > 0) {
-      // Estimación razonable: ~400 KB por imagen optimizada, ~8 MB por video
-      imagesBucketBytes = imagenes.length * 400 * 1024;
-      videosBucketBytes = videos.length * 8 * 1024 * 1024;
-      totalBucketBytes = imagesBucketBytes + videosBucketBytes;
-    }
+    totalBucketBytes = imagesBucketBytes + videosBucketBytes;
 
     // 3. Consultar conteos de tablas de la Base de Datos
     const [
