@@ -1,21 +1,34 @@
-import { UploadCloud, RefreshCw } from "lucide-react";
+import { UploadCloud, RefreshCw, Film } from "lucide-react";
 
 /**
  * MediaGalleryUploader
- * Drag & drop file uploader box and uploading status indicator.
+ * Drag & drop file uploader box and uploading status indicator with 2-phase real progress.
  */
 export default function MediaGalleryUploader({
   isDragging = false,
   fileInputRef,
   isUploading = false,
-  uploadProgress = { current: 0, total: 0 },
+  uploadProgress = { current: 0, total: 0, phase: "uploading", compressPercent: 0, uploadPercent: 0, currentFileName: "" },
   onDragOver,
   onDragLeave,
   onDrop,
   onUploadFiles
 }) {
+  const isCompressing = uploadProgress.phase === "compressing";
+  const activePercent = isCompressing
+    ? (uploadProgress.compressPercent || 0)
+    : (uploadProgress.uploadPercent || 0);
+
+  const phaseTitle = isCompressing
+    ? `Comprimiendo video (${uploadProgress.compressPercent || 0}%)`
+    : `Subiendo a R2 (${uploadProgress.uploadPercent || 0}%)`;
+
+  const phaseStep = isCompressing
+    ? "Paso 1/2: Optimizando calidad"
+    : "Paso 2/2: Subiendo a la nube";
+
   return (
-    <div className="lg:col-span-4 bg-white rounded-[2rem] p-6 shadow-xl border border-gray-100 space-y-4 lg:sticky lg:top-6">
+    <div className="lg:col-span-4 bg-white rounded-[2rem] p-6 shadow-xl border border-gray-100 space-y-4 lg:sticky lg:top-6 font-inter">
       <div className="flex items-center justify-between gap-2 pb-3 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <UploadCloud className="w-4 h-4 text-pink-500" />
@@ -57,29 +70,37 @@ export default function MediaGalleryUploader({
         </p>
       </div>
 
-      {/* Uploading Status Panel */}
+      {/* Uploading Status Panel with 2-Phase Progress */}
       {isUploading && (
-        <div className="p-4 bg-pink-50 border border-pink-200 rounded-2xl space-y-2 animate-in fade-in duration-200">
+        <div className="p-4 bg-pink-50 border border-pink-200 rounded-2xl space-y-2.5 animate-in fade-in duration-200">
           <div className="flex items-center justify-between text-xs font-sora font-bold text-pink-700">
-            <span className="flex items-center gap-1.5">
-              <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Subiendo archivos...
+            <span className="flex items-center gap-1.5 truncate pr-2">
+              {isCompressing ? (
+                <Film className="w-3.5 h-3.5 animate-pulse text-pink-600 shrink-0" />
+              ) : (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin text-pink-600 shrink-0" />
+              )}
+              <span className="truncate">{phaseTitle}</span>
             </span>
-            <span>
+            <span className="shrink-0 text-[11px] font-mono">
               {uploadProgress.current} de {uploadProgress.total}
             </span>
           </div>
-          <div className="w-full h-2 bg-pink-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-pink-500 transition-all duration-300"
-              style={{
-                width: `${
-                  uploadProgress.total > 0
-                    ? Math.round((uploadProgress.current / uploadProgress.total) * 100)
-                    : 0
-                }%`
-              }}
-            />
+
+          <div className="flex items-center justify-between text-[10px] text-gray-500 font-medium">
+            <span>{phaseStep}</span>
+            {uploadProgress.currentFileName && (
+              <span className="max-w-[130px] truncate font-mono text-gray-600">
+                {uploadProgress.currentFileName}
+              </span>
+            )}
           </div>
+
+          <progress
+            value={activePercent}
+            max={100}
+            className="w-full h-2 rounded-full overflow-hidden accent-pink-500 bg-pink-200 [&::-webkit-progress-bar]:bg-pink-200 [&::-webkit-progress-value]:bg-pink-500 [&::-webkit-progress-value]:transition-all [&::-webkit-progress-value]:duration-200 [&::-moz-progress-bar]:bg-pink-500"
+          />
         </div>
       )}
     </div>

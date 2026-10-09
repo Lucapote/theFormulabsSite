@@ -120,10 +120,21 @@ export async function generateVideoThumbnail(file) {
 export async function compressVideo(file, onProgress) {
   if (!file) return { file, compressed: false };
 
+  // Evitar doble compresión si el archivo ya fue procesado previamente
+  if (file._alreadyCompressed) {
+    return {
+      file,
+      originalSize: file.size,
+      compressedSize: file.size,
+      compressed: false,
+    };
+  }
+
   const isMp4 = file.type === "video/mp4" || file.name.toLowerCase().endsWith(".mp4");
 
-  // Si el archivo ya es menor a 12 MB y ya es .mp4, déjalo pasar directo sin procesar
-  if (file.size < 12 * 1024 * 1024 && isMp4) {
+  // Si el archivo ya es menor a 25 MB y ya es .mp4, déjalo pasar directo sin procesar para preservar 100% calidad
+  if (file.size < 25 * 1024 * 1024 && isMp4) {
+    file._alreadyCompressed = true;
     return {
       file,
       originalSize: file.size,
@@ -149,14 +160,20 @@ export async function compressVideo(file, onProgress) {
     const inputName = `input.${inputExt}`;
     await ffmpeg.writeFile(inputName, await fetchFile(file));
 
-    // Ejecutar comando de transcodificación y optimización web
+    // Ejecutar transcodificación de alta fidelidad visual (Visually Lossless)
+    // - CRF 21: Nivel de fidelidad donde el ojo humano no percibe pérdidas respecto al original.
+    // - Preset veryfast: Activa motion estimation y macroblocks sin saturar el CPU del navegador.
+    // - maxrate 7000k y bufsize 14000k: Permite picos dinámicos de calidad en tomas con movimiento.
+    // - pix_fmt yuv420p: Garantiza compatibilidad universal en Safari iOS, Android y navegadores web.
     await ffmpeg.exec([
       "-i", inputName,
       "-vf", "scale=w=1080:h=1920:force_original_aspect_ratio=decrease,pad=ceil(iw/2)*2:ceil(ih/2)*2",
       "-c:v", "libx264",
-      "-crf", "26",
-      "-preset", "ultrafast",
-      "-b:v", "3500k",
+      "-crf", "21",
+      "-preset", "veryfast",
+      "-maxrate", "7000k",
+      "-bufsize", "14000k",
+      "-pix_fmt", "yuv420p",
       "-c:a", "aac",
       "-b:a", "128k",
       "-movflags", "+faststart",
@@ -179,6 +196,7 @@ export async function compressVideo(file, onProgress) {
       type: "video/mp4",
       lastModified: Date.now(),
     });
+    compressedFile._alreadyCompressed = true;
 
     const savedPercentage = Math.round(
       ((file.size - compressedFile.size) / file.size) * 100
@@ -193,6 +211,7 @@ export async function compressVideo(file, onProgress) {
     };
   } catch (err) {
     console.warn("Fallo transcodificación FFmpeg WASM, conservando archivo original:", err);
+    file._alreadyCompressed = true;
     return {
       file,
       originalSize: file.size,
@@ -238,10 +257,10 @@ export async function compressMediaFile(file, options = {}) {
   }
 
   const defaultOptions = {
-    maxSizeMB: 1, // Tamaño máximo objetivo ~1MB
+    maxSizeMB: 1.5, // Tamaño máximo objetivo ~1.5MB para retener detalle fino
     maxWidthOrHeight: 1920, // Dimensión máxima 1920px (Full HD)
     useWebWorker: true,
-    initialQuality: 0.85,
+    initialQuality: 0.9, // Calidad alta 90% para evitar pérdida de texturas o nitidez
     fileType: file.type === "image/png" ? "image/png" : "image/jpeg",
     ...options,
   };
@@ -253,6 +272,7 @@ export async function compressMediaFile(file, options = {}) {
       type: compressedBlob.type || file.type,
       lastModified: Date.now(),
     });
+    compressedFile._alreadyCompressed = true;
 
     const savedPercentage = Math.round(
       ((file.size - compressedFile.size) / file.size) * 100

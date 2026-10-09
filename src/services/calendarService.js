@@ -341,9 +341,60 @@ export async function deleteCalendario(calendarioId) {
  * Sube un archivo multimedia a Cloudflare R2 e inserta el registro en archivos_galeria.
  * Para videos: genera miniatura WebP, transcodifica con FFmpeg a MP4 FastStart y sube ambos a R2.
  */
-export async function uploadMediaFile(calendarioId, file, onProgress) {
+/**
+ * Función auxiliar para subir binarios con seguimiento de progreso real vía XMLHttpRequest.
+ */
+function uploadBinaryWithProgress({ url, method = "POST", headers = {}, body, onProgress }) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+
+    Object.entries(headers).forEach(([k, v]) => {
+      xhr.setRequestHeader(k, v);
+    });
+
+    if (xhr.upload && typeof onProgress === "function") {
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable && event.total > 0) {
+          const percent = Math.min(100, Math.max(0, Math.round((event.loaded / event.total) * 100)));
+          onProgress(percent);
+        }
+      };
+    }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const json = JSON.parse(xhr.responseText);
+          resolve({ ok: true, status: xhr.status, json });
+        } catch (_) {
+          resolve({ ok: true, status: xhr.status, text: xhr.responseText });
+        }
+      } else {
+        resolve({ ok: false, status: xhr.status, text: xhr.responseText });
+      }
+    };
+
+    xhr.onerror = () => reject(new Error("Error de red durante la subida a Cloudflare R2"));
+    xhr.ontimeout = () => reject(new Error("Tiempo de espera agotado al subir a Cloudflare R2"));
+
+    xhr.send(body);
+  });
+}
+
+/**
+ * Sube un archivo multimedia a Cloudflare R2 e inserta el registro en archivos_galeria.
+ * Para videos: genera miniatura WebP, transcodifica con FFmpeg a MP4 FastStart y sube ambos a R2.
+ * Soporta progressOptions: { onCompressProgress, onUploadProgress } o función callback simple.
+ */
+export async function uploadMediaFile(calendarioId, file, progressOptions) {
   if (!calendarioId) return { success: false, error: "calendarioId no provisto" };
   if (!file) return { success: false, error: "Archivo no provisto" };
+
+  const onCompressProgress = typeof progressOptions === "function"
+    ? progressOptions
+    : progressOptions?.onCompressProgress;
+  const onUploadProgress = progressOptions?.onUploadProgress;
 
   try {
     if (!supabase) return { success: false, error: "Supabase no configurado" };
@@ -383,32 +434,37 @@ export async function uploadMediaFile(calendarioId, file, onProgress) {
       }
 
       // 2. Transcodificar video pesado o .mov a MP4 con índice faststart (moov atom al inicio)
-      try {
-        const compressRes = await compressVideo(file, onProgress);
-        if (compressRes?.file) {
-          fileToUpload = compressRes.file;
+      if (!file._alreadyCompressed) {
+        try {
+          const compressRes = await compressVideo(file, onCompressProgress);
+          if (compressRes?.file) {
+            fileToUpload = compressRes.file;
+          }
+        } catch (transcodeErr) {
+          console.warn("Aviso: Transcodificación omitida, usando video original:", transcodeErr);
         }
-      } catch (transcodeErr) {
-        console.warn("Aviso: Transcodificación omitida, usando video original:", transcodeErr);
       }
     } else {
-      // 3. Optimizar imágenes antes de subir a Cloudflare R2 (~200-350 KB)
-      try {
-        const imgCompressRes = await compressImage(file);
-        if (imgCompressRes?.file) {
-          fileToUpload = imgCompressRes.file;
+      // 3. Optimizar imágenes antes de subir a Cloudflare R2
+      if (!file._alreadyCompressed) {
+        try {
+          const imgCompressRes = await compressImage(file);
+          if (imgCompressRes?.file) {
+            fileToUpload = imgCompressRes.file;
+          }
+        } catch (imgErr) {
+          console.warn("Aviso: No se pudo comprimir la imagen, usando original:", imgErr);
         }
-      } catch (imgErr) {
-        console.warn("Aviso: No se pudo comprimir la imagen, usando original:", imgErr);
       }
     }
 
     const contentType = fileToUpload.type || (isVideo ? "video/mp4" : "image/jpeg");
     let publicUrl = "";
 
-    // 3. Subida del archivo principal a Cloudflare R2 mediante /api/upload-r2 (Seguro contra CORS)
+    // 3. Subida del archivo principal a Cloudflare R2 mediante /api/upload-r2 con seguimiento de progreso real
     try {
-      const apiRes = await fetch("/api/upload-r2", {
+      const apiRes = await uploadBinaryWithProgress({
+        url: "/api/upload-r2",
         method: "POST",
         headers: {
           "x-file-name": encodeURIComponent(fileToUpload.name),
@@ -416,13 +472,11 @@ export async function uploadMediaFile(calendarioId, file, onProgress) {
           "x-calendario-id": calendarioId,
         },
         body: fileToUpload,
+        onProgress: onUploadProgress,
       });
 
-      if (apiRes.ok) {
-        const json = await apiRes.json();
-        if (json.success && json.publicUrl) {
-          publicUrl = json.publicUrl;
-        }
+      if (apiRes.ok && apiRes.json?.success && apiRes.json?.publicUrl) {
+        publicUrl = apiRes.json.publicUrl;
       }
     } catch (apiErr) {
       console.warn("Aviso: Subida /api/upload-r2 no disponible, intentando URL prefirmada:", apiErr);
@@ -441,17 +495,18 @@ export async function uploadMediaFile(calendarioId, file, onProgress) {
         return { success: false, error: presignedRes.error || "No se pudo obtener URL prefirmada de R2" };
       }
 
-      const uploadRes = await fetch(presignedRes.uploadUrl, {
+      const uploadRes = await uploadBinaryWithProgress({
+        url: presignedRes.uploadUrl,
         method: "PUT",
         headers: {
           "Content-Type": contentType,
         },
         body: fileToUpload,
+        onProgress: onUploadProgress,
       });
 
       if (!uploadRes.ok) {
-        const errText = await uploadRes.text().catch(() => "");
-        console.error("uploadMediaFile R2 PUT upload error:", uploadRes.status, errText);
+        console.error("uploadMediaFile R2 PUT upload error:", uploadRes.status, uploadRes.text);
         return { success: false, error: `Error al subir archivo a R2 (HTTP ${uploadRes.status})` };
       }
 

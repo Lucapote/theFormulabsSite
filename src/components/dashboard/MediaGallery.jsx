@@ -51,7 +51,14 @@ export default function MediaGallery({
 
   // Computed upload state for this calendar
   const isUploading = uploadState.isUploading && uploadState.calendarId === calendarioId;
-  const uploadProgress = { current: uploadState.current, total: uploadState.total };
+  const uploadProgress = {
+    current: uploadState.current,
+    total: uploadState.total,
+    phase: uploadState.phase,
+    compressPercent: uploadState.compressPercent,
+    uploadPercent: uploadState.uploadPercent,
+    currentFileName: uploadState.currentFileName
+  };
 
   // Lightbox / Delete / Edit Post Modal
   const [previewMedia, setPreviewMedia] = useState(null);
