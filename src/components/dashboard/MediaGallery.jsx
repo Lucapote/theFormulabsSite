@@ -1,19 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  UploadCloud,
   Image as ImageIcon,
-  Video as VideoIcon,
   Trash2,
-  CheckCircle,
-  Clock,
-  Copy,
-  Check,
-  Eye,
   RefreshCw,
   Sparkles,
-  Filter,
-  X,
-  Play,
   Film,
   ArrowLeft,
   AlertTriangle
@@ -22,18 +12,22 @@ import { toast } from "sonner";
 import {
   getArchivosByCalendario,
   getPostsByCalendario,
-  uploadMediaFile,
   deleteArchivo,
   createPost,
   updatePost
 } from "@/services/calendarService";
-import { compressMediaFile, formatBytes } from "@/utils/mediaCompressor";
 import { useUpload } from "@/context/UploadContext";
-import { useLongPress } from "@/hooks/useLongPress";
 import MediaDetailModal from "@/components/common/MediaDetailModal";
 import PostModal from "./PostModal";
 import GalleryItemCard from "./GalleryItemCard";
+import MediaGalleryUploader from "./MediaGalleryUploader";
+import MediaGalleryFilterBar from "./MediaGalleryFilterBar";
+import FloatingBatchToolbar from "./FloatingBatchToolbar";
 
+/**
+ * MediaGallery
+ * Orchestrator component for viewing, uploading, filtering, and deleting media files.
+ */
 export default function MediaGallery({
   calendarioId,
   calendarioNombre = "Calendario",
@@ -63,7 +57,6 @@ export default function MediaGallery({
   const [previewMedia, setPreviewMedia] = useState(null);
   const [deletingMedia, setDeletingMedia] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [copiedId, setCopiedId] = useState(null);
   const [editingPost, setEditingPost] = useState(null);
   const [isSavingPost, setIsSavingPost] = useState(false);
 
@@ -293,15 +286,6 @@ export default function MediaGallery({
     setIsDeleting(false);
   };
 
-  // Copy link handler
-  const copyMediaUrl = (item, e) => {
-    e?.stopPropagation();
-    navigator.clipboard.writeText(item.url);
-    setCopiedId(item.id);
-    toast.success("Enlace del archivo copiado al portapapeles.");
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
   // Dynamic check if a media item is referenced in any post or marked in DB
   const isMediaInUse = (item) => {
     if (!item) return false;
@@ -317,14 +301,10 @@ export default function MediaGallery({
   // Filtered files
   const filteredArchivos = archivos.filter((item) => {
     const inUse = isMediaInUse(item);
-    // Status filter
     if ((statusFilter === "disponible" || statusFilter === "disponibles") && inUse) return false;
     if (statusFilter === "en_uso" && !inUse) return false;
-
-    // Type filter
     if (typeFilter === "image" && item.tipo !== "image") return false;
     if (typeFilter === "video" && item.tipo !== "video") return false;
-
     return true;
   });
 
@@ -357,7 +337,6 @@ export default function MediaGallery({
           </div>
         </div>
 
-        {/* Refresh Button */}
         <button
           type="button"
           onClick={fetchGallery}
@@ -370,158 +349,28 @@ export default function MediaGallery({
 
       {/* 2-COLUMN MAIN CONTENT (1/3 Upload, 2/3 Gallery Grid) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* LEFT COLUMN (1/3 Width: lg:col-span-4) - COMPACT UPLOADER */}
-        <div className="lg:col-span-4 bg-white rounded-[2rem] p-6 shadow-xl border border-gray-100 space-y-4 lg:sticky lg:top-6">
-          <div className="flex items-center justify-between gap-2 pb-3 border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              <UploadCloud className="w-4 h-4 text-pink-500" />
-              <h3 className="font-sora font-bold text-gray-900 text-sm">Subir Nuevos Medios</h3>
-            </div>
-          </div>
+        <MediaGalleryUploader
+          isDragging={isDragging}
+          fileInputRef={fileInputRef}
+          isUploading={isUploading}
+          uploadProgress={uploadProgress}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onUploadFiles={handleUploadFiles}
+        />
 
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            className={`p-6 border-2 border-dashed rounded-2xl text-center cursor-pointer transition-all ${
-              isDragging
-                ? "border-pink-500 bg-pink-50/50 scale-[1.02]"
-                : "border-gray-200 hover:border-pink-300 hover:bg-pink-50/20"
-            }`}
-          >
-            <input
-              type="file"
-              ref={fileInputRef}
-              multiple
-              accept="image/*,video/*"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files && e.target.files.length > 0) {
-                  handleUploadFiles(e.target.files);
-                }
-              }}
-            />
-            <div className="w-12 h-12 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center mx-auto mb-3">
-              <UploadCloud className="w-6 h-6" />
-            </div>
-            <p className="text-xs font-sora font-bold text-gray-800 mb-1">
-              Arrastra tus archivos aquí
-            </p>
-            <p className="text-[11px] text-gray-400">
-              o haz clic para examinar desde tu equipo (Imágenes o Videos)
-            </p>
-          </div>
-
-          {/* Uploading Status Panel */}
-          {isUploading && (
-            <div className="p-4 bg-pink-50 border border-pink-200 rounded-2xl space-y-2 animate-in fade-in duration-200">
-              <div className="flex items-center justify-between text-xs font-sora font-bold text-pink-700">
-                <span className="flex items-center gap-1.5">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" /> Subiendo archivos...
-                </span>
-                <span>
-                  {uploadProgress.current} de {uploadProgress.total}
-                </span>
-              </div>
-              <div className="w-full h-2 bg-pink-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-pink-500 transition-all duration-300"
-                  style={{
-                    width: `${
-                      uploadProgress.total > 0
-                        ? Math.round((uploadProgress.current / uploadProgress.total) * 100)
-                        : 0
-                    }%`
-                  }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* RIGHT COLUMN (2/3 Width: lg:col-span-8) - GALLERY GRID */}
         <div className="lg:col-span-8 space-y-4">
-          {/* FILTER BAR & COUNTS */}
-          <div className="bg-white rounded-[2rem] p-4 shadow-xl border border-gray-100 flex flex-wrap items-center justify-between gap-3">
-            {/* Status Pills */}
-            <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-full border border-gray-200 overflow-x-auto max-w-full">
-              <button
-                type="button"
-                onClick={() => setStatusFilter("all")}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-sora font-extrabold cursor-pointer transition-all whitespace-nowrap ${
-                  statusFilter === "all"
-                    ? "bg-gray-900 text-white shadow-xs"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                Todos ({archivos.length})
-              </button>
+          <MediaGalleryFilterBar
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            typeFilter={typeFilter}
+            setTypeFilter={setTypeFilter}
+            totalCount={archivos.length}
+            disponiblesCount={disponiblesCount}
+            enUsoCount={enUsoCount}
+          />
 
-              <button
-                type="button"
-                onClick={() => setStatusFilter("disponibles")}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-sora font-extrabold cursor-pointer transition-all flex items-center gap-1.5 whitespace-nowrap ${
-                  statusFilter === "disponibles" || statusFilter === "disponible"
-                    ? "bg-emerald-600 text-white shadow-xs"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                <CheckCircle className="w-3.5 h-3.5" /> Disponibles ({disponiblesCount})
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setStatusFilter("en_uso")}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-sora font-extrabold cursor-pointer transition-all flex items-center gap-1.5 whitespace-nowrap ${
-                  statusFilter === "en_uso"
-                    ? "bg-purple-600 text-white shadow-xs"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                <Clock className="w-3.5 h-3.5" /> En uso ({enUsoCount})
-              </button>
-            </div>
-
-            {/* Type Filters */}
-            <div className="flex items-center bg-gray-100 p-1 rounded-full border border-gray-200 overflow-x-auto max-w-full">
-              <button
-                type="button"
-                onClick={() => setTypeFilter("all")}
-                className={`px-3 py-1.5 rounded-full text-xs font-sora font-bold cursor-pointer transition-all whitespace-nowrap ${
-                  typeFilter === "all"
-                    ? "bg-[#188ff0] text-white shadow-xs"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                Todos
-              </button>
-              <button
-                type="button"
-                onClick={() => setTypeFilter("image")}
-                className={`px-3 py-1.5 rounded-full text-xs font-sora font-bold cursor-pointer transition-all flex items-center gap-1 whitespace-nowrap ${
-                  typeFilter === "image"
-                    ? "bg-[#188ff0] text-white shadow-xs"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                <ImageIcon className="w-3.5 h-3.5" /> Imágenes
-              </button>
-              <button
-                type="button"
-                onClick={() => setTypeFilter("video")}
-                className={`px-3 py-1.5 rounded-full text-xs font-sora font-bold cursor-pointer transition-all flex items-center gap-1 whitespace-nowrap ${
-                  typeFilter === "video"
-                    ? "bg-[#188ff0] text-white shadow-xs"
-                    : "text-gray-600 hover:text-gray-900"
-                }`}
-              >
-                <VideoIcon className="w-3.5 h-3.5" /> Videos
-              </button>
-            </div>
-          </div>
-
-          {/* GRID RENDER */}
           {loading ? (
             <div className="bg-white rounded-[2rem] p-12 text-center shadow-xl border border-gray-100">
               <Sparkles className="w-8 h-8 text-pink-500 animate-spin mx-auto mb-3" />
@@ -558,53 +407,13 @@ export default function MediaGallery({
         </div>
       </div>
 
-      {/* FLOATING BATCH SELECTION TOOLBAR */}
-      {selectedFileIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900/95 border border-gray-800 text-white rounded-full px-4 py-2 shadow-2xl backdrop-blur-md flex items-center gap-3 animate-in slide-in-from-bottom duration-200 font-sora max-w-[90vw] sm:max-w-md">
-          {/* Selected Badge & Counter */}
-          <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-pink-500 text-white text-xs font-extrabold flex items-center justify-center shadow-xs">
-              {selectedFileIds.length}
-            </span>
-            <span className="text-xs font-bold text-gray-200">
-              {selectedFileIds.length === 1 ? "seleccionado" : "seleccionados"}
-            </span>
-          </div>
-
-          <div className="h-4 w-px bg-gray-750 mx-0.5" />
-
-          {/* Select All Toggle */}
-          <button
-            type="button"
-            onClick={handleSelectAll}
-            className="text-xs font-bold text-gray-300 hover:text-white transition-colors cursor-pointer"
-          >
-            {selectedFileIds.length === filteredArchivos.length ? "Deseleccionar" : "Todos"}
-          </button>
-
-          <div className="h-4 w-px bg-gray-750 mx-0.5" />
-
-          {/* Cancel Action (Icon) */}
-          <button
-            type="button"
-            onClick={() => setSelectedFileIds([])}
-            className="p-1.5 rounded-full hover:bg-gray-800 text-gray-400 hover:text-white transition-colors cursor-pointer"
-            title="Cancelar selección"
-          >
-            <X className="w-4 h-4" />
-          </button>
-
-          {/* Delete Action (Icon Button) */}
-          <button
-            type="button"
-            onClick={() => setShowBatchDeleteConfirm(true)}
-            className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full transition-all shadow-md shadow-red-500/20 cursor-pointer shrink-0"
-            title={`Eliminar ${selectedFileIds.length} archivo(s)`}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+      <FloatingBatchToolbar
+        selectedCount={selectedFileIds.length}
+        isAllSelected={selectedFileIds.length === filteredArchivos.length}
+        onSelectAll={handleSelectAll}
+        onCancelSelection={() => setSelectedFileIds([])}
+        onOpenDeleteConfirm={() => setShowBatchDeleteConfirm(true)}
+      />
 
       {/* LIGHTBOX PREVIEW MODAL */}
       {previewMedia && (

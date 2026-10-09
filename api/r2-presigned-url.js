@@ -6,9 +6,13 @@ const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
 const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
 const R2_PUBLIC_DOMAIN = (process.env.R2_PUBLIC_DOMAIN || "").replace(/\/$/, "");
-const R2_ENDPOINT = process.env.R2_ENDPOINT || `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+const R2_ENDPOINT = process.env.R2_ENDPOINT || (R2_ACCOUNT_ID ? `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com` : "");
 
 function getS3Client() {
+  if (!R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_NAME) {
+    throw new Error("Missing required environment variables: R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY or R2_BUCKET_NAME");
+  }
+
   return new S3Client({
     region: "auto",
     endpoint: R2_ENDPOINT,
@@ -32,6 +36,7 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  try {
     let body = req.body || {};
     if (typeof body === "string") {
       try {

@@ -2,101 +2,23 @@ import { useState, useEffect } from "react";
 import {
   X,
   Video as VideoIcon,
-  Image as ImageIcon,
   Calendar as CalendarIcon,
   Clock,
   Film,
-  Plus,
-  Check,
   RefreshCw,
-  Copy,
   Trash2,
   Sparkles,
-  Layers,
-  AlertCircle,
-  Eye
+  Layers
 } from "lucide-react";
 import { toast } from "sonner";
 import { getArchivosByCalendario } from "@/services/calendarService";
 import MediaDetailModal from "@/components/common/MediaDetailModal";
-import { useLongPress } from "@/hooks/useLongPress";
+import GalleryFileItem from "./GalleryFileItem";
 
-function GalleryFileItem({ file, isSelected, selectedIndex, tipoPost, onSelect, onPreview }) {
-  const bindLongPress = useLongPress(
-    () => onPreview(file),
-    () => onSelect(file)
-  );
-
-  return (
-    <div
-      {...bindLongPress}
-      className={`relative aspect-square rounded-2xl overflow-hidden cursor-pointer transition-all border-2 group select-none ${
-        isSelected
-          ? "border-[#188ff0] ring-4 ring-blue-100 scale-[0.98]"
-          : "border-gray-200 hover:border-blue-300 bg-gray-900"
-      }`}
-      title="Clic simple: Seleccionar • Mantener presionado: Vista previa"
-    >
-      {file.tipo === "video" ? (
-        file.thumbnail_url ? (
-          <img
-            src={file.thumbnail_url}
-            alt={file.nombre_archivo || "Media"}
-            className="w-full h-full object-cover pointer-events-none"
-          />
-        ) : (
-          <video
-            src={file.url}
-            muted
-            preload="metadata"
-            playsInline
-            className="w-full h-full object-cover pointer-events-none"
-          />
-        )
-      ) : (
-        <img
-          src={file.url}
-          alt={file.nombre_archivo || "Media"}
-          className="w-full h-full object-cover pointer-events-none"
-        />
-      )}
-
-      {/* Top-Left Order Badge / Check if Selected */}
-      {isSelected && (
-        <div className="absolute top-2 left-2 bg-[#188ff0] text-white text-xs font-sora font-extrabold w-6 h-6 rounded-full flex items-center justify-center shadow-md z-10 pointer-events-none">
-          {tipoPost === "carrousel" ? (
-            selectedIndex + 1
-          ) : (
-            <Check className="w-3.5 h-3.5" />
-          )}
-        </div>
-      )}
-
-      {/* Top-Right Preview Eye Button (Desktop Hover shortcut) */}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onPreview(file);
-        }}
-        className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/70 hover:bg-black text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all z-20 shadow-md"
-        title="Ver detalles de medio"
-      >
-        <Eye className="w-3.5 h-3.5" />
-      </button>
-
-      {/* Bottom-Left Format Indicator Badge */}
-      <span className="absolute bottom-2 left-2 bg-black/70 text-white text-[9px] font-sora font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 backdrop-blur-xs pointer-events-none">
-        {file.tipo === "video" ? (
-          <VideoIcon className="w-2.5 h-2.5 text-white" />
-        ) : (
-          <ImageIcon className="w-2.5 h-2.5 text-white" />
-        )}
-      </span>
-    </div>
-  );
-}
-
+/**
+ * PostModal
+ * Modal dialog for scheduling and editing social media posts (Reels & Carousels).
+ */
 export default function PostModal({
   isOpen,
   onClose,
@@ -210,7 +132,7 @@ export default function PostModal({
     }
   };
 
-  // Form Submit Handler - Strict Mandatory Field Validation
+  // Form Submit Handler
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -239,7 +161,6 @@ export default function PostModal({
       return;
     }
 
-    // Al completar todos los campos requeridos, el estado pasa automáticamente a "programado"
     const finalEstado = estado === "borrador" ? "programado" : estado;
 
     onSave({
@@ -259,9 +180,7 @@ export default function PostModal({
 
   return (
     <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-6 font-inter animate-in fade-in duration-200 overflow-y-auto">
-      {/* Modal Container: Flex Col with Fixed Header/Footer and Scrollable Form Body */}
       <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full max-w-[calc(100vw-1.25rem)] my-auto shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[85dvh] sm:max-h-[88dvh] relative">
-        
         {/* Fixed Modal Header */}
         <div className="flex items-center justify-between px-5 py-4 sm:px-8 sm:py-5 border-b border-gray-100 bg-white shrink-0">
           <div className="flex items-center gap-3">
@@ -278,6 +197,7 @@ export default function PostModal({
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-700 font-bold p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
           >
@@ -287,7 +207,7 @@ export default function PostModal({
 
         {/* Scrollable Form Body */}
         <form id="post-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 sm:p-8 space-y-5 sm:space-y-6">
-          {/* 1. TIPO DE FORMATO (TOGGLE SWITCH) */}
+          {/* TIPO DE FORMATO */}
           <div>
             <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-2">
               Formato de Publicación *
@@ -321,7 +241,7 @@ export default function PostModal({
             </div>
           </div>
 
-          {/* 2. FECHA, HORA Y ESTADO */}
+          {/* FECHA, HORA Y ESTADO */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5 flex items-center gap-1.5">
@@ -353,7 +273,6 @@ export default function PostModal({
               <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5">
                 Estado <br />Publicación
               </label>
-              {/* CLEAN SELECT OPTIONS WITH NO OS EMOJIS */}
               <select
                 value={estado}
                 onChange={(e) => setEstado(e.target.value)}
@@ -366,7 +285,7 @@ export default function PostModal({
             </div>
           </div>
 
-          {/* 3. CAPTION / COPYWRITING */}
+          {/* CAPTION / COPYWRITING */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-sora font-bold uppercase text-gray-700">
@@ -385,7 +304,7 @@ export default function PostModal({
             />
           </div>
 
-          {/* 4. BANCO UNIFICADO DE MEDIOS DE GALERÍA */}
+          {/* BANCO UNIFICADO DE MEDIOS DE GALERÍA */}
           <div className="space-y-3 pt-2 border-t border-gray-100">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
               <label className="text-xs font-sora font-bold uppercase text-gray-700 flex items-center gap-1.5">
@@ -393,19 +312,16 @@ export default function PostModal({
                 Medios de Galería ({archivos.length} asignados / {availableGalleryFiles.length} disponibles) *
               </label>
 
-              <div className="flex items-center gap-3">
-
-                <button
-                  type="button"
-                  onClick={loadGalleryFiles}
-                  disabled={loadingGallery}
-                  className="text-[11px] font-sora font-bold text-[#188ff0] hover:text-blue-700 inline-flex items-center gap-1 cursor-pointer"
-                  title="Recargar archivos de la galería"
-                >
-                  <RefreshCw className={`w-3 h-3 ${loadingGallery ? "animate-spin" : ""}`} />
-                  <span>Actualizar</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={loadGalleryFiles}
+                disabled={loadingGallery}
+                className="text-[11px] font-sora font-bold text-[#188ff0] hover:text-blue-700 inline-flex items-center gap-1 cursor-pointer"
+                title="Recargar archivos de la galería"
+              >
+                <RefreshCw className={`w-3 h-3 ${loadingGallery ? "animate-spin" : ""}`} />
+                <span>Actualizar</span>
+              </button>
             </div>
 
             {loadingGallery ? (
@@ -452,28 +368,28 @@ export default function PostModal({
           </div>
         </form>
 
-        {/* Fixed Modal Action Buttons Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 md:px-8 border-t border-gray-100 bg-gray-50/50 shrink-0">
+        {/* Fixed Action Footer */}
+        <div className="flex items-center justify-between px-5 py-3.5 sm:px-8 sm:py-4 border-t border-gray-100 bg-gray-50/50 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="h-11 px-6 rounded-full border border-gray-300 hover:bg-gray-100 text-gray-700 font-sora font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+            disabled={isSaving}
+            className="h-10 sm:h-11 px-4 sm:px-5 rounded-full border border-gray-300 hover:bg-gray-100 text-gray-700 font-sora font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
           >
             Cancelar
           </button>
-
           <button
             type="submit"
             form="post-form"
             disabled={isSaving}
-            className="h-11 px-6 bg-[#188ff0] hover:bg-blue-600 text-white font-sora font-bold text-xs uppercase tracking-wider rounded-full shadow-md shadow-blue-200 transition-all inline-flex items-center gap-2 cursor-pointer"
+            className="h-10 sm:h-11 px-5 sm:px-7 bg-[#188ff0] hover:bg-blue-600 text-white font-sora font-bold text-xs uppercase tracking-wider rounded-full shadow-md shadow-blue-200 transition-all inline-flex items-center gap-2 cursor-pointer"
           >
             {isSaving ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin" /> Guardando...
               </>
             ) : isEditing ? (
-              "Actualizar Publicación"
+              "Guardar Cambios"
             ) : (
               "Programar Publicación"
             )}
@@ -481,12 +397,12 @@ export default function PostModal({
         </div>
       </div>
 
-      {/* Media Detail Preview Modal */}
+      {/* Lightbox details modal */}
       {previewMedia && (
         <MediaDetailModal
           media={previewMedia}
-          posts={post ? [post] : []}
           onClose={() => setPreviewMedia(null)}
+          showDelete={false}
         />
       )}
     </div>
