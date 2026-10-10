@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
@@ -62,6 +62,30 @@ export default async function handler(req, res) {
 
       await s3Client.send(deleteCmd);
       return res.status(200).json({ success: true, message: `Objeto ${targetKey} eliminado de Cloudflare R2.` });
+    }
+
+    // Manejar generación de URL de descarga forzada con Content-Disposition: attachment
+    if (action === "download" || action === "get") {
+      const targetKey = key || params.key || (params.url && params.url.includes("calendarios/") ? params.url.substring(params.url.indexOf("calendarios/")).split("?")[0] : null);
+      if (!targetKey) {
+        return res.status(400).json({ error: "La clave (key) o URL del objeto es requerida para la descarga." });
+      }
+
+      const cleanDownloadName = fileName ? decodeURIComponent(fileName).replace(/[\r\n"]/g, "").replace(/\s+/g, "_") : "archivo";
+      const getCmd = new GetObjectCommand({
+        Bucket: R2_BUCKET_NAME,
+        Key: targetKey,
+        ResponseContentDisposition: `attachment; filename="${cleanDownloadName}"`,
+      });
+
+      const downloadUrl = await getSignedUrl(s3Client, getCmd, { expiresIn: 3600 });
+      return res.status(200).json({
+        success: true,
+        downloadUrl,
+        key: targetKey,
+        fileName: cleanDownloadName,
+        expiresIn: 3600,
+      });
     }
 
     if (!fileName || !calendarioId) {

@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 /**
@@ -98,7 +98,39 @@ export function viteR2DevServer() {
               return;
             }
 
-            // Acción: GENERAR URL PREFIRMADA
+            // Acción: GENERAR URL DE DESCARGA FORZADA (Content-Disposition: attachment)
+            if (action === "download" || action === "get") {
+              const downloadKey = targetKey || (body.url && body.url.includes("calendarios/") ? body.url.substring(body.url.indexOf("calendarios/")).split("?")[0] : null);
+              if (!downloadKey) {
+                res.statusCode = 400;
+                res.setHeader("Content-Type", "application/json");
+                res.end(JSON.stringify({ error: "La clave (key) o URL del objeto es requerida para descargar." }));
+                return;
+              }
+
+              const downloadName = body.fileName || urlObj.searchParams.get("fileName") || "archivo";
+              const cleanDownloadName = decodeURIComponent(downloadName).replace(/[\r\n"]/g, "").replace(/\s+/g, "_");
+
+              const getCmd = new GetObjectCommand({
+                Bucket: bucketName,
+                Key: downloadKey,
+                ResponseContentDisposition: `attachment; filename="${cleanDownloadName}"`,
+              });
+
+              const downloadUrl = await getSignedUrl(s3Client, getCmd, { expiresIn: 3600 });
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({
+                success: true,
+                downloadUrl,
+                key: downloadKey,
+                fileName: cleanDownloadName,
+                expiresIn: 3600
+              }));
+              return;
+            }
+
+            // Acción: GENERAR URL PREFIRMADA (SUBIDA)
             const fileName = body.fileName || urlObj.searchParams.get("fileName");
             const fileType = body.fileType || urlObj.searchParams.get("fileType") || "application/octet-stream";
             const calendarioId = body.calendarioId || urlObj.searchParams.get("calendarioId") || "general";
