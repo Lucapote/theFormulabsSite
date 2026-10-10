@@ -9,7 +9,8 @@ import {
   Copy,
   Check,
   Film,
-  ExternalLink
+  ExternalLink,
+  Download
 } from "lucide-react";
 import { formatCalendarUrlPath } from "@/services/calendarService";
 
@@ -40,7 +41,8 @@ export default function ClientCalendarsGrid({
   onOpenCalendarModal,
   onDeleteCalendar,
   onCopyCalendarLink,
-  onSelectActiveCalendar
+  onSelectActiveCalendar,
+  onToggleDownloadPermission = null
 }) {
   return (
     <div className="lg:col-span-8 bg-white rounded-[2rem] p-6 md:p-8 shadow-xl border border-gray-100 space-y-6">
@@ -49,9 +51,28 @@ export default function ClientCalendarsGrid({
           {/* Active Client Info Banner */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-gray-100 gap-4">
             <div>
-              <span className="inline-block text-[10px] font-sora font-bold text-pink-600 bg-pink-50 uppercase tracking-widest px-3 py-1 rounded-full mb-1">
-                CLIENTE SELECCIONADO
-              </span>
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <span className="inline-block text-[10px] font-sora font-bold text-pink-600 bg-pink-50 uppercase tracking-widest px-3 py-1 rounded-full">
+                  CLIENTE SELECCIONADO
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onToggleDownloadPermission?.(selectedCliente)}
+                  title="Haga clic para alternar los permisos de descarga del cliente"
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-sora font-bold transition-all cursor-pointer border ${
+                    selectedCliente.permite_descarga
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 shadow-2xs"
+                      : "bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200"
+                  }`}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>
+                    {selectedCliente.permite_descarga
+                      ? "Descargas activadas"
+                      : "Descargas inactivas"}
+                  </span>
+                </button>
+              </div>
               <h3 className="text-2xl font-sora font-extrabold text-gray-900 tracking-tight">
                 {selectedCliente.nombre}
               </h3>

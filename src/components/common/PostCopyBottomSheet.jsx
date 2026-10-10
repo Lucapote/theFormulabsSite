@@ -7,9 +7,12 @@ import {
   Calendar as CalendarIcon,
   Video as VideoIcon,
   Layers,
-  Edit2
+  Edit2,
+  Download
 } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { triggerMediaDownload, extractFilenameFromUrl } from "@/utils/downloadHelpers";
 import { formatTimeHHMM } from "@/components/calendar/CalendarGridView";
 
 /**
@@ -19,13 +22,48 @@ import { formatTimeHHMM } from "@/components/calendar/CalendarGridView";
 export default function PostCopyBottomSheet({
   post,
   isInternal = false,
-  onEdit = null
+  onEdit = null,
+  permiteDescarga = false,
+  activeMediaIndex = 0
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const touchStartY = useRef(0);
 
   if (!post) return null;
+
+  const filesList = Array.isArray(post.archivos) ? post.archivos : [];
+  const currentFile = filesList[activeMediaIndex] || filesList[0] || null;
+  const targetMediaUrl = currentFile?.url || post.url || null;
+  const hasMedia = Boolean(targetMediaUrl);
+
+  const handleDownload = async (e) => {
+    e?.stopPropagation();
+    if (!targetMediaUrl) {
+      toast.error("No hay archivo multimedia disponible para descargar.");
+      return;
+    }
+
+    setIsDownloading(true);
+    toast.info("Descargando archivo...");
+    const ext = currentFile?.tipo === "video" || post.tipo_post === "reel" ? "mp4" : "jpg";
+    const defaultName = currentFile?.nombre_archivo || `publicacion-${post.id ? post.id.slice(0, 8) : "media"}.${ext}`;
+    const filename = extractFilenameFromUrl(targetMediaUrl, defaultName);
+
+    try {
+      const success = await triggerMediaDownload(targetMediaUrl, filename);
+      if (success) {
+        toast.success("Archivo descargado exitosamente.");
+      } else {
+        toast.info("Descarga iniciada.");
+      }
+    } catch {
+      toast.error("Ocurrió un error al intentar descargar el archivo.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const handleCopy = (e) => {
     e?.stopPropagation();
@@ -148,35 +186,49 @@ export default function PostCopyBottomSheet({
         )}
 
         {/* Actions Button Row */}
-        <div className="flex items-center gap-2 pt-1">
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="bg-pink-600 hover:bg-pink-500 text-white font-semibold py-3 w-full rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg shadow-pink-600/25 cursor-pointer text-xs uppercase tracking-wider font-sora"
-          >
-            {copied ? (
-              <>
-                <Check className="w-4 h-4 text-white" />
-                <span>¡Copiado!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-4 h-4 text-white" />
-                <span>Copiar Copywriting</span>
-              </>
-            )}
-          </button>
-
-          {isInternal && onEdit && (
+        <div className="space-y-2 pt-1">
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => onEdit(post)}
-              className="h-11 px-4 rounded-full bg-slate-800 hover:bg-slate-700 text-white font-sora font-bold text-xs inline-flex items-center gap-1.5 transition-all shrink-0 cursor-pointer border border-slate-700"
-              title="Editar publicación"
+              onClick={handleCopy}
+              className="bg-pink-600 hover:bg-pink-500 text-white font-semibold py-3 w-full rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg shadow-pink-600/25 cursor-pointer text-xs uppercase tracking-wider font-sora"
             >
-              <Edit2 className="w-3.5 h-3.5 text-pink-400" />
-              <span className="hidden sm:inline">Editar</span>
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4 text-white" />
+                  <span>¡Copiado!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4 text-white" />
+                  <span>Copiar Copywriting</span>
+                </>
+              )}
             </button>
+
+            {isInternal && onEdit && (
+              <button
+                type="button"
+                onClick={() => onEdit(post)}
+                className="h-11 px-4 rounded-full bg-slate-800 hover:bg-slate-700 text-white font-sora font-bold text-xs inline-flex items-center gap-1.5 transition-all shrink-0 cursor-pointer border border-slate-700"
+                title="Editar publicación"
+              >
+                <Edit2 className="w-3.5 h-3.5 text-pink-400" />
+                <span className="hidden sm:inline">Editar</span>
+              </button>
+            )}
+          </div>
+
+          {permiteDescarga && hasMedia && (
+            <Button
+              variant="outline"
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className="w-full rounded-full py-3 border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-100 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+            >
+              <Download className={`w-4 h-4 text-slate-300 ${isDownloading ? "animate-bounce" : ""}`} />
+              <span>{isDownloading ? "Descargando..." : "Descargar Archivo"}</span>
+            </Button>
           )}
         </div>
       </div>

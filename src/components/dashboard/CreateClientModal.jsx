@@ -1,4 +1,6 @@
 import { UserPlus, RefreshCw } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 /**
  * CreateClientModal
@@ -7,7 +9,7 @@ import { UserPlus, RefreshCw } from "lucide-react";
 export default function CreateClientModal({
   isOpen = false,
   onClose,
-  clientForm = { nombre: "", empresa: "", email: "" },
+  clientForm = { nombre: "", empresa: "", email: "", permite_descarga: false },
   setClientForm,
   onSubmit,
   isSaving = false
@@ -73,6 +75,28 @@ export default function CreateClientModal({
               value={clientForm.email}
               onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })}
               className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-sm text-gray-900 font-medium transition-all"
+            />
+          </div>
+
+          {/* Permiso de Descarga en Vista Pública */}
+          <div className="flex items-center justify-between p-3.5 rounded-xl border border-gray-100 bg-gray-50/70 hover:bg-gray-50 transition-colors">
+            <div className="space-y-0.5 pr-3">
+              <Label
+                htmlFor="permite-descarga-toggle"
+                className="text-xs font-sora font-bold text-gray-800 cursor-pointer"
+              >
+                Permitir descarga de archivos en vista pública
+              </Label>
+              <p className="text-[11px] text-gray-500 font-normal leading-relaxed">
+                Habilita a este cliente descargar fotos y videos desde su calendario.
+              </p>
+            </div>
+            <Switch
+              id="permite-descarga-toggle"
+              checked={Boolean(clientForm.permite_descarga)}
+              onCheckedChange={(checked) =>
+                setClientForm({ ...clientForm, permite_descarga: checked })
+              }
             />
           </div>
 

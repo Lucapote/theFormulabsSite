@@ -75,7 +75,7 @@ export async function getClientes() {
 /**
  * Inserta un nuevo cliente en la tabla clientes
  */
-export async function createCliente({ nombre, empresa = "", email = "" }) {
+export async function createCliente({ nombre, empresa = "", email = "", permite_descarga = false }) {
   if (!nombre || !nombre.trim()) {
     return { success: false, error: "El nombre del cliente es obligatorio" };
   }
@@ -90,6 +90,7 @@ export async function createCliente({ nombre, empresa = "", email = "" }) {
       empresa: empresa.trim(),
       email: email.trim(),
       activo: true,
+      permite_descarga: Boolean(permite_descarga),
       created_at: new Date().toISOString()
     };
 
@@ -106,6 +107,33 @@ export async function createCliente({ nombre, empresa = "", email = "" }) {
     return { success: true, data: data[0] };
   } catch (err) {
     console.error("createCliente catch error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Actualiza granularmente el permiso de descarga de archivos para un cliente específico
+ */
+export async function updateClientDownloadPermission(clienteId, permiteDescarga) {
+  if (!clienteId) return { success: false, error: "ID de cliente no provisto" };
+
+  try {
+    if (!supabase) return { success: false, error: "Supabase no configurado" };
+
+    const { data, error } = await supabase
+      .from("clientes")
+      .update({ permite_descarga: Boolean(permiteDescarga) })
+      .eq("id", clienteId)
+      .select();
+
+    if (error) {
+      console.error("updateClientDownloadPermission error:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data?.[0] };
+  } catch (err) {
+    console.error("updateClientDownloadPermission catch error:", err);
     return { success: false, error: err.message };
   }
 }
@@ -192,7 +220,7 @@ export async function getCalendariosByCliente(clienteId) {
 
     const { data, error } = await supabase
       .from("calendarios")
-      .select("*")
+      .select("*, cliente:clientes(nombre, empresa, email, permite_descarga)")
       .eq("cliente_id", clienteId)
       .order("created_at", { ascending: false });
 
@@ -282,7 +310,7 @@ export async function createCalendario({ cliente_id, clienteNombre = "", nombre,
     const { data, error } = await supabase
       .from("calendarios")
       .insert([payload])
-      .select();
+      .select("*, cliente:clientes(nombre, empresa, email, permite_descarga)");
 
     if (error) {
       console.error("createCalendario error:", error);
@@ -799,16 +827,41 @@ export async function getPublicCalendarioBySlug(slug) {
   try {
     if (!supabase) return { success: false, data: null, error: "Supabase no configurado" };
 
-    // 1. Fetch calendar details with joined client name/empresa
+    // 1. Fetch calendar details with joined client name/empresa and download permission
     const { data: calData, error: calErr } = await supabase
       .from("calendarios")
-      .select("*, cliente:clientes(nombre, empresa, email)")
+      .select("*, cliente:clientes(nombre, empresa, email, permite_descarga)")
       .eq("slug", cleanSlug)
       .single();
 
     if (calErr || !calData) {
       console.error("getPublicCalendarioBySlug error:", calErr);
       return { success: false, data: null, error: `No se encontró el calendario "${slug}".` };
+    }
+
+    // 1.1 Si el join cliente fuera nulo, intentar consultar directamente la tabla clientes
+    if (!calData.cliente && calData.cliente_id) {
+      const { data: directCliente } = await supabase
+        .from("clientes")
+        .select("nombre, empresa, email, permite_descarga")
+        .eq("id", calData.cliente_id)
+        .maybeSingle();
+
+      if (directCliente) {
+        calData.cliente = directCliente;
+      }
+    }
+
+    // 1.2 Fallback adicional: inferir nombre del cliente desde el prefijo del slug (ej. "yamamoto-octubre-2026" -> "Yamamoto")
+    if (!calData.cliente || !calData.cliente.nombre) {
+      const slugParts = cleanSlug.split("-");
+      if (slugParts.length >= 2) {
+        const inferred = slugParts[0].charAt(0).toUpperCase() + slugParts[0].slice(1);
+        calData.cliente = {
+          nombre: inferred,
+          empresa: calData.cliente?.empresa || ""
+        };
+      }
     }
 
     // 2. Fetch posts associated with this calendar

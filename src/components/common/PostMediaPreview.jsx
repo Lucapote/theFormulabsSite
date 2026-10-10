@@ -10,7 +10,9 @@ export default function PostMediaPreview({
   tipo = "image",
   posterUrl = null,
   containerClassName = "w-full h-full",
-  imageClassName = "w-full h-full object-contain"
+  imageClassName = "w-full h-full object-contain",
+  initialIndex = 0,
+  onIndexChange = null
 }) {
   const normalizedFiles = Array.isArray(archivos) ? archivos : [];
   const isCarousel = tipo === "carrousel" || tipo === "carousel" || normalizedFiles.length > 1;
@@ -30,6 +32,8 @@ export default function PostMediaPreview({
       <div className={`relative bg-black flex items-center justify-center overflow-hidden ${containerClassName}`}>
         <MediaCarousel
           files={normalizedFiles}
+          initialIndex={initialIndex}
+          onIndexChange={onIndexChange}
           containerClassName="w-full h-full min-h-[300px] max-h-[60vh] sm:max-h-[70vh]"
           imageClassName={imageClassName}
           showControls={true}

@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, Copy, ExternalLink, Calendar as CalendarIcon, Film } from "lucide-react";
+import { ArrowLeft, Check, Copy, ExternalLink, Calendar as CalendarIcon, Film, Download } from "lucide-react";
 import { formatCalendarUrlPath } from "@/services/calendarService";
 
 /**
@@ -12,9 +12,12 @@ export default function ActiveCalendarHeader({
   copiedSlug = null,
   onBack,
   onCopyCalendarLink,
-  onSetSubTab
+  onSetSubTab,
+  onToggleDownloadPermission = null
 }) {
   if (!activeCalendar) return null;
+
+  const targetCliente = selectedCliente || activeCalendar.cliente;
 
   return (
     <div className="bg-white rounded-[2rem] p-6 shadow-xl border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -28,9 +31,30 @@ export default function ActiveCalendarHeader({
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <span className="inline-block text-[10px] font-sora font-bold text-pink-600 bg-pink-50 uppercase tracking-widest px-3 py-0.5 rounded-full mb-1">
-            CALENDARIO ACTIVO
-          </span>
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <span className="inline-block text-[10px] font-sora font-bold text-pink-600 bg-pink-50 uppercase tracking-widest px-3 py-0.5 rounded-full">
+              CALENDARIO ACTIVO
+            </span>
+            {targetCliente && (
+              <button
+                type="button"
+                onClick={() => onToggleDownloadPermission?.(targetCliente)}
+                title="Haga clic para alternar los permisos de descarga del cliente"
+                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-sora font-bold transition-all cursor-pointer border ${
+                  targetCliente.permite_descarga
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 shadow-2xs"
+                    : "bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200"
+                }`}
+              >
+                <Download className="w-3 h-3" />
+                <span>
+                  {targetCliente.permite_descarga
+                    ? "Descargas activadas"
+                    : "Descargas inactivas"}
+                </span>
+              </button>
+            )}
+          </div>
           <h2 className="text-2xl font-sora font-extrabold text-gray-900 tracking-tight">
             {activeCalendar.nombre}
           </h2>

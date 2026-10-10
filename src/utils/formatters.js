@@ -13,3 +13,6 @@ export const formatPrice = (price) => {
 export const formatPriceLabel = (num) => `$${Number(num || 0).toLocaleString("es-MX")}`;
 
 export const formatAddonLabel = (num) => `+$${Number(num || 0).toLocaleString("es-MX")} MXN`;
+
+export { triggerMediaDownload } from "./downloadHelpers";
+

@@ -10,7 +10,8 @@ import {
   deleteCalendario,
   generateSlug,
   formatCalendarUrlPath,
-  createDraftPlaceholderPosts
+  createDraftPlaceholderPosts,
+  updateClientDownloadPermission
 } from "@/services/calendarService";
 
 import MediaGallery from "@/components/dashboard/MediaGallery";
@@ -76,7 +77,12 @@ export default function ClientsCalendarSection() {
   const [showCalendarModal, setShowCalendarModal] = useState(false);
 
   // Form states - Client
-  const [clientForm, setClientForm] = useState({ nombre: "", empresa: "", email: "" });
+  const [clientForm, setClientForm] = useState({
+    nombre: "",
+    empresa: "",
+    email: "",
+    permite_descarga: false
+  });
   const [isSavingClient, setIsSavingClient] = useState(false);
 
   // Confirm Modal State
@@ -200,13 +206,54 @@ export default function ClientsCalendarSection() {
     const res = await createCliente(clientForm);
     if (res.success) {
       toast.success(`Cliente "${clientForm.nombre}" creado exitosamente.`);
-      setClientForm({ nombre: "", empresa: "", email: "" });
+      setClientForm({ nombre: "", empresa: "", email: "", permite_descarga: false });
       setShowClientModal(false);
       await loadClientes(res.data?.id);
     } else {
       toast.error(res.error || "No se pudo crear el cliente.");
     }
     setIsSavingClient(false);
+  };
+
+  // Toggle Download Permission (Live Control with Optimistic Update)
+  const handleToggleDownloadPermission = async (clienteToUpdate) => {
+    if (!clienteToUpdate?.id) return;
+    const nextStatus = !clienteToUpdate.permite_descarga;
+
+    const prevList = [...clientes];
+    const prevSelected = selectedCliente ? { ...selectedCliente } : null;
+    const prevActive = activeCalendar ? { ...activeCalendar } : null;
+
+    setClientes((prev) =>
+      prev.map((c) => (c.id === clienteToUpdate.id ? { ...c, permite_descarga: nextStatus } : c))
+    );
+    if (selectedCliente?.id === clienteToUpdate.id) {
+      setSelectedCliente((prev) => ({ ...prev, permite_descarga: nextStatus }));
+    }
+    if (activeCalendar?.cliente?.id === clienteToUpdate.id || activeCalendar?.cliente_id === clienteToUpdate.id) {
+      setActiveCalendar((prev) =>
+        prev
+          ? {
+              ...prev,
+              cliente: prev.cliente ? { ...prev.cliente, permite_descarga: nextStatus } : prev.cliente
+            }
+          : prev
+      );
+    }
+
+    const res = await updateClientDownloadPermission(clienteToUpdate.id, nextStatus);
+    if (res.success) {
+      toast.success(
+        nextStatus
+          ? "Permisos de descarga actualizados: Activadas"
+          : "Permisos de descarga actualizados: Inactivas"
+      );
+    } else {
+      setClientes(prevList);
+      setSelectedCliente(prevSelected);
+      setActiveCalendar(prevActive);
+      toast.error(res.error || "No se pudieron actualizar los permisos de descarga.");
+    }
   };
 
   // Create Calendar Submit
@@ -368,6 +415,7 @@ export default function ClientsCalendarSection() {
           onBack={() => setActiveCalendar(null)}
           onCopyCalendarLink={copyCalendarLink}
           onSetSubTab={setCalendarSubTab}
+          onToggleDownloadPermission={handleToggleDownloadPermission}
         />
 
         {calendarSubTab === "posts" ? (
@@ -479,6 +527,7 @@ export default function ClientsCalendarSection() {
           onDeleteCalendar={handleDeleteCalendar}
           onCopyCalendarLink={copyCalendarLink}
           onSelectActiveCalendar={setActiveCalendar}
+          onToggleDownloadPermission={handleToggleDownloadPermission}
         />
       </div>
 

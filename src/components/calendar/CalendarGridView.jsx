@@ -18,6 +18,7 @@ export default function CalendarGridView({
   anio = new Date().getFullYear(),
   posts = [],
   readOnly = false,
+  permiteDescarga = false,
   onDayClick,
   onPostClick
 }) {
@@ -144,6 +145,7 @@ export default function CalendarGridView({
           hasNextPost={hasNextPost}
           onPrevPost={goToPrevPost}
           onNextPost={goToNextPost}
+          permiteDescarga={permiteDescarga}
           onEdit={!readOnly && onPostClick ? (postToEdit) => {
             setSelectedPost(null);
             onPostClick(postToEdit);

@@ -147,7 +147,12 @@ export default function PublicCalendarPage() {
     );
   }
 
-  const clientName = calendario.cliente?.nombre || "Cliente";
+  const clientName =
+    calendario.cliente?.nombre ||
+    (calendario.slug
+      ? calendario.slug.split("-")[0].charAt(0).toUpperCase() + calendario.slug.split("-")[0].slice(1)
+      : "") ||
+    "Cliente";
   const monthName = MONTH_NAMES[(calendario.mes || 1) - 1];
   const yearNum = calendario.anio || new Date().getFullYear();
   const tipoContenido = calendario.tipo_contenido || "Reels y Carruseles";
@@ -220,6 +225,7 @@ export default function PublicCalendarPage() {
             anio={calendario.anio}
             posts={postsList}
             readOnly={true}
+            permiteDescarga={Boolean(calendario?.cliente?.permite_descarga)}
           />
         ) : (
           /* VIEW 2: FEED / SEQUENTIAL LIST VIEW */
@@ -242,6 +248,7 @@ export default function PublicCalendarPage() {
           hasNextPost={hasNextPost}
           onPrevPost={goToPrevPost}
           onNextPost={goToNextPost}
+          permiteDescarga={Boolean(calendario?.cliente?.permite_descarga)}
         />
       )}
     </div>

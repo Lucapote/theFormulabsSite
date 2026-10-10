@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import PostMediaPreview from "./PostMediaPreview";
 import PostCopyBottomSheet from "./PostCopyBottomSheet";
@@ -15,8 +15,14 @@ export default function InstagramPostPreviewModal({
   hasPrevPost = false,
   hasNextPost = false,
   onPrevPost = null,
-  onNextPost = null
+  onNextPost = null,
+  permiteDescarga = false
 }) {
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+
+  useEffect(() => {
+    setActiveMediaIndex(0);
+  }, [post?.id]);
   useEffect(() => {
     if (!post) return;
     const handleKeyDown = (e) => {
@@ -91,6 +97,8 @@ export default function InstagramPostPreviewModal({
             posterUrl={post.archivos?.[0]?.thumbnail_url}
             containerClassName="w-full h-full"
             imageClassName="w-full h-full object-contain"
+            initialIndex={activeMediaIndex}
+            onIndexChange={setActiveMediaIndex}
           />
         </div>
 
@@ -99,6 +107,8 @@ export default function InstagramPostPreviewModal({
           post={post}
           isInternal={isInternal}
           onEdit={onEdit}
+          permiteDescarga={permiteDescarga}
+          activeMediaIndex={activeMediaIndex}
         />
       </div>
     </div>
