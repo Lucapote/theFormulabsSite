@@ -14,15 +14,15 @@ import {
   updateClientDownloadPermission
 } from "@/services/calendarService";
 
-import MediaGallery from "@/components/dashboard/MediaGallery";
-import ScheduledPostsList from "@/components/dashboard/ScheduledPostsList";
+import MediaGallery from "@/components/dashboard/gallery/MediaGallery";
+import ScheduledPostsList from "./ScheduledPostsList";
 
 import ClientListSidebar from "./ClientListSidebar";
 import ClientCalendarsGrid from "./ClientCalendarsGrid";
 import CreateClientModal from "./CreateClientModal";
 import CreateCalendarModal from "./CreateCalendarModal";
 import ActiveCalendarHeader from "./ActiveCalendarHeader";
-import ConfirmDeleteModal from "./ConfirmDeleteModal";
+import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
 
 const MONTH_NAMES = [
   "Enero",

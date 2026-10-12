@@ -17,7 +17,7 @@ import CalendarGridView from "@/components/calendar/CalendarGridView";
 import InstagramPostPreviewModal from "@/components/common/InstagramPostPreviewModal";
 import PostCardItem from "./PostCardItem";
 import ScheduledPostsFilterBar from "./ScheduledPostsFilterBar";
-import ConfirmDeleteModal from "./ConfirmDeleteModal";
+import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
 
 /**
  * ScheduledPostsList

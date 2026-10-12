@@ -151,7 +151,7 @@ export default function LeadQuestionCard({
                   </div>
 
                   <span
-                    className={`font-sora text-xs sm:text-sm font-semibold leading-snug truncate transition-colors ${
+                    className={`font-sora text-xs sm:text-sm font-semibold leading-snug transition-colors ${
                       isSelected ? "text-gray-900 font-bold" : "text-gray-700 group-hover:text-gray-900"
                     }`}
                   >

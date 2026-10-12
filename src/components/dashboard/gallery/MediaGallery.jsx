@@ -18,11 +18,11 @@ import {
 } from "@/services/calendarService";
 import { useUpload } from "@/context/UploadContext";
 import MediaDetailModal from "@/components/common/MediaDetailModal";
-import PostModal from "./PostModal";
+import PostModal from "@/components/dashboard/calendar/PostModal";
 import GalleryItemCard from "./GalleryItemCard";
 import MediaGalleryUploader from "./MediaGalleryUploader";
 import MediaGalleryFilterBar from "./MediaGalleryFilterBar";
-import FloatingBatchToolbar from "./FloatingBatchToolbar";
+import FloatingBatchToolbar from "@/components/dashboard/calendar/FloatingBatchToolbar";
 
 /**
  * MediaGallery

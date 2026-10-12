@@ -13,7 +13,7 @@ import {
 import { toast } from "sonner";
 import { getArchivosByCalendario } from "@/services/calendarService";
 import MediaDetailModal from "@/components/common/MediaDetailModal";
-import GalleryFileItem from "./GalleryFileItem";
+import GalleryFileItem from "@/components/dashboard/gallery/GalleryFileItem";
 
 /**
  * PostModal

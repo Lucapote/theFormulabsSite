@@ -29,8 +29,9 @@ export default function LeadFormContainer() {
   const containerRef = useRef(null);
 
   const scrollToTop = () => {
-    if (containerRef.current) {
-      containerRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    // Evitar salto hacia abajo: solo hacer scroll al tope si la página realmente ha bajado
+    if (typeof window !== "undefined" && window.scrollY > 80) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -78,7 +79,7 @@ export default function LeadFormContainer() {
     if (res.success) {
       triggerBubbleReaction();
       setCurrentStep(7); // 7 is success state
-      scrollToTop();
+      if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       setErrorMessage(res.error || "No se pudo procesar tu respuesta. Por favor intenta de nuevo.");
     }

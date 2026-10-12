@@ -12,11 +12,11 @@ import {
   updateProposal,
   deleteProposal
 } from "@/services/proposalService";
-import ProposalModal from "@/components/dashboard/ProposalModal";
-import ClientsCalendarSection from "@/components/dashboard/ClientsCalendarSection";
-import ProposalsTabSection from "@/components/dashboard/ProposalsTabSection";
-import DiagnosticsTabSection from "@/components/dashboard/DiagnosticsTabSection";
-import ConfirmDeleteModal from "@/components/dashboard/ConfirmDeleteModal";
+import ProposalModal from "@/components/dashboard/proposals/ProposalModal";
+import ClientsCalendarSection from "@/components/dashboard/calendar/ClientsCalendarSection";
+import ProposalsTabSection from "@/components/dashboard/proposals/ProposalsTabSection";
+import DiagnosticsTabSection from "@/components/dashboard/diagnostics/DiagnosticsTabSection";
+import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
