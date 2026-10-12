@@ -1,5 +1,20 @@
 import { supabase } from "@/lib/supabase";
 
+async function getAuthHeaders() {
+  const headers = { "Content-Type": "application/json" };
+  try {
+    if (supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
+    }
+  } catch (err) {
+    console.warn("No se pudo obtener el token de sesión para propuesta:", err);
+  }
+  return headers;
+}
+
 /**
  * Service for proposals CRUD operations (Create, Read, Update, Delete)
  * with Supabase + Serverless API Fallback
@@ -19,7 +34,8 @@ export async function fetchProposals() {
     }
 
     // Serverless API fallback
-    const res = await fetch("/api/proposal");
+    const headers = await getAuthHeaders();
+    const res = await fetch("/api/proposal", { headers });
     if (res.ok) {
       const json = await res.json();
       return { success: true, data: json.data || [] };
@@ -32,11 +48,45 @@ export async function fetchProposals() {
   }
 }
 
-export async function fetchProposalBySlug(slug) {
+export async function fetchProposalBySlug(slug, token = null) {
   if (!slug) return { success: false, data: null, error: "Slug no provisto" };
-  const cleanSlug = slug.toLowerCase();
+  const cleanSlug = slug.toLowerCase().trim();
 
   try {
+    // Para consultas públicas con soporte de protección privada en servidor, consultar la API segura
+    const queryParams = new URLSearchParams({ slug: cleanSlug });
+    if (token) {
+      queryParams.set("token", token);
+    }
+
+    const headers = await getAuthHeaders();
+    const res = await fetch(`/api/proposal?${queryParams.toString()}`, { headers });
+    const json = await res.json().catch(() => ({}));
+
+    if (res.ok && json.success && json.data) {
+      const data = json.data;
+      const content = data.contenido || data.content || data;
+      return {
+        success: true,
+        data: {
+          ...content,
+          id: data.id,
+          slug: data.slug,
+          cliente: data.cliente
+        },
+        rawRecord: data
+      };
+    }
+
+    if (res.status === 403 || json.isPrivate) {
+      return {
+        success: false,
+        isPrivate: true,
+        error: json.error || "Esta propuesta requiere un enlace de acceso privado válido."
+      };
+    }
+
+    // Direct Supabase fallback if authenticated
     if (supabase) {
       const { data, error } = await supabase
         .from("propuestas")
@@ -45,26 +95,6 @@ export async function fetchProposalBySlug(slug) {
         .single();
 
       if (!error && data) {
-        const content = data.contenido || data.content || data;
-        return {
-          success: true,
-          data: {
-            ...content,
-            id: data.id,
-            slug: data.slug,
-            cliente: data.cliente
-          },
-          rawRecord: data
-        };
-      }
-    }
-
-    // Serverless API fallback
-    const res = await fetch(`/api/proposal?slug=${encodeURIComponent(cleanSlug)}`);
-    if (res.ok) {
-      const json = await res.json();
-      if (json.data) {
-        const data = json.data;
         const content = data.contenido || data.content || data;
         return {
           success: true,
@@ -106,9 +136,10 @@ export async function createProposal({ slug, cliente, contenido }) {
     }
 
     // Serverless API fallback
+    const headers = await getAuthHeaders();
     const res = await fetch("/api/proposal", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ slug: cleanSlug, cliente, contenido })
     });
 
@@ -145,9 +176,10 @@ export async function updateProposal(id, { cliente, contenido, slug }) {
     }
 
     // Serverless API fallback
+    const headers = await getAuthHeaders();
     const res = await fetch("/api/proposal", {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ id, cliente, contenido, slug })
     });
 
@@ -174,8 +206,10 @@ export async function deleteProposal(id) {
     }
 
     // Serverless API fallback
+    const headers = await getAuthHeaders();
     const res = await fetch(`/api/proposal?id=${encodeURIComponent(id)}`, {
-      method: "DELETE"
+      method: "DELETE",
+      headers
     });
 
     if (res.ok) {

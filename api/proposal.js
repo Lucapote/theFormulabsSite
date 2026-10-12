@@ -1,11 +1,29 @@
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey;
 
 let supabase = null;
 if (supabaseKey && supabaseUrl) {
   supabase = createClient(supabaseUrl, supabaseKey);
+}
+
+async function verifyUser(req) {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return { authenticated: false };
+  }
+  const token = authHeader.slice(7).trim();
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return { authenticated: false };
+  }
+  const authClient = createClient(supabaseUrl, supabaseAnonKey);
+  const { data: { user }, error } = await authClient.auth.getUser(token);
+  if (error || !user) {
+    return { authenticated: false };
+  }
+  return { authenticated: true, user };
 }
 
 export default async function handler(req, res) {
@@ -14,34 +32,66 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST,DELETE,PUT");
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+    "Authorization, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, X-Proposal-Token"
   );
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  // GET: Fetch proposal by slug or list all proposals
+  // GET: Fetch proposal by slug (with server-side token validation) or list all proposals (auth required)
   if (req.method === "GET") {
     try {
-      const { slug } = req.query;
+      const { slug, token: queryToken } = req.query;
 
       if (!supabase) {
-        return res.status(200).json({ success: false, error: "Database not configured" });
+        return res.status(500).json({ success: false, error: "Database not configured" });
       }
 
       if (slug) {
         const { data, error } = await supabase
           .from("propuestas")
           .select("*")
-          .eq("slug", slug.toLowerCase())
+          .eq("slug", slug.toLowerCase().trim())
           .single();
 
-        if (error) {
-          return res.status(404).json({ success: false, error: error.message });
+        if (error || !data) {
+          return res.status(404).json({ success: false, error: "Propuesta no encontrada." });
         }
-        return res.status(200).json({ success: true, data });
+
+        // Validación de token en el servidor para propuestas privadas
+        const requiredToken = data.contenido?.token || data.token;
+        if (requiredToken) {
+          const auth = await verifyUser(req);
+          const providedToken = queryToken || req.headers["x-proposal-token"];
+
+          if (!auth.authenticated && (!providedToken || providedToken !== requiredToken)) {
+            return res.status(403).json({
+              success: false,
+              isPrivate: true,
+              error: "Esta propuesta requiere un enlace de acceso privado válido."
+            });
+          }
+        }
+
+        // Sanitizar contenido: eliminar token de acceso antes de enviar la respuesta al cliente
+        const sanitizedContent = { ...(data.contenido || {}) };
+        delete sanitizedContent.token;
+
+        const sanitizedData = {
+          ...data,
+          contenido: sanitizedContent,
+          token: undefined
+        };
+
+        return res.status(200).json({ success: true, data: sanitizedData });
       } else {
+        // Listar todas las propuestas requiere autenticación administrativa
+        const auth = await verifyUser(req);
+        if (!auth.authenticated) {
+          return res.status(401).json({ success: false, error: "Autenticación requerida para listar propuestas." });
+        }
+
         const { data, error } = await supabase
           .from("propuestas")
           .select("*")
@@ -58,9 +108,14 @@ export default async function handler(req, res) {
     }
   }
 
-  // POST / PUT: Create or update proposal
+  // POST / PUT: Create or update proposal (requires authentication)
   if (req.method === "POST" || req.method === "PUT") {
     try {
+      const auth = await verifyUser(req);
+      if (!auth.authenticated) {
+        return res.status(401).json({ success: false, error: "No autorizado. Se requiere iniciar sesión como administrador." });
+      }
+
       const { slug, clientName, content, id } = req.body || {};
 
       if (!slug || !clientName) {
@@ -101,9 +156,14 @@ export default async function handler(req, res) {
     }
   }
 
-  // DELETE: Delete proposal
+  // DELETE: Delete proposal (requires authentication)
   if (req.method === "DELETE") {
     try {
+      const auth = await verifyUser(req);
+      if (!auth.authenticated) {
+        return res.status(401).json({ success: false, error: "No autorizado. Se requiere iniciar sesión como administrador." });
+      }
+
       const { slug, id } = req.query;
 
       if (!supabase) {
@@ -114,7 +174,7 @@ export default async function handler(req, res) {
       if (id) {
         query = query.eq("id", id);
       } else if (slug) {
-        query = query.eq("slug", slug.toLowerCase());
+        query = query.eq("slug", slug.toLowerCase().trim());
       } else {
         return res.status(400).json({ success: false, error: "ID o Slug requerido para eliminar." });
       }

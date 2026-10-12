@@ -4,14 +4,32 @@
  * para mantener las claves de acceso de R2 100% privadas y seguras en el servidor.
  */
 
+import { supabase } from "@/lib/supabase";
+
+async function getAuthHeaders() {
+  const headers = { "Content-Type": "application/json" };
+  try {
+    if (supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        headers["Authorization"] = `Bearer ${session.access_token}`;
+      }
+    }
+  } catch (err) {
+    console.warn("No se pudo obtener el token de sesión para R2:", err);
+  }
+  return headers;
+}
+
 /**
  * Obtiene una URL prefirmada de subida (PUT) desde el backend serverless
  */
 export async function getR2PresignedUploadUrl({ fileName, fileType, calendarioId }) {
   try {
+    const headers = await getAuthHeaders();
     const res = await fetch("/api/r2-presigned-url", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ fileName, fileType, calendarioId }),
     });
 
@@ -35,9 +53,10 @@ export async function deleteR2Object(storageKey) {
   if (!storageKey) return { success: false, error: "Clave de almacenamiento no provista" };
 
   try {
+    const headers = await getAuthHeaders();
     const res = await fetch("/api/r2-presigned-url", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ action: "delete", key: storageKey }),
     });
 

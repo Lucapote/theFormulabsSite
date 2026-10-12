@@ -1,5 +1,32 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { createClient } from "@supabase/supabase-js";
+
+async function verifySupabaseAuth(req) {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return { authenticated: false, error: "Token de autorización requerido." };
+  }
+  const token = authHeader.slice(7).trim();
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return { authenticated: false, error: "Servicio de autenticación no configurado." };
+  }
+  const client = createClient(supabaseUrl, supabaseAnonKey);
+  const { data: { user }, error } = await client.auth.getUser(token);
+  if (error || !user) {
+    return { authenticated: false, error: "Sesión inválida o expirada." };
+  }
+  return { authenticated: true, user };
+}
+
+function sanitizeStorageKey(key) {
+  if (!key || typeof key !== "string") return null;
+  // Prevenir path traversal
+  if (key.includes("..") || key.startsWith("/") || key.includes("\\")) return null;
+  return key.trim();
+}
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
 const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
@@ -50,9 +77,15 @@ export default async function handler(req, res) {
 
     // Manejar eliminación de objeto en R2 si se solicita action = 'delete'
     if (action === "delete" || req.method === "DELETE") {
-      const targetKey = key || params.key;
+      const auth = await verifySupabaseAuth(req);
+      if (!auth.authenticated) {
+        return res.status(401).json({ error: auth.error || "No autorizado para eliminar archivos." });
+      }
+
+      const rawKey = key || params.key;
+      const targetKey = sanitizeStorageKey(rawKey);
       if (!targetKey) {
-        return res.status(400).json({ error: "La clave (key) del objeto es requerida para eliminar." });
+        return res.status(400).json({ error: "La clave (key) del objeto es requerida y debe tener un formato válido." });
       }
 
       const deleteCmd = new DeleteObjectCommand({

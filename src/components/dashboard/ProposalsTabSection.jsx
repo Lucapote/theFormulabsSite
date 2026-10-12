@@ -61,7 +61,7 @@ export default function ProposalsTabSection({
               className="h-10 sm:h-11 px-4 sm:px-6 bg-pink-500 hover:bg-pink-600 text-white font-sora font-bold text-xs rounded-full shadow-lg shadow-pink-200 transition-all flex items-center gap-2 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              <span>+ Propuesta</span>
+              <span>Propuesta</span>
             </button>
           </div>
         </div>

@@ -9,7 +9,15 @@ export default defineConfig(({ mode }) => {
   Object.assign(process.env, env);
 
   return {
-    envPrefix: ["VITE_", "SUPABASE_"],
+    define: {
+      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(
+        process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || ""
+      ),
+      "import.meta.env.VITE_SUPABASE_ANON_KEY": JSON.stringify(
+        process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || ""
+      )
+    },
+    envPrefix: ["VITE_"],
     server: {
       host: "::",
       port: 8080,

@@ -12,7 +12,9 @@ export default function PostMediaPreview({
   containerClassName = "w-full h-full",
   imageClassName = "w-full h-full object-contain",
   initialIndex = 0,
-  onIndexChange = null
+  onIndexChange = null,
+  showDots = true,
+  showControls = true
 }) {
   const normalizedFiles = Array.isArray(archivos) ? archivos : [];
   const isCarousel = tipo === "carrousel" || tipo === "carousel" || normalizedFiles.length > 1;
@@ -34,11 +36,11 @@ export default function PostMediaPreview({
           files={normalizedFiles}
           initialIndex={initialIndex}
           onIndexChange={onIndexChange}
-          containerClassName="w-full h-full min-h-[300px] max-h-[60vh] sm:max-h-[70vh]"
+          containerClassName="w-full h-full"
           imageClassName={imageClassName}
-          showControls={true}
-          showDots={true}
-          activeDotColorClass="bg-pink-500 w-5"
+          showControls={showControls}
+          showDots={showDots}
+          activeDotColorClass="bg-pink-500 w-6 h-2 shadow-sm shadow-pink-500/50"
         />
       </div>
     );

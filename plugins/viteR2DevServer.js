@@ -72,14 +72,17 @@ export function viteR2DevServer() {
             }
 
             const action = body.action || urlObj.searchParams.get("action") || (req.method === "DELETE" ? "delete" : "put");
-            const targetKey = body.key || urlObj.searchParams.get("key");
+            const rawTargetKey = body.key || urlObj.searchParams.get("key");
+            const targetKey = (rawTargetKey && typeof rawTargetKey === "string" && !rawTargetKey.includes("..") && !rawTargetKey.startsWith("/") && !rawTargetKey.includes("\\"))
+              ? rawTargetKey.trim()
+              : null;
 
             // Acción: ELIMINAR objeto de R2
             if (action === "delete" || req.method === "DELETE") {
               if (!targetKey) {
                 res.statusCode = 400;
                 res.setHeader("Content-Type", "application/json");
-                res.end(JSON.stringify({ error: "La clave (key) del objeto es requerida para eliminar." }));
+                res.end(JSON.stringify({ error: "La clave (key) del objeto es requerida y debe ser válida." }));
                 return;
               }
 

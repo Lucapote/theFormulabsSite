@@ -28,22 +28,16 @@ export default function ProposalPage() {
         return;
       }
 
-      const res = await fetchProposalBySlug(slug);
+      const res = await fetchProposalBySlug(slug, urlToken);
       if (res.success && res.data) {
-        const proposal = res.data;
-        const requiredToken = proposal.token || proposal.contenido?.token;
-
-        // Verify Google Docs-style unlisted private token
-        if (requiredToken && requiredToken !== urlToken) {
-          setIsPrivateError(true);
-          setProposalData(null);
-        } else {
-          setProposalData(proposal);
-          // Increment view counter silently
-          if (proposal.slug || proposal.id) {
-            incrementProposalViews(proposal);
-          }
+        setProposalData(res.data);
+        // Increment view counter silently
+        if (res.data.slug || res.data.id) {
+          incrementProposalViews(res.data);
         }
+      } else if (res.isPrivate) {
+        setIsPrivateError(true);
+        setProposalData(null);
       } else {
         setError(res.error || `No se encontró la propuesta para "${slug}".`);
       }

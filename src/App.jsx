@@ -8,6 +8,7 @@ import ProposalPage from "./pages/ProposalPage.jsx";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import PublicCalendarPage from "./pages/PublicCalendarPage.jsx";
+import DiagnosticFormPage from "./pages/DiagnosticFormPage.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { UploadProvider } from "./context/UploadContext.jsx";
@@ -32,6 +33,8 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route path="/diagnostico" element={<DiagnosticFormPage />} />
+            <Route path="/formulario" element={<DiagnosticFormPage />} />
             <Route path="/propuesta/:slug" element={<ProposalPage />} />
             <Route path="/calendario/:slug" element={<PublicCalendarPage />} />
             <Route path="/:clientSlug/:calendarSlug" element={<PublicCalendarPage />} />
