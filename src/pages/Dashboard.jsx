@@ -44,10 +44,9 @@ export default function Dashboard() {
     setLoadingDb(true);
     try {
       const { data, error } = await supabase
-        .from("diagnostics")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(15);
+        .from("leads")
+        .select("id")
+        .order("created_at", { ascending: false });
 
       if (!error && data) {
         setDiagnostics(data || []);
@@ -308,7 +307,7 @@ export default function Dashboard() {
 
         {/* TAB 3: DIAGNÓSTICOS */}
         {activeTab === "diagnostics" && (
-          <DiagnosticsTabSection diagnostics={diagnostics} loadingDb={loadingDb} />
+          <DiagnosticsTabSection />
         )}
       </main>
 
