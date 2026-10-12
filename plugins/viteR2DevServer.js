@@ -1,17 +1,87 @@
+import fs from "fs";
+import path from "path";
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import notifyLeadHandler from "../api/notify-lead.js";
+
+function reloadLocalEnv() {
+  try {
+    const envPath = path.resolve(process.cwd(), ".env");
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, "utf-8");
+      for (const line of content.split("\n")) {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith("#") && trimmed.includes("=")) {
+          const idx = trimmed.indexOf("=");
+          const key = trimmed.slice(0, idx).trim();
+          const val = trimmed.slice(idx + 1).trim().replace(/^["']|["']$/g, "");
+          if (key && val && val !== "tu_resend_api_key_aqui") {
+            process.env[key] = val;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("No se pudo recargar .env:", e);
+  }
+}
 
 /**
  * Plugin de desarrollo para Vite que intercepta las llamadas a:
  * - /api/upload-r2 (subida de archivos binarios o eliminación)
  * - /api/r2-presigned-url (generación de URLs prefirmadas o eliminación de objetos)
- * durante `npm run dev` y opera directamente contra Cloudflare R2 sin exponer credenciales al cliente web.
+ * - /api/notify-lead (notificación por correo con Resend)
+ * durante `npm run dev` y opera directamente en Node.js sin exponer credenciales al cliente web.
  */
 export function viteR2DevServer() {
   return {
     name: "vite-plugin-r2-dev-server",
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
+        // Interceptar notificación de leads con Resend en desarrollo local
+        if (req.url && req.url.startsWith("/api/notify-lead")) {
+          reloadLocalEnv();
+
+          res.setHeader("Access-Control-Allow-Origin", "*");
+          res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+          res.setHeader("Access-Control-Allow-Headers", "*");
+
+          if (req.method === "OPTIONS") {
+            res.statusCode = 200;
+            res.end();
+            return;
+          }
+
+          res.status = function (code) {
+            this.statusCode = code;
+            return this;
+          };
+          res.json = function (data) {
+            this.setHeader("Content-Type", "application/json");
+            this.end(JSON.stringify(data));
+            return this;
+          };
+
+          const chunks = [];
+          for await (const chunk of req) {
+            chunks.push(chunk);
+          }
+          const bodyBuffer = Buffer.concat(chunks);
+          try {
+            req.body = bodyBuffer.length > 0 ? JSON.parse(bodyBuffer.toString("utf-8")) : {};
+          } catch {
+            req.body = {};
+          }
+
+          try {
+            await notifyLeadHandler(req, res);
+          } catch (err) {
+            console.error("Error en local dev /api/notify-lead:", err);
+            res.status(500).json({ success: false, error: err.message });
+          }
+          return;
+        }
+
         const isUploadR2 = req.url.startsWith("/api/upload-r2");
         const isPresignedR2 = req.url.startsWith("/api/r2-presigned-url");
 

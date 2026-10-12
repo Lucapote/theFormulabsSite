@@ -1,4 +1,4 @@
-import { Search, X, RefreshCw, Filter } from "lucide-react";
+import { Search, X, RefreshCw, Filter, Mail } from "lucide-react";
 
 const ROUTE_PILLS = [
   { id: "all", label: "Todos los servicios" },
@@ -14,7 +14,9 @@ export default function LeadFilterBar({
   filterRoute,
   onFilterRouteChange,
   onRefresh,
-  loading = false
+  loading = false,
+  onTestEmail,
+  isTestingEmail = false
 }) {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-3.5 sm:p-4 shadow-xs space-y-3">
@@ -40,16 +42,32 @@ export default function LeadFilterBar({
           )}
         </div>
 
-        {/* Refresh button */}
-        <button
-          type="button"
-          onClick={onRefresh}
-          disabled={loading}
-          className="h-10 px-4 rounded-full border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-sora font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 shrink-0"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 text-brand-blue ${loading ? "animate-spin" : ""}`} />
-          <span>Actualizar</span>
-        </button>
+        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+          {/* Test Resend Email Notification */}
+          {onTestEmail && (
+            <button
+              type="button"
+              onClick={onTestEmail}
+              disabled={isTestingEmail}
+              className="h-10 px-3.5 rounded-full border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-sora font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 shrink-0"
+              title="Enviar alerta de prueba con Resend a theformulab.io@gmail.com"
+            >
+              <Mail className={`w-3.5 h-3.5 text-brand-magenta ${isTestingEmail ? "animate-pulse" : ""}`} />
+              <span className="hidden sm:inline">{isTestingEmail ? "Probando..." : "Probar Resend"}</span>
+            </button>
+          )}
+
+          {/* Refresh button */}
+          <button
+            type="button"
+            onClick={onRefresh}
+            disabled={loading}
+            className="h-10 px-4 rounded-full border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-sora font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 shrink-0"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-brand-blue ${loading ? "animate-spin" : ""}`} />
+            <span>Actualizar</span>
+          </button>
+        </div>
       </div>
 
       {/* Route Filter Pills */}

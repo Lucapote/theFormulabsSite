@@ -41,6 +41,11 @@ export async function submitLeadForm({ answers, contactData }) {
       return { success: false, error: error.message || "Error al enviar el formulario." };
     }
 
+    // Disparar notificación por correo con Resend en segundo plano (cero bloqueo al cliente)
+    sendLeadEmailNotification(payload).catch((err) => {
+      console.warn("Aviso: Notificación por correo no enviada (no bloqueante):", err);
+    });
+
     return {
       success: true,
       data: payload
@@ -48,6 +53,36 @@ export async function submitLeadForm({ answers, contactData }) {
   } catch (err) {
     console.error("Error inesperado en submitLeadForm:", err);
     return { success: false, error: err.message || "Error inesperado." };
+  }
+}
+
+/**
+ * Envía una alerta por correo a la agencia mediante la función serverless /api/notify-lead.
+ * Retorna { success, data, error } respetando GEMINI.md (Sección 3.F).
+ */
+export async function sendLeadEmailNotification(leadPayload) {
+  try {
+    const res = await fetch("/api/notify-lead", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(leadPayload)
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || !data?.success) {
+      return {
+        success: false,
+        error: data?.error || `Error al despachar notificación (${res.status})`
+      };
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    console.warn("Fallo en sendLeadEmailNotification:", err);
+    return { success: false, error: err.message || "Error de red al conectar con el servicio de alertas." };
   }
 }
 

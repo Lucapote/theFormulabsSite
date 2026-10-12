@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { FlaskConical, ArrowDownWideNarrow, ArrowUpNarrowWide } from "lucide-react";
-import { getLeads, getLeadStats, deleteLead, updateLeadStatus } from "@/services/leadService";
+import { getLeads, getLeadStats, deleteLead, updateLeadStatus, sendLeadEmailNotification } from "@/services/leadService";
 import { Skeleton } from "@/components/ui/skeleton";
 import LeadMetricsHeader from "./LeadMetricsHeader";
 import LeadFilterBar from "./LeadFilterBar";
@@ -11,9 +11,10 @@ import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal
 
 export default function DiagnosticsTabSection() {
   const [leads, setLeads] = useState([]);
-  const [stats, setStats] = useState({ totalLeads: 0, avgScore: 0, topRoute: "—", avgSeconds: null });
+  const [stats, setStats] = useState({ totalLeads: 0, topRoute: "—", avgSeconds: null });
   const [loadingLeads, setLoadingLeads] = useState(true);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [isTestingEmail, setIsTestingEmail] = useState(false);
 
   // Filtros y ordenación
   const [search, setSearch] = useState("");
@@ -90,6 +91,39 @@ export default function DiagnosticsTabSection() {
     );
   };
 
+  // Probar notificación de alerta por correo con Resend
+  const handleTestEmail = async () => {
+    setIsTestingEmail(true);
+    const testLead = leads[0] || {
+      nombre: "Prospecto de Prueba Lab",
+      whatsapp: "+52 998 123 4567",
+      instagram: "@theformulab.io",
+      route: "A",
+      route_name: "Gestión Integral",
+      score: 8,
+      suggested_range: "$7,000 – $18,000 MXN / mes",
+      seconds_to_complete: 35,
+      ubicacion: "Cancún",
+      cuando: "Este mes",
+      answers: {
+        objetivo: { label: "Que las redes me traigan clientes, no solo likes" },
+        operacion: { label: "Somos más de 5 personas o tenemos varias sucursales" },
+        gestion: { label: "Una agencia" },
+        inversion: { label: "Entre $15,000 y $40,000 MXN" }
+      }
+    };
+
+    const toastId = toast.loading("Enviando alerta de prueba por Resend a theformulab.io@gmail.com...");
+    const res = await sendLeadEmailNotification(testLead);
+    setIsTestingEmail(false);
+
+    if (res.success) {
+      toast.success("Alerta de prueba enviada exitosamente por Resend", { id: toastId });
+    } else {
+      toast.error(res.error || "No se pudo enviar la alerta de prueba.", { id: toastId });
+    }
+  };
+
   // Confirmar eliminación
   const handleConfirmDelete = async () => {
     if (!deletingLead) return;
@@ -121,6 +155,8 @@ export default function DiagnosticsTabSection() {
         onFilterRouteChange={setFilterRoute}
         onRefresh={handleRefresh}
         loading={loadingLeads}
+        onTestEmail={handleTestEmail}
+        isTestingEmail={isTestingEmail}
       />
 
       {/* 3. Listado de Prospectos / Leads */}

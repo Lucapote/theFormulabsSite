@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,10 +17,14 @@ import {
   Compass,
   CheckCircle2,
   ExternalLink,
-  Target
+  Target,
+  Mail,
+  Send
 } from "lucide-react";
+import { toast } from "sonner";
 import { formatLeadDate } from "@/utils/formatters";
 import { LEAD_STATUS_OPTIONS } from "@/data/leadStatusData";
+import { sendLeadEmailNotification } from "@/services/leadService";
 
 const QUESTION_TITLES = {
   objetivo: "1. Necesidad principal",
@@ -30,6 +35,8 @@ const QUESTION_TITLES = {
 };
 
 export default function LeadDetailModal({ isOpen, onClose, lead, onStatusChange }) {
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+
   if (!lead) return null;
 
   const {
@@ -57,6 +64,20 @@ export default function LeadDetailModal({ isOpen, onClose, lead, onStatusChange 
   const cleanInsta = instagram ? instagram.replace(/^@/, "").trim() : "";
   const instaUrl = cleanInsta ? `https://instagram.com/${cleanInsta}` : null;
 
+  const handleResendEmail = async () => {
+    setIsSendingEmail(true);
+    const toastId = toast.loading("Enviando alerta a theformulab.io@gmail.com...");
+
+    const res = await sendLeadEmailNotification(lead);
+    setIsSendingEmail(false);
+
+    if (res.success) {
+      toast.success("Alerta enviada correctamente por Resend", { id: toastId });
+    } else {
+      toast.error(res.error || "No se pudo enviar la alerta por correo.", { id: toastId });
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-5 sm:p-7 rounded-[2rem] bg-white border border-gray-100 shadow-2xl">
@@ -74,7 +95,7 @@ export default function LeadDetailModal({ isOpen, onClose, lead, onStatusChange 
             {nombre}
           </DialogTitle>
 
-          {/* Quick Contact Buttons */}
+          {/* Quick Contact & Notification Actions */}
           <div className="flex flex-wrap items-center gap-2 pt-1">
             {waUrl && (
               <a
@@ -101,6 +122,17 @@ export default function LeadDetailModal({ isOpen, onClose, lead, onStatusChange 
                 <ExternalLink className="w-3 h-3 ml-0.5 opacity-80" />
               </a>
             )}
+
+            <button
+              type="button"
+              disabled={isSendingEmail}
+              onClick={handleResendEmail}
+              className="h-8 px-3.5 rounded-full border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-sora font-semibold flex items-center gap-1.5 transition-all shadow-2xs disabled:opacity-50 cursor-pointer"
+              title="Reenviar alerta de correo a theformulab.io@gmail.com"
+            >
+              <Mail className={`w-3.5 h-3.5 text-brand-blue ${isSendingEmail ? "animate-spin" : ""}`} />
+              <span>{isSendingEmail ? "Enviando..." : "Reenviar Alerta Email"}</span>
+            </button>
           </div>
         </DialogHeader>
 
