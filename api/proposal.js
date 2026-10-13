@@ -49,10 +49,30 @@ export default async function handler(req, res) {
       }
 
       if (slug) {
+        const cleanSlug = slug.toLowerCase().trim();
+        const providedToken = queryToken || req.headers["x-proposal-token"] || null;
+
+        // 1. Intento primario con RPC de base de datos (seguro, sanitizado y compatible con anon)
+        const { data: rpcResult, error: rpcError } = await supabase.rpc("get_proposal_by_slug", {
+          p_slug: cleanSlug,
+          p_token: providedToken
+        });
+
+        if (!rpcError && rpcResult) {
+          if (!rpcResult.success) {
+            if (rpcResult.isPrivate) {
+              return res.status(403).json(rpcResult);
+            }
+            return res.status(404).json(rpcResult);
+          }
+          return res.status(200).json(rpcResult);
+        }
+
+        // 2. Fallback a query directa de tabla si la RPC no responde
         const { data, error } = await supabase
           .from("propuestas")
           .select("*")
-          .eq("slug", slug.toLowerCase().trim())
+          .eq("slug", cleanSlug)
           .single();
 
         if (error || !data) {
@@ -63,8 +83,6 @@ export default async function handler(req, res) {
         const requiredToken = data.contenido?.token || data.token;
         if (requiredToken) {
           const auth = await verifyUser(req);
-          const providedToken = queryToken || req.headers["x-proposal-token"];
-
           if (!auth.authenticated && (!providedToken || providedToken !== requiredToken)) {
             return res.status(403).json({
               success: false,

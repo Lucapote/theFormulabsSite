@@ -53,7 +53,46 @@ export async function fetchProposalBySlug(slug, token = null) {
   const cleanSlug = slug.toLowerCase().trim();
 
   try {
-    // Para consultas públicas con soporte de protección privada en servidor, consultar la API segura
+    // 1. Consulta directa y segura mediante RPC con validación de token a nivel de BD
+    if (supabase) {
+      const { data: rpcResult, error: rpcError } = await supabase.rpc("get_proposal_by_slug", {
+        p_slug: cleanSlug,
+        p_token: token || null
+      });
+
+      if (!rpcError && rpcResult) {
+        if (rpcResult.success && rpcResult.data) {
+          const raw = rpcResult.data;
+          const content = raw.contenido || raw.content || raw;
+          return {
+            success: true,
+            data: {
+              ...content,
+              id: raw.id,
+              slug: raw.slug,
+              cliente: raw.cliente
+            },
+            rawRecord: raw
+          };
+        }
+
+        if (rpcResult.isPrivate) {
+          return {
+            success: false,
+            isPrivate: true,
+            error: rpcResult.error || "Esta propuesta requiere un enlace de acceso privado válido."
+          };
+        }
+
+        return {
+          success: false,
+          data: null,
+          error: rpcResult.error || `No se encontró la propuesta para "${slug}"`
+        };
+      }
+    }
+
+    // 2. Fallback a Serverless API
     const queryParams = new URLSearchParams({ slug: cleanSlug });
     if (token) {
       queryParams.set("token", token);
@@ -86,7 +125,7 @@ export async function fetchProposalBySlug(slug, token = null) {
       };
     }
 
-    // Direct Supabase fallback if authenticated
+    // 3. Direct Supabase fallback if authenticated
     if (supabase) {
       const { data, error } = await supabase
         .from("propuestas")
