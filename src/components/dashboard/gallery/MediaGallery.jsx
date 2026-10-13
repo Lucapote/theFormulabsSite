@@ -23,6 +23,7 @@ import GalleryItemCard from "./GalleryItemCard";
 import MediaGalleryUploader from "./MediaGalleryUploader";
 import MediaGalleryFilterBar from "./MediaGalleryFilterBar";
 import FloatingBatchToolbar from "@/components/dashboard/calendar/FloatingBatchToolbar";
+import { getLocalDateString } from "@/utils/formatters";
 
 /**
  * MediaGallery
@@ -181,7 +182,7 @@ export default function MediaGallery({
       archivos: [mediaFile],
       caption: "",
       estado: "programado",
-      fecha_programada: new Date().toISOString().split("T")[0],
+      fecha_programada: getLocalDateString(),
       hora_programada: "18:00"
     });
   };

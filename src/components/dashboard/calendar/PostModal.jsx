@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { getArchivosByCalendario } from "@/services/calendarService";
 import MediaDetailModal from "@/components/common/MediaDetailModal";
 import GalleryFileItem from "@/components/dashboard/gallery/GalleryFileItem";
+import { getLocalDateString } from "@/utils/formatters";
 
 /**
  * PostModal
@@ -30,7 +31,7 @@ export default function PostModal({
   const isEditing = Boolean(initialData?.id);
 
   // Form states
-  const today = new Date().toISOString().split("T")[0];
+  const today = getLocalDateString();
   const [tipoPost, setTipoPost] = useState("reel"); // 'reel' | 'carrousel'
   const [fechaProgramada, setFechaProgramada] = useState(today);
   const [horaProgramada, setHoraProgramada] = useState("18:00");

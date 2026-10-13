@@ -1,15 +1,24 @@
-import { UserPlus, RefreshCw } from "lucide-react";
+import { UserPlus, RefreshCw, DollarSign, Calendar, Video } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 /**
  * CreateClientModal
- * Modal dialog for creating a new client/brand.
+ * Modal dialog for creating a new client/brand with Retainers & Operations fields.
+ * Clinical High-Tech Lab design system.
  */
 export default function CreateClientModal({
   isOpen = false,
   onClose,
-  clientForm = { nombre: "", empresa: "", email: "", permite_descarga: false },
+  clientForm = {
+    nombre: "",
+    empresa: "",
+    email: "",
+    permite_descarga: false,
+    monto_retainer: "",
+    dia_corte_pago: 1,
+    producciones_por_mes: 1
+  },
   setClientForm,
   onSubmit,
   isSaving = false
@@ -18,15 +27,20 @@ export default function CreateClientModal({
 
   return (
     <div className="fixed inset-0 top-0 left-0 right-0 bottom-0 w-full h-full min-h-[100dvh] bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-6 font-inter animate-in fade-in duration-200 overflow-x-hidden">
-      <div className="bg-white rounded-[2rem] p-6 md:p-8 max-w-md w-full max-w-[calc(100vw-1.5rem)] mx-auto shadow-2xl border border-gray-100 relative">
+      <div className="bg-white rounded-[2rem] p-6 md:p-8 max-w-lg w-full max-w-[calc(100vw-1.5rem)] mx-auto shadow-2xl border border-gray-100 relative max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between pb-4 border-b border-gray-100 mb-6">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-full bg-pink-50 flex items-center justify-center text-pink-500">
               <UserPlus className="w-5 h-5" />
             </div>
-            <h3 className="font-sora font-bold text-gray-900 text-lg">
-              Nuevo Cliente
-            </h3>
+            <div>
+              <h3 className="font-sora font-bold text-gray-900 text-lg">
+                Nuevo Cliente
+              </h3>
+              <p className="text-[11px] text-gray-500 font-inter">
+                Alta operativa y configuración de retainer mensual
+              </p>
+            </div>
           </div>
           <button
             type="button"
@@ -76,6 +90,81 @@ export default function CreateClientModal({
               onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })}
               className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-sm text-gray-900 font-medium transition-all"
             />
+          </div>
+
+          {/* Fila Operativa: Monto Retainer y Día de Corte */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div>
+              <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5 flex items-center gap-1">
+                <DollarSign className="w-3.5 h-3.5 text-pink-500" />
+                Retainer Mensual ($)
+              </label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 font-sora font-bold text-xs">
+                  $
+                </span>
+                <input
+                  type="number"
+                  min="0"
+                  step="100"
+                  placeholder="0.00"
+                  value={clientForm.monto_retainer ?? ""}
+                  onChange={(e) =>
+                    setClientForm({ ...clientForm, monto_retainer: e.target.value })
+                  }
+                  className="w-full h-11 pl-7 pr-3 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-sm text-gray-900 font-semibold transition-all"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5 flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-blue-500" />
+                Día de Pago / Corte
+              </label>
+              <select
+                value={clientForm.dia_corte_pago ?? 1}
+                onChange={(e) =>
+                  setClientForm({ ...clientForm, dia_corte_pago: Number(e.target.value) })
+                }
+                className="w-full h-11 px-3 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-sm text-gray-900 font-medium bg-white transition-all cursor-pointer"
+              >
+                {Array.from({ length: 31 }, (_, i) => i + 1).map((dia) => (
+                  <option key={dia} value={dia}>
+                    Día {dia} de cada mes
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Sesiones de Producción / Mes (Control Segmentado Lab) */}
+          <div className="pt-1">
+            <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5 flex items-center gap-1">
+              <Video className="w-3.5 h-3.5 text-emerald-500" />
+              Sesiones de Producción / Mes
+            </label>
+            <div className="bg-gray-100 p-1 rounded-full border border-gray-200 grid grid-cols-4 gap-1">
+              {[1, 2, 3, 4].map((num) => {
+                const isActive = (Number(clientForm.producciones_por_mes) || 1) === num;
+                return (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() =>
+                      setClientForm({ ...clientForm, producciones_por_mes: num })
+                    }
+                    className={`h-8 text-[11px] font-sora font-bold rounded-full transition-all cursor-pointer flex items-center justify-center ${
+                      isActive
+                        ? "bg-gray-900 text-white shadow-md"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
+                    }`}
+                  >
+                    {num} {num === 1 ? "sesión" : "sesiones"}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Permiso de Descarga en Vista Pública */}

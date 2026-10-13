@@ -75,7 +75,16 @@ export async function getClientes() {
 /**
  * Inserta un nuevo cliente en la tabla clientes
  */
-export async function createCliente({ nombre, empresa = "", email = "", permite_descarga = false }) {
+export async function createCliente({
+  nombre,
+  empresa = "",
+  email = "",
+  permite_descarga = false,
+  monto_retainer = 0,
+  dia_corte_pago = 1,
+  producciones_por_mes = 1,
+  propuesta_origen_id = null
+}) {
   if (!nombre || !nombre.trim()) {
     return { success: false, error: "El nombre del cliente es obligatorio" };
   }
@@ -91,6 +100,10 @@ export async function createCliente({ nombre, empresa = "", email = "", permite_
       email: email.trim(),
       activo: true,
       permite_descarga: Boolean(permite_descarga),
+      monto_retainer: Math.max(0, Number(monto_retainer) || 0),
+      dia_corte_pago: Math.max(1, Math.min(31, Number(dia_corte_pago) || 1)),
+      producciones_por_mes: Math.max(1, Number(producciones_por_mes) || 1),
+      propuesta_origen_id: propuesta_origen_id || null,
       created_at: new Date().toISOString()
     };
 

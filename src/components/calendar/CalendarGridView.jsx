@@ -2,6 +2,7 @@ import { useState } from "react";
 import InstagramPostPreviewModal from "@/components/common/InstagramPostPreviewModal";
 import CalendarDesktopGrid from "./CalendarDesktopGrid";
 import CalendarMobileView from "./CalendarMobileView";
+import { getLocalDateString } from "@/utils/formatters";
 
 // Helper to format time as HH:MM (ignoring seconds if present)
 export function formatTimeHHMM(timeStr) {
@@ -61,7 +62,7 @@ export default function CalendarGridView({
   const daysInPrevMonth = new Date(currentYear, monthIndex, 0).getDate();
 
   const startOffset = (firstDay.getDay() + 6) % 7;
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = getLocalDateString();
 
   // Construct grid cells (35 or 42 slots)
   const gridCells = [];

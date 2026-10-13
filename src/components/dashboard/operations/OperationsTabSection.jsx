@@ -1,0 +1,223 @@
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+import {
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  Sparkles,
+  Users,
+  AlertCircle
+} from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getCiclosByPeriodo, ensureCicloActual } from "@/services/operationsService";
+import { getClientes } from "@/services/calendarService";
+import OperationsMetricsHeader from "./OperationsMetricsHeader";
+import OperationsCycleCard from "./OperationsCycleCard";
+import ProductionDetailModal from "./ProductionDetailModal";
+import FinanceCostModal from "./FinanceCostModal";
+
+const MESES = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+];
+
+export default function OperationsTabSection() {
+  const now = new Date();
+  const [mes, setMes] = useState(now.getMonth() + 1);
+  const [anio, setAnio] = useState(now.getFullYear());
+  const [ciclos, setCiclos] = useState([]);
+  const [clientes, setClientes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [activeProductionModal, setActiveProductionModal] = useState({ isOpen: false, produccion: null, clienteNombre: "" });
+  const [activeFinanceModal, setActiveFinanceModal] = useState({ isOpen: false, ciclo: null, clienteNombre: "" });
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [ciclosRes, clientesRes] = await Promise.all([getCiclosByPeriodo(mes, anio), getClientes()]);
+      if (ciclosRes.success) setCiclos(ciclosRes.data || []);
+      else toast.error(ciclosRes.error || "Error al cargar los ciclos mensuales.");
+      if (clientesRes.success) setClientes(clientesRes.data || []);
+    } catch (err) {
+      console.error("OperationsTabSection load error:", err);
+      toast.error("Error al cargar la información operativa.");
+    } finally {
+      setLoading(false);
+    }
+  }, [mes, anio]);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const activeClientesWithoutCycle = clientes.filter(
+    (cl) => cl.activo !== false && !ciclos.some((c) => c.cliente_id === cl.id)
+  );
+
+  const handleEnsureAllCycles = async () => {
+    if (activeClientesWithoutCycle.length === 0) return;
+    setGenerating(true);
+    let count = 0;
+    for (const cl of activeClientesWithoutCycle) {
+      const res = await ensureCicloActual(cl.id, mes, anio, cl.monto_retainer || 0, cl.producciones_por_mes || 1);
+      if (res.success) count++;
+    }
+    setGenerating(false);
+    toast.success(`Se generaron ${count} ciclos mensuales para el periodo.`);
+    loadData();
+  };
+
+  const handlePrevMonth = () => {
+    if (mes === 1) { setMes(12); setAnio((p) => p - 1); } else { setMes((p) => p - 1); }
+  };
+  const handleNextMonth = () => {
+    if (mes === 12) { setMes(1); setAnio((p) => p + 1); } else { setMes((p) => p + 1); }
+  };
+
+  return (
+    <div className="w-full">
+      {/* Selector Superior de Periodo */}
+      <div className="bg-white border border-gray-100 shadow-xs rounded-2xl p-3 sm:p-4 mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handlePrevMonth}
+            className="w-9 h-9 rounded-full border border-gray-200 hover:bg-gray-100 flex items-center justify-center text-gray-700 transition-colors cursor-pointer"
+            title="Mes anterior"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          <div className="px-4 py-1.5 rounded-full bg-gray-50 border border-gray-200 flex items-center gap-2">
+            <span className="font-sora font-bold text-gray-900 text-sm sm:text-base">
+              {MESES[mes - 1]} {anio}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleNextMonth}
+            className="w-9 h-9 rounded-full border border-gray-200 hover:bg-gray-100 flex items-center justify-center text-gray-700 transition-colors cursor-pointer"
+            title="Mes siguiente"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {activeClientesWithoutCycle.length > 0 && (
+            <button
+              type="button"
+              disabled={generating}
+              onClick={handleEnsureAllCycles}
+              className="h-9 px-4 rounded-full bg-gradient-to-r from-[#ef18d6] to-[#188ff0] hover:opacity-90 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-blue-200 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>
+                {generating ? "Generando..." : `Generar ${activeClientesWithoutCycle.length} Ciclos`}
+              </span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={loadData}
+            className="h-9 px-3.5 rounded-full border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-sora font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="Recargar datos"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">Actualizar</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Header de Métricas y KPIs */}
+      {!loading && <OperationsMetricsHeader ciclos={ciclos} />}
+
+      {/* Loading Skeletons */}
+      {loading && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-6">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-28 w-full rounded-xl bg-gray-200" />
+            ))}
+          </div>
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-24 w-full rounded-2xl bg-gray-200" />
+          ))}
+        </div>
+      )}
+
+      {/* Listado de Tarjetas de Ciclos */}
+      {!loading && ciclos.length > 0 && (
+        <div>
+          {ciclos.map((ciclo) => (
+            <OperationsCycleCard
+              key={ciclo.id}
+              ciclo={ciclo}
+              onOpenProductionModal={(prod, cNombre) =>
+                setActiveProductionModal({ isOpen: true, produccion: prod, clienteNombre: cNombre })
+              }
+              onOpenFinanceModal={(c, cNombre) =>
+                setActiveFinanceModal({ isOpen: true, ciclo: c, clienteNombre: cNombre })
+              }
+              onStatusUpdated={loadData}
+              onOpenCreateCalendar={() => {
+                toast.info("Dirígete a la pestaña de Calendarios para crear uno nuevo.");
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && ciclos.length === 0 && (
+        <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center max-w-lg mx-auto shadow-xs my-8">
+          <div className="w-12 h-12 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center mx-auto mb-3">
+            <Users className="w-6 h-6" />
+          </div>
+          <h3 className="font-sora font-bold text-gray-900 text-base mb-1">
+            Sin ciclos registrados en {MESES[mes - 1]} {anio}
+          </h3>
+          <p className="font-inter text-xs text-gray-500 mb-5">
+            {activeClientesWithoutCycle.length > 0
+              ? `Existen ${activeClientesWithoutCycle.length} clientes activos que aún no tienen ciclo generado para este mes.`
+              : "No se encontraron clientes activos configurados en la plataforma."}
+          </p>
+
+          {activeClientesWithoutCycle.length > 0 && (
+            <button
+              type="button"
+              disabled={generating}
+              onClick={handleEnsureAllCycles}
+              className="h-10 px-6 rounded-full bg-brand-blue hover:bg-blue-600 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-blue-200 transition-all inline-flex items-center gap-2 cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Generar Ciclos Mensuales Automáticamente</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Modales */}
+      <ProductionDetailModal
+        isOpen={activeProductionModal.isOpen}
+        produccion={activeProductionModal.produccion}
+        clienteNombre={activeProductionModal.clienteNombre}
+        onClose={() =>
+          setActiveProductionModal({ isOpen: false, produccion: null, clienteNombre: "" })
+        }
+        onUpdated={loadData}
+      />
+
+      <FinanceCostModal
+        isOpen={activeFinanceModal.isOpen}
+        ciclo={activeFinanceModal.ciclo}
+        clienteNombre={activeFinanceModal.clienteNombre}
+        onClose={() =>
+          setActiveFinanceModal({ isOpen: false, ciclo: null, clienteNombre: "" })
+        }
+        onUpdated={loadData}
+      />
+    </div>
+  );
+}

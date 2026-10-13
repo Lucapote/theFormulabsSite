@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { LogOut, User, FileText, BarChart2, Users } from "lucide-react";
+import { LogOut, User, FileText, BarChart2, Users, Clapperboard } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { DEFAULT_PROPOSAL_TEMPLATE as defaultTemplate } from "@/data/proposalData";
 import { formatPriceLabel, formatAddonLabel } from "@/utils/formatters";
@@ -16,6 +16,7 @@ import ProposalModal from "@/components/dashboard/proposals/ProposalModal";
 import ClientsCalendarSection from "@/components/dashboard/calendar/ClientsCalendarSection";
 import ProposalsTabSection from "@/components/dashboard/proposals/ProposalsTabSection";
 import DiagnosticsTabSection from "@/components/dashboard/diagnostics/DiagnosticsTabSection";
+import OperationsTabSection from "@/components/dashboard/operations/OperationsTabSection";
 import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
 
 export default function Dashboard() {
@@ -269,6 +270,17 @@ export default function Dashboard() {
             Calendarios
           </button>
           <button
+            onClick={() => setActiveTab("operaciones")}
+            className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+              activeTab === "operaciones"
+                ? "bg-gray-900 text-white shadow-md"
+                : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
+            }`}
+          >
+            <Clapperboard className="w-4 h-4 text-brand-blue" />
+            Operaciones
+          </button>
+          <button
             onClick={() => setActiveTab("diagnostics")}
             className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === "diagnostics"
@@ -308,6 +320,11 @@ export default function Dashboard() {
         {/* TAB 3: DIAGNÓSTICOS */}
         {activeTab === "diagnostics" && (
           <DiagnosticsTabSection />
+        )}
+
+        {/* TAB 4: OPERACIONES */}
+        {activeTab === "operaciones" && (
+          <OperationsTabSection />
         )}
       </main>
 

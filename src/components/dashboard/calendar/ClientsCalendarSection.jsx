@@ -13,6 +13,7 @@ import {
   createDraftPlaceholderPosts,
   updateClientDownloadPermission
 } from "@/services/calendarService";
+import { ensureCicloActual } from "@/services/operationsService";
 
 import MediaGallery from "@/components/dashboard/gallery/MediaGallery";
 import ScheduledPostsList from "./ScheduledPostsList";
@@ -81,7 +82,10 @@ export default function ClientsCalendarSection() {
     nombre: "",
     empresa: "",
     email: "",
-    permite_descarga: false
+    permite_descarga: false,
+    monto_retainer: "",
+    dia_corte_pago: 1,
+    producciones_por_mes: 1
   });
   const [isSavingClient, setIsSavingClient] = useState(false);
 
@@ -205,10 +209,32 @@ export default function ClientsCalendarSection() {
     setIsSavingClient(true);
     const res = await createCliente(clientForm);
     if (res.success) {
+      const nuevoCliente = res.data;
+
+      // Si se especificó un retainer mensual, inicializar el ciclo del mes actual
+      if (Number(clientForm.monto_retainer) > 0) {
+        const now = new Date();
+        await ensureCicloActual(
+          nuevoCliente.id,
+          now.getMonth() + 1,
+          now.getFullYear(),
+          Number(clientForm.monto_retainer),
+          Number(clientForm.producciones_por_mes) || 1
+        );
+      }
+
       toast.success(`Cliente "${clientForm.nombre}" creado exitosamente.`);
-      setClientForm({ nombre: "", empresa: "", email: "", permite_descarga: false });
+      setClientForm({
+        nombre: "",
+        empresa: "",
+        email: "",
+        permite_descarga: false,
+        monto_retainer: "",
+        dia_corte_pago: 1,
+        producciones_por_mes: 1
+      });
       setShowClientModal(false);
-      await loadClientes(res.data?.id);
+      await loadClientes(nuevoCliente?.id);
     } else {
       toast.error(res.error || "No se pudo crear el cliente.");
     }

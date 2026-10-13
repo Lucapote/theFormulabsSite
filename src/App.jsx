@@ -9,6 +9,7 @@ import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import PublicCalendarPage from "./pages/PublicCalendarPage.jsx";
 import DiagnosticFormPage from "./pages/DiagnosticFormPage.jsx";
+import ProductionBookingPage from "./pages/ProductionBookingPage.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { UploadProvider } from "./context/UploadContext.jsx";
@@ -35,6 +36,7 @@ const App = () => (
             />
             <Route path="/diagnostico" element={<DiagnosticFormPage />} />
             <Route path="/formulario" element={<DiagnosticFormPage />} />
+            <Route path="/reservar/produccion" element={<ProductionBookingPage />} />
             <Route path="/propuesta/:slug" element={<ProposalPage />} />
             <Route path="/calendario/:slug" element={<PublicCalendarPage />} />
             <Route path="/:clientSlug/:calendarSlug" element={<PublicCalendarPage />} />
