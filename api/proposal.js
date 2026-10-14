@@ -134,9 +134,11 @@ export default async function handler(req, res) {
         return res.status(401).json({ success: false, error: "No autorizado. Se requiere iniciar sesión como administrador." });
       }
 
-      const { slug, clientName, content, id } = req.body || {};
+      const { slug, clientName, cliente, content, contenido, id, version, propuesta_padre_id, notas_version } = req.body || {};
+      const finalClient = clientName || cliente;
+      const finalContent = content || contenido || {};
 
-      if (!slug || !clientName) {
+      if (!slug || !finalClient) {
         return res.status(400).json({ success: false, error: "Slug y nombre de cliente son requeridos." });
       }
 
@@ -147,10 +149,14 @@ export default async function handler(req, res) {
       const now = new Date().toISOString();
       const payload = {
         slug: slug.toLowerCase().trim(),
-        cliente: clientName,
-        contenido: content || {},
+        cliente: finalClient,
+        contenido: finalContent,
         updated_at: now
       };
+
+      if (version !== undefined && version !== null) payload.version = Number(version);
+      if (propuesta_padre_id !== undefined) payload.propuesta_padre_id = propuesta_padre_id;
+      if (notas_version !== undefined) payload.notas_version = notas_version;
 
       if (id) {
         payload.id = id;

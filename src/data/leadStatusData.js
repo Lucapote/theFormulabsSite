@@ -22,11 +22,23 @@ export const LEAD_STATUS_CONFIG = {
     colorClass: "text-purple-700 bg-purple-50 border-purple-200",
     dotClass: "bg-purple-500"
   },
+  propuesta_creada: {
+    key: "propuesta_creada",
+    label: "Propuesta Creada",
+    colorClass: "text-[#188ff0] bg-blue-50 border-blue-200 font-semibold",
+    dotClass: "bg-[#188ff0]"
+  },
   cerrado: {
     key: "cerrado",
     label: "Cerrado / Ganado",
     colorClass: "text-emerald-700 bg-emerald-50 border-emerald-200",
     dotClass: "bg-emerald-500"
+  },
+  cliente_activo: {
+    key: "cliente_activo",
+    label: "Cliente Activo",
+    colorClass: "text-emerald-700 bg-emerald-50 border-emerald-300 font-bold",
+    dotClass: "bg-emerald-600"
   },
   descartado: {
     key: "descartado",

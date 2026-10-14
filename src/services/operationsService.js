@@ -24,7 +24,8 @@ export async function ensureCicloActual(
   anio = null,
   montoDefault = 0,
   cantProducciones = 1,
-  tipoSesion = "organica"
+  tipoSesion = "organica",
+  locacionDefault = null
 ) {
   if (!clienteId) {
     return { success: false, error: "ID de cliente no provisto." };
@@ -86,27 +87,31 @@ export async function ensureCicloActual(
       return { success: false, error: insertCicloErr.message };
     }
 
-    // 3. Obtener locación default del cliente si está configurada
-    let defaultLocacion = "";
+    // 3. Obtener locación y tipo default del cliente si están configurados
+    let defaultLocacion = (locacionDefault && typeof locacionDefault === "string") ? locacionDefault.trim() : "";
+    let defaultTipo = tipoSesion || "organica";
+
     const { data: clienteRecord } = await supabase
       .from("clientes")
-      .select("locacion_default")
+      .select("locacion_default, tipo_sesion_default")
       .eq("id", clienteId)
       .maybeSingle();
 
-    if (clienteRecord?.locacion_default) {
+    if (!defaultLocacion && clienteRecord?.locacion_default) {
       defaultLocacion = clienteRecord.locacion_default.trim();
+    }
+    if (clienteRecord?.tipo_sesion_default && (!tipoSesion || tipoSesion === "organica")) {
+      defaultTipo = clienteRecord.tipo_sesion_default;
     }
 
     // 4. Crear las producciones asociadas según la cantidad estipulada
     const totalSessions = Math.max(1, Number(cantProducciones) || 1);
-    const resolvedTipo = tipoSesion || "organica";
     const produccionesPayload = Array.from({ length: totalSessions }, (_, idx) => ({
       cliente_id: clienteId,
       ciclo_id: nuevoCiclo.id,
       numero_sesion: idx + 1,
-      tipo: resolvedTipo,
-      duracion_horas: resolvedTipo === "profesional" ? 6 : 4,
+      tipo: defaultTipo,
+      duracion_horas: defaultTipo === "profesional" ? 6 : 4,
       locacion: defaultLocacion || null,
       estado: "pendiente_agendamiento",
       created_at: new Date().toISOString()
@@ -266,6 +271,9 @@ export async function updateProduccion(produccionId, prodData = {}) {
     if (prodData.locacion !== undefined) updatePayload.locacion = prodData.locacion;
     if (prodData.notas_brief !== undefined) updatePayload.notas_brief = prodData.notas_brief;
     if (prodData.tipo !== undefined) updatePayload.tipo = prodData.tipo;
+    if (prodData.duracion_horas !== undefined) {
+      updatePayload.duracion_horas = Number(prodData.duracion_horas) || 4;
+    }
 
     let { data, error } = await supabase
       .from("producciones")
@@ -338,72 +346,158 @@ export async function convertProposalToClient(propuesta) {
       };
     }
 
-    // 2. Extraer datos del JSON de la propuesta
-    const content = propuesta.contenido || propuesta.content || {};
-    const clientInfo = content.client || {};
+    // 2. Extraer y mapear exhaustivamente desde el JSON propuesta.contenido
+    const contenido = propuesta.contenido || propuesta.content || {};
+    const clientData = contenido.client || {};
 
-    const nombre = (propuesta.cliente || clientInfo.name || clientInfo.shortName || "Nuevo Cliente").trim();
-    const empresa = (clientInfo.proposalTitle || clientInfo.shortName || nombre).trim();
-    const email = clientInfo.email ? clientInfo.email.trim() : null;
+    // 2.1 Datos Generales del Cliente
+    const nombre = (clientData.name || propuesta.cliente || "Cliente Estimado").trim();
+    const empresa = (clientData.company || clientData.shortName || clientData.name || nombre).trim();
+    const email = clientData.email ? clientData.email.trim() : null;
+    const rawLocacion = clientData.location || clientData.address || contenido.location || contenido.address || null;
+    const locacion_default = rawLocacion ? String(rawLocacion).trim() : null;
 
-    // Calcular el monto del retainer mensual:
-    // Prioridad 1: totalPrice si fue calculado y guardado
-    // Prioridad 2: plan destacado en pricingPlans
-    // Prioridad 3: primer plan disponible
-    let montoRetainer = 0;
-    if (typeof content.totalPrice === "number" && content.totalPrice > 0) {
-      montoRetainer = content.totalPrice;
-    } else if (Array.isArray(content.pricingPlans) && content.pricingPlans.length > 0) {
-      const planElegido = content.pricingPlans.find((p) => p.highlight) || content.pricingPlans[0];
-      montoRetainer = Number(planElegido?.price) || 0;
+    // 2.2 Plan y Finanzas
+    const selectedPlanId = contenido.selectedPlanId || contenido.selectedPlan;
+    const plansList = Array.isArray(contenido.pricingPlans) ? contenido.pricingPlans : [];
+    const currentPlan = (selectedPlanId ? plansList.find((p) => p.id === selectedPlanId) : null) ||
+      plansList.find((p) => p.highlight) ||
+      plansList[0] ||
+      {};
+
+    const monto_retainer = Math.max(0, Number(contenido.totalPrice || currentPlan.price) || 0);
+    const esquema_pago = (contenido.paymentFrequency === "quincenal" || contenido.esquema_pago === "quincenal")
+      ? "quincenal"
+      : "mensual";
+    const dia_corte_pago = Math.min(31, Math.max(1, Number(contenido.billingDay || contenido.dia_corte_pago) || 1));
+    const dia_corte_pago_2 = Math.min(31, Math.max(1, Number(contenido.billingDay2 || contenido.dia_corte_pago_2) || 15));
+
+    // 2.3 Parámetros Operativos
+    let producciones_por_mes = 1;
+    if (Number(contenido.producciones_por_mes) > 0) {
+      producciones_por_mes = Number(contenido.producciones_por_mes);
+    } else {
+      const planReels = Number(currentPlan.reels) || 0;
+      const planShoots = Number(currentPlan.shoots || currentPlan.rodajes || currentPlan.sesiones) || 0;
+      const hasTwoCoverages = Array.isArray(contenido.baseFeatures) &&
+        contenido.baseFeatures.some((f) => typeof f === "string" && /2\s+(coberturas|rodajes|sesiones)/i.test(f));
+
+      if (planShoots >= 2 || planReels > 10 || hasTwoCoverages) {
+        producciones_por_mes = 2;
+      } else if (planShoots === 1) {
+        producciones_por_mes = 1;
+      }
     }
 
-    // Determinar cantidad de producciones mensuales:
-    // Por estándar en The Formulab (baseFeatures contempla 2 coberturas presenciales), se asignan 2
-    const produccionesPorMes = 2;
-    const diaCortePago = 1;
+    // Tipo de sesión predeterminado inferido de los formatos contratados o features
+    let tipo_sesion_default = "organica";
+    if (contenido.tipo_sesion_default) {
+      tipo_sesion_default = contenido.tipo_sesion_default;
+    } else if (contenido.tipo_sesion) {
+      tipo_sesion_default = contenido.tipo_sesion;
+    } else if (currentPlan.sessionType) {
+      tipo_sesion_default = currentPlan.sessionType;
+    } else {
+      const formatsPool = [
+        ...(Array.isArray(contenido.formatos) ? contenido.formatos : []),
+        ...(Array.isArray(contenido.formats) ? contenido.formats : []),
+        ...(Array.isArray(contenido.baseFeatures) ? contenido.baseFeatures : []),
+        currentPlan.description || "",
+        currentPlan.name || ""
+      ].join(" ").toLowerCase();
 
-    // 3. Insertar el nuevo cliente en Supabase
+      if (formatsPool.includes("profesional")) {
+        tipo_sesion_default = "profesional";
+      } else if (formatsPool.includes("hibrido") || (formatsPool.includes("foto") && formatsPool.includes("reel"))) {
+        tipo_sesion_default = "hibrido";
+      } else if (formatsPool.includes("foto") && !formatsPool.includes("reel")) {
+        tipo_sesion_default = "fotos";
+      } else if (formatsPool.includes("reel") || formatsPool.includes("video")) {
+        tipo_sesion_default = "reels_batch";
+      } else {
+        tipo_sesion_default = "organica";
+      }
+    }
+
+    const permite_descarga = Boolean(contenido.allowDownload || contenido.permite_descarga || false);
+
+    // 3. Inserción atómica en Supabase
     const clientPayload = {
       nombre,
       empresa,
       email,
       activo: true,
-      permite_descarga: true,
-      monto_retainer: montoRetainer,
-      dia_corte_pago: diaCortePago,
-      producciones_por_mes: produccionesPorMes,
+      permite_descarga,
+      monto_retainer,
+      esquema_pago,
+      dia_corte_pago,
+      dia_corte_pago_2,
+      producciones_por_mes,
+      tipo_sesion_default,
+      locacion_default,
       propuesta_origen_id: propuesta.id,
       created_at: new Date().toISOString()
     };
 
-    const { data: newClient, error: insertClientErr } = await supabase
+    let { data: newClient, error: insertClientErr } = await supabase
       .from("clientes")
       .insert([clientPayload])
       .select()
       .single();
+
+    // Fallback defensivo si alguna columna de migración pendiente no existe aún
+    if (insertClientErr) {
+      const fallbackPayload = { ...clientPayload };
+      let hadFallback = false;
+      if (insertClientErr.message && insertClientErr.message.includes("locacion_default")) {
+        delete fallbackPayload.locacion_default;
+        hadFallback = true;
+      }
+      if (
+        insertClientErr.message &&
+        (insertClientErr.message.includes("esquema_pago") ||
+          insertClientErr.message.includes("dia_corte_pago_2") ||
+          insertClientErr.message.includes("tipo_sesion_default"))
+      ) {
+        delete fallbackPayload.esquema_pago;
+        delete fallbackPayload.dia_corte_pago_2;
+        delete fallbackPayload.tipo_sesion_default;
+        hadFallback = true;
+      }
+      if (hadFallback) {
+        const retry = await supabase.from("clientes").insert([fallbackPayload]).select().single();
+        if (!retry.error && retry.data) {
+          newClient = retry.data;
+          insertClientErr = null;
+        }
+      }
+    }
 
     if (insertClientErr) {
       console.error("convertProposalToClient insert client error:", insertClientErr);
       return { success: false, error: insertClientErr.message };
     }
 
-    // 4. Inicializar ciclo mensual y producciones para el mes corriente
+    // 4. Inicializar ciclo mensual y producciones garantizando herencia de locación
     const now = new Date();
+    const mesActual = now.getMonth() + 1;
+    const anioActual = now.getFullYear();
+
     const cicloRes = await ensureCicloActual(
       newClient.id,
-      now.getMonth() + 1,
-      now.getFullYear(),
-      montoRetainer,
-      produccionesPorMes
+      mesActual,
+      anioActual,
+      newClient.monto_retainer,
+      newClient.producciones_por_mes,
+      newClient.tipo_sesion_default,
+      newClient.locacion_default
     );
 
     return {
       success: true,
       data: {
         cliente: newClient,
-        ciclo: cicloRes?.data?.ciclo,
-        producciones: cicloRes?.data?.producciones || []
+        ciclo: cicloRes?.data?.ciclo || null
       }
     };
   } catch (err) {

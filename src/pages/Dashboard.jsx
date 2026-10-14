@@ -314,6 +314,7 @@ export default function Dashboard() {
             }}
             onDeleteClick={(item) => setDeletingItem(item)}
             copiedSlug={copiedSlug}
+            setActiveTab={setActiveTab}
           />
         )}
 

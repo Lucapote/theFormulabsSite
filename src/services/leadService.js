@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { evaluateLeadBranching, extractUrlTracking } from "@/utils/leadBranching";
+import { ensureCicloActual } from "@/services/operationsService";
 
 /**
  * Registra un nuevo lead en la tabla `leads` de Supabase siguiendo el esquema exacto de BD.
@@ -303,3 +304,141 @@ export async function updateLeadStatus(leadId, newStatus) {
   }
 }
 
+/**
+ * Convierte un lead calificado en cliente formal (por ejemplo, para asesorías o mentorías directas)
+ * e inicializa su ciclo mensual si cuenta con retainer o producciones.
+ *
+ * @param {string|object} leadIdOrLead - UUID del lead u objeto lead completo
+ * @param {object} clientData - Parámetros configurados en el formulario
+ * @returns {Promise<{ success: boolean, data?: { cliente: object }, error?: string }>}
+ */
+export async function convertLeadToClient(leadIdOrLead, clientData = {}) {
+  try {
+    if (!supabase) {
+      return { success: false, error: "Servicio no disponible temporalmente." };
+    }
+
+    // 1. Resolver los datos base del lead
+    let lead = typeof leadIdOrLead === "object" ? leadIdOrLead : null;
+    const leadId = typeof leadIdOrLead === "object" ? leadIdOrLead.id : leadIdOrLead;
+
+    if (!lead && leadId) {
+      const { data: fetchedLead, error: fetchErr } = await supabase
+        .from("leads")
+        .select("*")
+        .eq("id", leadId)
+        .maybeSingle();
+
+      if (fetchErr) {
+        console.error("convertLeadToClient fetch lead error:", fetchErr);
+      }
+      lead = fetchedLead || {};
+    }
+
+    const nombre = (clientData.nombre || lead?.nombre || "Nuevo Cliente").trim();
+    const empresa = (clientData.empresa || clientData.nombre || lead?.nombre || nombre).trim();
+    const email = clientData.email ? clientData.email.trim() : null;
+    const monto_retainer = Math.max(0, Number(clientData.monto_retainer) || 0);
+    const esquema_pago = clientData.esquema_pago === "quincenal" ? "dos_pagos" : "mensual";
+    const dia_corte_pago = Math.min(31, Math.max(1, Number(clientData.dia_corte_pago) || 1));
+    const dia_corte_pago_2 = Math.min(31, Math.max(1, Number(clientData.dia_corte_pago_2) || 15));
+    const producciones_por_mes = clientData.producciones_por_mes !== undefined
+      ? Math.max(0, Number(clientData.producciones_por_mes))
+      : 0;
+    const tipo_sesion_default = clientData.tipo_sesion_default || "mentoria";
+    const locacion_default = (clientData.locacion_default || lead?.ubicacion || "").trim() || null;
+    const permite_descarga = Boolean(clientData.permite_descarga);
+
+    // 2. Insertar nuevo registro en la tabla clientes
+    const clientPayload = {
+      nombre,
+      empresa,
+      email,
+      activo: true,
+      permite_descarga,
+      monto_retainer,
+      esquema_pago,
+      dia_corte_pago,
+      dia_corte_pago_2: esquema_pago === "dos_pagos" ? dia_corte_pago_2 : null,
+      producciones_por_mes,
+      tipo_sesion_default,
+      locacion_default,
+      created_at: new Date().toISOString()
+    };
+
+    let { data: newClient, error: insertErr } = await supabase
+      .from("clientes")
+      .insert([clientPayload])
+      .select()
+      .single();
+
+    // Fallback defensivo si alguna columna de migración pendiente no existe aún
+    if (insertErr) {
+      const fallbackPayload = { ...clientPayload };
+      let hadFallback = false;
+      if (insertErr.message && insertErr.message.includes("locacion_default")) {
+        delete fallbackPayload.locacion_default;
+        hadFallback = true;
+      }
+      if (
+        insertErr.message &&
+        (insertErr.message.includes("esquema_pago") ||
+          insertErr.message.includes("dia_corte_pago_2") ||
+          insertErr.message.includes("tipo_sesion_default"))
+      ) {
+        delete fallbackPayload.esquema_pago;
+        delete fallbackPayload.dia_corte_pago_2;
+        delete fallbackPayload.tipo_sesion_default;
+        hadFallback = true;
+      }
+      if (hadFallback) {
+        const retry = await supabase.from("clientes").insert([fallbackPayload]).select().single();
+        if (!retry.error && retry.data) {
+          newClient = retry.data;
+          insertErr = null;
+        }
+      }
+    }
+
+    if (insertErr) {
+      console.error("convertLeadToClient insert error:", insertErr);
+      return { success: false, error: insertErr.message };
+    }
+
+    // 3. Actualizar la tabla leads marcando status = 'cliente_activo'
+    if (leadId) {
+      const { error: updateLeadErr } = await supabase
+        .from("leads")
+        .update({ status: "cliente_activo" })
+        .eq("id", leadId);
+
+      if (updateLeadErr) {
+        console.warn("Aviso: no se pudo actualizar status en leads:", updateLeadErr);
+      }
+    }
+
+    // 4. Si monto_retainer > 0 o producciones_por_mes > 0, inicializar ciclo mensual
+    if (monto_retainer > 0 || producciones_por_mes > 0) {
+      const now = new Date();
+      await ensureCicloActual(
+        newClient.id,
+        now.getMonth() + 1,
+        now.getFullYear(),
+        monto_retainer,
+        Math.max(1, producciones_por_mes),
+        tipo_sesion_default,
+        locacion_default
+      );
+    }
+
+    return {
+      success: true,
+      data: { cliente: newClient }
+    };
+  } catch (err) {
+    console.error("convertLeadToClient unexpected error:", err);
+    return { success: false, error: err.message || "Error al convertir lead a cliente." };
+  }
+}
+
+export { createProposalFromLead } from "./proposalCrudService";
