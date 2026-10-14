@@ -51,4 +51,51 @@ export const getLocalDateString = (d = new Date()) => {
 
 export { triggerMediaDownload } from "./downloadHelpers";
 
+export const MESES_ANIO = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+];
+
+/**
+ * Obtiene el nombre por defecto o personalizado de una sesión de producción.
+ * Si tiene nombre personalizado: lo devuelve.
+ * Si no:
+ *   - Si totalSesiones > 1: "Sesión {numero_sesion} de {totalSesiones}" (ej: "Sesión 1 de 2")
+ *   - Si totalSesiones <= 1: "Sesión {Mes}" (ej: "Sesión Octubre")
+ */
+export const getSessionDisplayName = (produccion, mes = null, totalSesiones = 1) => {
+  if (produccion?.nombre && typeof produccion.nombre === "string" && produccion.nombre.trim()) {
+    return produccion.nombre.trim();
+  }
+  const sessionNum = produccion?.numero_sesion || 1;
+  const count = Number(totalSesiones) || 1;
+
+  if (count > 1) {
+    return `Sesión ${sessionNum} de ${count}`;
+  }
+
+  let mesIndex = null;
+  if (mes !== null && mes !== undefined) {
+    mesIndex = Number(mes) - 1;
+  } else if (produccion?.fecha_produccion) {
+    mesIndex = new Date(produccion.fecha_produccion).getMonth();
+  } else {
+    mesIndex = new Date().getMonth();
+  }
+
+  const mesNombre = MESES_ANIO[mesIndex] || "";
+  return mesNombre ? `Sesión ${mesNombre}` : `Sesión #${sessionNum}`;
+};
+
+/**
+ * Genera la URL de reserva de una producción considerando el origin actual (localhost o producción)
+ */
+export const getBookingUrl = (token) => {
+  if (!token) return "";
+  const origin = typeof window !== "undefined" && window.location?.origin
+    ? window.location.origin
+    : "https://www.theformulab.io";
+  return `${origin}/reservar/produccion?token=${token}`;
+};
+
 

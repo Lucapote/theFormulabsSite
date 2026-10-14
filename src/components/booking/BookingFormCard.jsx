@@ -1,18 +1,12 @@
 import { useState } from "react";
-import { Calendar, Clock, MapPin, FileText, Loader2, Check } from "lucide-react";
-
-const SUGGESTED_SLOTS = [
-  { label: "09:00 AM", value: "09:00" },
-  { label: "11:00 AM", value: "11:00" },
-  { label: "02:00 PM", value: "14:00" },
-  { label: "04:00 PM", value: "16:00" },
-  { label: "06:00 PM", value: "18:00" }
-];
+import { Calendar, Clock, MapPin, FileText, Loader2, Check, Video } from "lucide-react";
 
 export default function BookingFormCard({
   initialData = {},
   onSubmit,
-  isSubmitting = false
+  isSubmitting = false,
+  tipo = "organica",
+  duracionHoras = null
 }) {
   const [fecha, setFecha] = useState(() => {
     if (initialData.fecha_produccion) {
@@ -35,6 +29,7 @@ export default function BookingFormCard({
   const [errorMsg, setErrorMsg] = useState("");
 
   const today = new Date().toISOString().slice(0, 10);
+  const isProfesional = tipo === "profesional" || duracionHoras === 6;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -70,64 +65,57 @@ export default function BookingFormCard({
           </div>
         )}
 
-        {/* 1. Fecha del Rodaje */}
-        <div>
-          <label className="block text-xs font-sora font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-brand-blue" />
-            <span>Fecha del Rodaje</span>
-            <span className="text-brand-magenta">*</span>
-          </label>
-          <input
-            type="date"
-            min={today}
-            required
-            value={fecha}
-            onChange={(e) => setFecha(e.target.value)}
-            className="w-full text-base sm:text-sm font-mono bg-gray-50/50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:bg-white transition-all"
-          />
-        </div>
-
-        {/* 2. Horario / Turno */}
-        <div>
-          <label className="block text-xs font-sora font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-brand-blue" />
-            <span>Horario Sugerido de Inicio</span>
-            <span className="text-brand-magenta">*</span>
-          </label>
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-2">
-            {SUGGESTED_SLOTS.map((slot) => {
-              const isSelected = hora === slot.value;
-              return (
-                <button
-                  key={slot.value}
-                  type="button"
-                  onClick={() => setHora(slot.value)}
-                  className={`py-2 px-1 rounded-xl text-xs font-mono font-medium border text-center transition-all cursor-pointer ${
-                    isSelected
-                      ? "bg-gray-900 text-white border-gray-900 shadow-xs"
-                      : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-                  }`}
-                >
-                  {slot.label}
-                </button>
-              );
-            })}
+        {/* Banner de Tipo de Sesión y Horas de Cobertura */}
+        <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-xl flex items-center justify-between text-xs font-sora">
+          <div className="flex items-center gap-2 text-brand-blue font-semibold">
+            <Video className="w-4 h-4" />
+            <span>Tipo de Sesión</span>
           </div>
-          <input
-            type="time"
-            required
-            value={hora}
-            onChange={(e) => setHora(e.target.value)}
-            className="w-full text-base sm:text-sm font-mono bg-gray-50/50 border border-gray-200 rounded-xl px-3.5 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:bg-white transition-all"
-          />
+          <span className="font-bold text-gray-900">
+            {isProfesional ? "Profesional (6 horas)" : "Orgánica (4 horas total)"}
+          </span>
         </div>
 
-        {/* 3. Locación */}
+        {/* 1. Fecha y Hora lado a lado en desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-sora font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-brand-blue" />
+              <span>Fecha del Rodaje</span>
+              <span className="text-pink-500">*</span>
+            </label>
+            <input
+              type="date"
+              min={today}
+              required
+              value={fecha}
+              onChange={(e) => setFecha(e.target.value)}
+              className="w-full text-base sm:text-sm font-inter bg-gray-50/50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:bg-white transition-all cursor-pointer"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-sora font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-brand-blue" />
+              <span>Hora de Inicio</span>
+              <span className="text-pink-500">*</span>
+            </label>
+            <input
+              type="time"
+              required
+              value={hora}
+              onChange={(e) => setHora(e.target.value)}
+              className="w-full text-base sm:text-sm font-inter bg-gray-50/50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:bg-white transition-all cursor-pointer"
+            />
+          </div>
+        </div>
+
+        {/* 2. Locación */}
         <div>
           <label className="block text-xs font-sora font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
             <MapPin className="w-3.5 h-3.5 text-emerald-600" />
             <span>Locación / Dirección</span>
-            <span className="text-brand-magenta">*</span>
+            <span className="text-pink-500">*</span>
           </label>
           <input
             type="text"
@@ -139,7 +127,7 @@ export default function BookingFormCard({
           />
         </div>
 
-        {/* 4. Notas y Brief */}
+        {/* 3. Notas y Brief */}
         <div>
           <label className="block text-xs font-sora font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
             <FileText className="w-3.5 h-3.5 text-gray-500" />

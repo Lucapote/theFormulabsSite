@@ -73,27 +73,27 @@ export default function FinanceCostModal({
       <DialogContent className="max-w-md bg-white p-6 rounded-2xl shadow-xl border-gray-100">
         <DialogHeader className="pb-2 border-b border-gray-100">
           <DialogTitle className="font-sora text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+            <span className="w-2.5 h-2.5 rounded-full bg-brand-blue" />
             Finanzas del Ciclo &mdash; {clienteNombre}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           {/* Card de Margen en Vivo */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 flex items-center justify-between">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-sora font-semibold text-gray-500 uppercase tracking-wider block">
+              <span className="text-[10px] font-sora font-semibold text-gray-500 uppercase tracking-wider block mb-0.5">
                 Margen Neto Proyectado
               </span>
-              <span className={`text-lg font-mono font-bold ${margen >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+              <span className="text-xl font-sora font-bold text-gray-900 tracking-tight">
                 ${margen.toLocaleString("es-MX")} MXN
               </span>
             </div>
             <div className="text-right">
-              <span className="text-[10px] font-sora font-semibold text-gray-500 uppercase tracking-wider block">
+              <span className="text-[10px] font-sora font-semibold text-gray-500 uppercase tracking-wider block mb-0.5">
                 Rentabilidad
               </span>
-              <span className={`text-sm font-mono font-bold ${rentabilidad >= 30 ? "text-emerald-600" : "text-amber-600"}`}>
+              <span className="text-sm font-sora font-bold text-brand-blue">
                 {rentabilidad}%
               </span>
             </div>
@@ -111,12 +111,12 @@ export default function FinanceCostModal({
                 step="any"
                 value={formData.monto_cobrado}
                 onChange={(e) => setFormData({ ...formData, monto_cobrado: e.target.value })}
-                className="w-full text-xs font-mono bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                className="w-full text-sm font-inter bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue"
               />
             </div>
             <div>
               <label className="text-xs font-sora font-semibold text-gray-700 mb-1 flex items-center gap-1">
-                <TrendingUp className="w-3.5 h-3.5 text-rose-500" /> Costo Operativo
+                <TrendingUp className="w-3.5 h-3.5 text-pink-500" /> Costo Operativo
               </label>
               <input
                 type="number"
@@ -124,7 +124,7 @@ export default function FinanceCostModal({
                 step="any"
                 value={formData.costo_operativo}
                 onChange={(e) => setFormData({ ...formData, costo_operativo: e.target.value })}
-                className="w-full text-xs font-mono bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                className="w-full text-sm font-inter bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue"
               />
             </div>
           </div>
@@ -153,7 +153,7 @@ export default function FinanceCostModal({
                 type="date"
                 value={formData.fecha_pago}
                 onChange={(e) => setFormData({ ...formData, fecha_pago: e.target.value })}
-                className="w-full text-xs font-mono bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                className="w-full text-sm font-inter bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue"
               />
             </div>
           </div>
@@ -161,14 +161,14 @@ export default function FinanceCostModal({
           {/* Comprobante / Factura URL */}
           <div>
             <label className="text-xs font-sora font-semibold text-gray-700 mb-1 flex items-center gap-1">
-              <LinkIcon className="w-3.5 h-3.5 text-brand-magenta" /> URL Comprobante / Factura
+              <LinkIcon className="w-3.5 h-3.5 text-brand-blue" /> URL Comprobante / Factura
             </label>
             <input
               type="url"
               placeholder="https://..."
               value={formData.comprobante_url}
               onChange={(e) => setFormData({ ...formData, comprobante_url: e.target.value })}
-              className="w-full text-xs font-mono bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue"
+              className="w-full text-sm font-inter bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue"
             />
           </div>
 
@@ -177,14 +177,14 @@ export default function FinanceCostModal({
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="h-9 px-4 rounded-full border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-sora font-medium transition-colors"
+              className="h-10 px-5 rounded-full border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-sora font-bold uppercase tracking-wider transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="h-9 px-6 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-emerald-200 transition-all active:scale-[0.98] disabled:opacity-50"
+              className="h-10 px-6 rounded-full bg-[#188ff0] hover:bg-blue-600 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-50"
             >
               {loading ? "Guardando..." : "Guardar Finanzas"}
             </button>

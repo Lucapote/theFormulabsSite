@@ -12,6 +12,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { updateCicloFinanzas } from "@/services/operationsService";
+import { getSessionDisplayName, getBookingUrl } from "@/utils/formatters";
 
 export default function OperationsCycleCard({
   ciclo,
@@ -45,9 +46,19 @@ export default function OperationsCycleCard({
       toast.error("Esta sesión no cuenta con token de reserva.");
       return;
     }
-    const url = `https://www.theformulab.io/reservar/produccion?token=${token}`;
+    const url = getBookingUrl(token);
     navigator.clipboard.writeText(url);
     toast.success("Enlace de reserva copiado al portapapeles.");
+  };
+
+  const openProductionLink = (e, token) => {
+    e.stopPropagation();
+    if (!token) {
+      toast.error("Esta sesión no cuenta con token de reserva.");
+      return;
+    }
+    const url = getBookingUrl(token);
+    window.open(url, "_blank");
   };
 
   const formatSessionDate = (isoStr) => {
@@ -79,7 +90,7 @@ export default function OperationsCycleCard({
       case "vencido":
         return "bg-rose-50 text-rose-700 border-rose-200";
       default:
-        return "bg-amber-50 text-amber-700 border-amber-200";
+        return "bg-gray-100 text-gray-700 border-gray-200";
     }
   };
 
@@ -93,7 +104,7 @@ export default function OperationsCycleCard({
               {cliente.nombre || "Cliente sin nombre"}
             </h3>
             {cliente.permite_descarga && (
-              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-mono bg-purple-50 text-purple-700 border border-purple-100 shrink-0">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-sora font-semibold bg-pink-50 text-pink-600 border border-pink-100 shrink-0">
                 <Download className="w-2.5 h-2.5" /> Descarga
               </span>
             )}
@@ -105,8 +116,13 @@ export default function OperationsCycleCard({
                 {cliente.empresa}
               </span>
             )}
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-gray-100 text-gray-600 border border-gray-200">
-              Corte: día {cliente.dia_corte_pago || 1}
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-inter font-medium bg-gray-100 text-gray-600 border border-gray-200">
+              {cliente.esquema_pago === "dos_pagos" || cliente.esquema_pago === "quincenal" || cliente.dia_corte_pago_2
+                ? `Cortes: Días ${cliente.dia_corte_pago || 1} y ${cliente.dia_corte_pago_2 || 15}`
+                : `Corte: Día ${cliente.dia_corte_pago || 1}`}
+            </span>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-sora font-semibold bg-blue-50 text-brand-blue border border-blue-100">
+              {cliente.tipo_sesion_default === "profesional" ? "Pro (6h)" : "Orgánica (4h)"}
             </span>
           </div>
 
@@ -127,7 +143,7 @@ export default function OperationsCycleCard({
               <button
                 type="button"
                 onClick={() => onOpenCreateCalendar && onOpenCreateCalendar(cliente)}
-                className="inline-flex items-center gap-1 text-[11px] font-sora font-medium text-brand-magenta hover:underline cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-sora font-semibold text-brand-blue bg-blue-50 hover:bg-blue-100 border border-blue-100 transition-colors cursor-pointer"
               >
                 <Plus className="w-3 h-3" /> Crear calendario mensual
               </button>
@@ -147,34 +163,53 @@ export default function OperationsCycleCard({
               const isScheduled = prod.estado === "agendada";
               const isCompleted = ["rodaje_completado", "en_edicion", "finalizada"].includes(prod.estado);
               const dateText = formatSessionDate(prod.fecha_produccion);
+              const sessionTitle = getSessionDisplayName(prod, ciclo.mes, producciones.length);
 
               return (
                 <div
                   key={prod.id}
-                  onClick={() => onOpenProductionModal && onOpenProductionModal(prod, cliente.nombre)}
+                  onClick={() => onOpenProductionModal && onOpenProductionModal(prod, cliente.nombre, ciclo)}
                   className={`group relative flex items-center gap-1.5 pl-2.5 pr-1.5 py-1.5 rounded-full border text-xs cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] ${
                     isCompleted
-                      ? "bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100"
+                      ? "bg-pink-50 text-pink-600 border-pink-200 hover:bg-pink-100"
                       : isScheduled
                       ? "bg-blue-50 text-brand-blue border-blue-200 hover:bg-blue-100"
-                      : "bg-amber-50/70 text-amber-800 border-amber-200 hover:bg-amber-100"
+                      : "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200"
                   }`}
-                  title="Clic para gestionar detalles de la sesión"
+                  title={`${sessionTitle} • Clic para gestionar detalles`}
                 >
-                  <span className="font-sora font-bold text-[11px]">#{prod.numero_sesion}</span>
-                  <span className="font-mono text-[11px] truncate max-w-[110px]">
-                    {dateText || (isCompleted ? "Rodaje Listo" : "Sin agendar")}
+                  <span className="font-sora font-bold text-[11px] truncate max-w-[130px]">
+                    {sessionTitle}
                   </span>
+                  {dateText ? (
+                    <span className="font-inter text-[10px] opacity-75 truncate max-w-[80px]">
+                      • {dateText}
+                    </span>
+                  ) : (
+                    <span className="font-inter text-[10px] opacity-75">
+                      • {prod.tipo === "profesional" || prod.duracion_horas === 6 ? "6h" : "4h"}
+                    </span>
+                  )}
 
                   {prod.token_reserva && (
-                    <button
-                      type="button"
-                      onClick={(e) => copyProductionLink(e, prod.token_reserva)}
-                      title="Copiar link de agendamiento para el cliente"
-                      className="p-1 rounded-full hover:bg-white/80 text-gray-600 hover:text-brand-blue transition-colors ml-0.5 cursor-pointer"
-                    >
-                      <Link2 className="w-3 h-3" />
-                    </button>
+                    <div className="flex items-center gap-0.5 ml-0.5" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={(e) => copyProductionLink(e, prod.token_reserva)}
+                        title="Copiar link de reserva"
+                        className="p-1 rounded-full hover:bg-white/80 text-gray-500 hover:text-brand-blue transition-colors cursor-pointer"
+                      >
+                        <Link2 className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => openProductionLink(e, prod.token_reserva)}
+                        title="Abrir auto-reserva en nueva pestaña"
+                        className="p-1 rounded-full hover:bg-white/80 text-gray-500 hover:text-brand-blue transition-colors cursor-pointer"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </button>
+                    </div>
                   )}
                 </div>
               );
@@ -194,8 +229,8 @@ export default function OperationsCycleCard({
             <div className="text-lg font-sora font-bold text-gray-900 tracking-tight">
               {formatCurrency(ciclo.monto_cobrado)}
             </div>
-            <div className="text-xs font-mono text-gray-500 mt-0.5">
-              Costo: <span className="font-semibold">{formatCurrency(ciclo.costo_operativo)}</span>
+            <div className="text-xs font-inter text-gray-500 mt-0.5">
+              Costo: <span className="font-semibold text-gray-700">{formatCurrency(ciclo.costo_operativo)}</span>
             </div>
           </div>
 
@@ -218,7 +253,7 @@ export default function OperationsCycleCard({
             <button
               type="button"
               onClick={() => onOpenFinanceModal && onOpenFinanceModal(ciclo, cliente.nombre)}
-              className="h-8 px-3 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-sora font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="h-8 px-3 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-sora font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
               title="Registrar o editar costos y comprobante"
             >
               <Receipt className="w-3.5 h-3.5 text-gray-600" />

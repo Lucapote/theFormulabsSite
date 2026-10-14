@@ -82,6 +82,9 @@ export async function createCliente({
   permite_descarga = false,
   monto_retainer = 0,
   dia_corte_pago = 1,
+  dia_corte_pago_2 = 15,
+  esquema_pago = "mensual",
+  tipo_sesion_default = "organica",
   producciones_por_mes = 1,
   propuesta_origen_id = null
 }) {
@@ -94,6 +97,8 @@ export async function createCliente({
       return { success: false, error: "Supabase no configurado" };
     }
 
+    const isDosPagos = esquema_pago === "dos_pagos" || esquema_pago === "quincenal";
+
     const payload = {
       nombre: nombre.trim(),
       empresa: empresa.trim(),
@@ -101,16 +106,34 @@ export async function createCliente({
       activo: true,
       permite_descarga: Boolean(permite_descarga),
       monto_retainer: Math.max(0, Number(monto_retainer) || 0),
+      esquema_pago: isDosPagos ? "dos_pagos" : "mensual",
       dia_corte_pago: Math.max(1, Math.min(31, Number(dia_corte_pago) || 1)),
+      dia_corte_pago_2: isDosPagos ? Math.max(1, Math.min(31, Number(dia_corte_pago_2) || 15)) : null,
+      tipo_sesion_default: tipo_sesion_default || "organica",
       producciones_por_mes: Math.max(1, Number(producciones_por_mes) || 1),
       propuesta_origen_id: propuesta_origen_id || null,
       created_at: new Date().toISOString()
     };
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("clientes")
       .insert([payload])
       .select();
+
+    // Fallback defensivo si alguna columna adicional aún no existe en Supabase
+    if (error && (error.message.includes("dia_corte_pago_2") || error.message.includes("esquema_pago") || error.message.includes("tipo_sesion_default"))) {
+      const fallbackPayload = { ...payload };
+      delete fallbackPayload.dia_corte_pago_2;
+      delete fallbackPayload.esquema_pago;
+      delete fallbackPayload.tipo_sesion_default;
+      const retry = await supabase
+        .from("clientes")
+        .insert([fallbackPayload])
+        .select();
+      if (!retry.error) {
+        return { success: true, data: { ...retry.data[0], ...payload } };
+      }
+    }
 
     if (error) {
       console.error("createCliente error:", error);

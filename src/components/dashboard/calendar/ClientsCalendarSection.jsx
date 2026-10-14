@@ -84,7 +84,10 @@ export default function ClientsCalendarSection() {
     email: "",
     permite_descarga: false,
     monto_retainer: "",
+    esquema_pago: "mensual",
     dia_corte_pago: 1,
+    dia_corte_pago_2: 15,
+    tipo_sesion_default: "organica",
     producciones_por_mes: 1
   });
   const [isSavingClient, setIsSavingClient] = useState(false);
@@ -219,7 +222,8 @@ export default function ClientsCalendarSection() {
           now.getMonth() + 1,
           now.getFullYear(),
           Number(clientForm.monto_retainer),
-          Number(clientForm.producciones_por_mes) || 1
+          Number(clientForm.producciones_por_mes) || 1,
+          clientForm.tipo_sesion_default || "organica"
         );
       }
 
@@ -230,7 +234,10 @@ export default function ClientsCalendarSection() {
         email: "",
         permite_descarga: false,
         monto_retainer: "",
+        esquema_pago: "mensual",
         dia_corte_pago: 1,
+        dia_corte_pago_2: 15,
+        tipo_sesion_default: "organica",
         producciones_por_mes: 1
       });
       setShowClientModal(false);

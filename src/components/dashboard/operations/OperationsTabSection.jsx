@@ -109,7 +109,7 @@ export default function OperationsTabSection() {
               type="button"
               disabled={generating}
               onClick={handleEnsureAllCycles}
-              className="h-9 px-4 rounded-full bg-gradient-to-r from-[#ef18d6] to-[#188ff0] hover:opacity-90 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-blue-200 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="h-9 px-4 rounded-full bg-[#188ff0] hover:bg-blue-600 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-blue-200 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>
@@ -155,7 +155,12 @@ export default function OperationsTabSection() {
               key={ciclo.id}
               ciclo={ciclo}
               onOpenProductionModal={(prod, cNombre) =>
-                setActiveProductionModal({ isOpen: true, produccion: prod, clienteNombre: cNombre })
+                setActiveProductionModal({
+                  isOpen: true,
+                  produccion: prod,
+                  clienteNombre: cNombre,
+                  ciclo
+                })
               }
               onOpenFinanceModal={(c, cNombre) =>
                 setActiveFinanceModal({ isOpen: true, ciclo: c, clienteNombre: cNombre })
@@ -203,8 +208,9 @@ export default function OperationsTabSection() {
         isOpen={activeProductionModal.isOpen}
         produccion={activeProductionModal.produccion}
         clienteNombre={activeProductionModal.clienteNombre}
+        ciclo={activeProductionModal.ciclo}
         onClose={() =>
-          setActiveProductionModal({ isOpen: false, produccion: null, clienteNombre: "" })
+          setActiveProductionModal({ isOpen: false, produccion: null, clienteNombre: "", ciclo: null })
         }
         onUpdated={loadData}
       />

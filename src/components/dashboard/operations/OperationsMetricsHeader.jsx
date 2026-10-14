@@ -84,13 +84,13 @@ export default function OperationsMetricsHeader({ ciclos = [] }) {
           </div>
         </div>
         <div>
-          <div className="text-xl font-sora font-bold text-gray-900 tracking-tight">
+          <div className="text-2xl font-sora font-bold text-gray-900 tracking-tight">
             {formatCurrency(metrics.facturacionTotal)}
           </div>
           <div className="mt-2.5">
-            <div className="flex items-center justify-between text-[11px] text-gray-500 font-mono mb-1">
+            <div className="flex items-center justify-between text-xs text-gray-500 font-inter mb-1.5">
               <span>Cobrado: {formatCurrency(metrics.facturacionCobrada)}</span>
-              <span className="font-semibold text-brand-blue">{metrics.porcentajeCobrado}%</span>
+              <span className="font-sora font-semibold text-brand-blue">{metrics.porcentajeCobrado}%</span>
             </div>
             <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden flex">
               <div
@@ -125,13 +125,13 @@ export default function OperationsMetricsHeader({ ciclos = [] }) {
         </div>
         <div>
           <div
-            className={`text-xl font-mono font-bold tracking-tight ${
-              metrics.margenNeto >= 0 ? "text-emerald-600" : "text-rose-600"
+            className={`text-2xl font-sora font-bold tracking-tight ${
+              metrics.margenNeto >= 0 ? "text-gray-900" : "text-rose-600"
             }`}
           >
             {formatCurrency(metrics.margenNeto)}
           </div>
-          <div className="text-[11px] text-gray-500 mt-2 font-mono flex items-center justify-between">
+          <div className="text-xs text-gray-500 mt-2 font-inter flex items-center justify-between">
             <span>Costos: {formatCurrency(metrics.costosOperativos)}</span>
             <span className="text-gray-400">Neto cobrado</span>
           </div>
@@ -144,22 +144,22 @@ export default function OperationsMetricsHeader({ ciclos = [] }) {
           <span className="text-[11px] font-sora font-semibold text-gray-500 uppercase tracking-wider">
             Control de Rodajes
           </span>
-          <div className="w-7 h-7 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center">
             <Film className="w-4 h-4" />
           </div>
         </div>
         <div>
-          <div className="text-xl font-sora font-bold text-gray-900 tracking-tight">
+          <div className="text-2xl font-sora font-bold text-gray-900 tracking-tight">
             {metrics.totalSesiones} <span className="text-xs font-normal text-gray-500 font-inter">sesiones</span>
           </div>
           <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-sora font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
               {metrics.sesionesRealizadas} Realizadas
             </span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-blue-50 text-brand-blue border border-blue-100">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-sora font-semibold bg-blue-50 text-brand-blue border border-blue-100">
               {metrics.sesionesAgendadas} Agendadas
             </span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-mono font-medium bg-amber-50 text-amber-700 border border-amber-100">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-sora font-semibold bg-gray-100 text-gray-600 border border-gray-200">
               {metrics.sesionesPendientes} Por agendar
             </span>
           </div>
@@ -172,19 +172,19 @@ export default function OperationsMetricsHeader({ ciclos = [] }) {
           <span className="text-[11px] font-sora font-semibold text-gray-500 uppercase tracking-wider">
             Estado Editorial
           </span>
-          <div className="w-7 h-7 rounded-full bg-pink-50 text-brand-magenta flex items-center justify-center">
+          <div className="w-7 h-7 rounded-full bg-pink-50 text-pink-500 flex items-center justify-center">
             <CalendarCheck className="w-4 h-4" />
           </div>
         </div>
         <div>
-          <div className="text-xl font-sora font-bold text-gray-900 tracking-tight">
+          <div className="text-2xl font-sora font-bold text-gray-900 tracking-tight">
             {metrics.calendariosVinculados}{" "}
             <span className="text-xs font-normal text-gray-500 font-inter">
               / {metrics.totalCiclos} calendarios
             </span>
           </div>
-          <div className="text-[11px] text-gray-500 mt-2 font-mono flex items-center justify-between">
-            <span className="text-brand-magenta font-medium">
+          <div className="text-xs text-gray-500 mt-2 font-inter flex items-center justify-between">
+            <span className="text-pink-500 font-sora font-semibold text-[11px]">
               {metrics.calendariosPendientes > 0
                 ? `${metrics.calendariosPendientes} pendientes`
                 : "100% vinculados"}

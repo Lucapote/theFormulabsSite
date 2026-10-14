@@ -16,7 +16,10 @@ export default function CreateClientModal({
     email: "",
     permite_descarga: false,
     monto_retainer: "",
+    esquema_pago: "mensual",
     dia_corte_pago: 1,
+    dia_corte_pago_2: 15,
+    tipo_sesion_default: "organica",
     producciones_por_mes: 1
   },
   setClientForm,
@@ -92,12 +95,12 @@ export default function CreateClientModal({
             />
           </div>
 
-          {/* Fila Operativa: Monto Retainer y Día de Corte */}
+          {/* Fila Operativa: Monto Retainer, Esquema de Pago y Días de Pago */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
             <div>
               <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5 flex items-center gap-1">
                 <DollarSign className="w-3.5 h-3.5 text-pink-500" />
-                Retainer Mensual ($)
+                Retainer Mensual Total ($)
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 font-sora font-bold text-xs">
@@ -115,26 +118,135 @@ export default function CreateClientModal({
                   className="w-full h-11 pl-7 pr-3 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-sm text-gray-900 font-semibold transition-all"
                 />
               </div>
+              {(clientForm.esquema_pago === "dos_pagos" || clientForm.esquema_pago === "quincenal") && Number(clientForm.monto_retainer) > 0 && (
+                <p className="text-[11px] font-inter text-gray-500 mt-1">
+                  2 pagos de <strong className="text-gray-800">${(Number(clientForm.monto_retainer) / 2).toLocaleString("es-MX")}</strong>
+                </p>
+              )}
             </div>
 
             <div>
               <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5 flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-blue-500" />
-                Día de Pago / Corte
+                Esquema y Días de Pago
               </label>
-              <select
-                value={clientForm.dia_corte_pago ?? 1}
-                onChange={(e) =>
-                  setClientForm({ ...clientForm, dia_corte_pago: Number(e.target.value) })
+              <div className="space-y-1.5">
+                <select
+                  value={
+                    clientForm.esquema_pago === "dos_pagos" || clientForm.esquema_pago === "quincenal"
+                      ? "dos_pagos"
+                      : "mensual"
+                  }
+                  onChange={(e) =>
+                    setClientForm({ ...clientForm, esquema_pago: e.target.value })
+                  }
+                  className="w-full h-11 px-2.5 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-xs text-gray-900 font-sora font-semibold bg-white transition-all cursor-pointer"
+                >
+                  <option value="mensual">1 Pago Mensual</option>
+                  <option value="dos_pagos">2 Pagos Mensuales</option>
+                </select>
+
+                {clientForm.esquema_pago === "dos_pagos" || clientForm.esquema_pago === "quincenal" ? (
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <div>
+                      <span className="text-[10px] font-sora font-semibold text-gray-500 block mb-0.5">
+                        1er Pago
+                      </span>
+                      <select
+                        value={clientForm.dia_corte_pago ?? 1}
+                        onChange={(e) =>
+                          setClientForm({ ...clientForm, dia_corte_pago: Number(e.target.value) })
+                        }
+                        className="w-full h-9 px-2 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-xs text-gray-900 font-medium bg-white transition-all cursor-pointer"
+                      >
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map((dia) => (
+                          <option key={dia} value={dia}>
+                            Día {dia}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-sora font-semibold text-gray-500 block mb-0.5">
+                        2do Pago
+                      </span>
+                      <select
+                        value={clientForm.dia_corte_pago_2 ?? 15}
+                        onChange={(e) =>
+                          setClientForm({ ...clientForm, dia_corte_pago_2: Number(e.target.value) })
+                        }
+                        className="w-full h-9 px-2 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-xs text-gray-900 font-medium bg-white transition-all cursor-pointer"
+                      >
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map((dia) => (
+                          <option key={dia} value={dia}>
+                            Día {dia}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <select
+                      value={clientForm.dia_corte_pago ?? 1}
+                      onChange={(e) =>
+                        setClientForm({ ...clientForm, dia_corte_pago: Number(e.target.value) })
+                      }
+                      className="w-full h-9 px-2.5 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-xs text-gray-900 font-medium bg-white transition-all cursor-pointer"
+                    >
+                      {Array.from({ length: 31 }, (_, i) => i + 1).map((dia) => (
+                        <option key={dia} value={dia}>
+                          Día {dia} de cada mes
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Tipo de Sesión de Producción (Orgánica 4h vs Profesional 6h) */}
+          <div className="pt-1">
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-sora font-bold uppercase text-gray-700 flex items-center gap-1">
+                <Video className="w-3.5 h-3.5 text-brand-blue" />
+                Tipo de Sesión de Producción
+              </label>
+              <span className="text-[11px] font-sora font-semibold text-gray-500">
+                {(clientForm.tipo_sesion_default || "organica") === "profesional"
+                  ? "6 hrs de levantamiento"
+                  : "4 hrs de levantamiento"}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setClientForm({ ...clientForm, tipo_sesion_default: "organica" })
                 }
-                className="w-full h-11 px-3 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-sm text-gray-900 font-medium bg-white transition-all cursor-pointer"
+                className={`py-2 px-3 rounded-xl border text-xs font-sora font-bold transition-all text-center cursor-pointer ${
+                  (clientForm.tipo_sesion_default || "organica") === "organica"
+                    ? "bg-gray-900 text-white border-gray-900 shadow-xs"
+                    : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                }`}
               >
-                {Array.from({ length: 31 }, (_, i) => i + 1).map((dia) => (
-                  <option key={dia} value={dia}>
-                    Día {dia} de cada mes
-                  </option>
-                ))}
-              </select>
+                Orgánica (4 horas)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setClientForm({ ...clientForm, tipo_sesion_default: "profesional" })
+                }
+                className={`py-2 px-3 rounded-xl border text-xs font-sora font-bold transition-all text-center cursor-pointer ${
+                  clientForm.tipo_sesion_default === "profesional"
+                    ? "bg-gray-900 text-white border-gray-900 shadow-xs"
+                    : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                Profesional (6 horas)
+              </button>
             </div>
           </div>
 

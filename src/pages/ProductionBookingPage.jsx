@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getProduccionByToken, confirmarReservaProduccion } from "@/services/operationsService";
+import { getSessionDisplayName } from "@/utils/formatters";
 import BookingHeader from "@/components/booking/BookingHeader";
 import BookingFormCard from "@/components/booking/BookingFormCard";
 import BookingSuccessCard from "@/components/booking/BookingSuccessCard";
@@ -79,15 +80,26 @@ export default function ProductionBookingPage() {
 
   return (
     <div className="relative min-h-screen bg-[#f4f4f4] text-gray-900 font-inter antialiased overflow-x-hidden selection:bg-[#ef18d6]/20 selection:text-[#ef18d6]">
-      {/* Gradiente Ambiental de Laboratorio */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#ef18d6]/10 via-transparent to-transparent pointer-events-none" />
+      {/* Top Navbar Institucional (Logo anclado y barra de navegación) */}
+      <header className="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-xs">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+          <a href="/" className="inline-flex items-center">
+            <img src="/logo.png" alt="The Formulab" className="h-8 sm:h-9 w-auto object-contain" />
+          </a>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-sora font-semibold bg-blue-50 text-brand-blue border border-blue-100">
+            <span>Auto-Reserva de Producción</span>
+          </span>
+        </div>
+      </header>
 
-      <main className="relative max-w-2xl mx-auto px-4 py-8 sm:py-14 z-10">
+      {/* Gradiente Ambiental de Laboratorio */}
+      <div className="absolute top-16 right-0 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#ef18d6]/10 via-transparent to-transparent pointer-events-none" />
+
+      <main className="relative max-w-xl mx-auto px-4 py-8 sm:py-12 z-10">
         {/* Estado: Cargando con Skeletons */}
         {loading && (
           <div className="space-y-4 max-w-xl mx-auto">
             <div className="text-center space-y-2 mb-6">
-              <Skeleton className="h-9 w-32 mx-auto rounded-lg bg-gray-200" />
               <Skeleton className="h-5 w-48 mx-auto rounded-full bg-gray-200" />
               <Skeleton className="h-8 w-64 mx-auto rounded-xl bg-gray-200" />
             </div>
@@ -121,9 +133,16 @@ export default function ProductionBookingPage() {
         {!loading && !error && produccion && (
           <div>
             <BookingHeader
+              sessionTitle={getSessionDisplayName(
+                produccion,
+                produccion.ciclo?.mes,
+                produccion.cliente?.producciones_por_mes || 1
+              )}
               numeroSesion={produccion.numero_sesion || 1}
               clienteNombre={produccion.cliente?.nombre || ""}
               empresa={produccion.cliente?.empresa || ""}
+              tipo={produccion.tipo || produccion.cliente?.tipo_sesion_default || "organica"}
+              duracionHoras={produccion.duracion_horas}
             />
 
             {showSuccess ? (
@@ -136,6 +155,8 @@ export default function ProductionBookingPage() {
                 initialData={produccion}
                 onSubmit={handleBookingSubmit}
                 isSubmitting={isSubmitting}
+                tipo={produccion.tipo || produccion.cliente?.tipo_sesion_default || "organica"}
+                duracionHoras={produccion.duracion_horas}
               />
             )}
           </div>

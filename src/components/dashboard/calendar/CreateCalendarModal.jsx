@@ -176,8 +176,8 @@ export default function CreateCalendarModal({
             <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5">
               Slug Personalizado (URL pública)
             </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono text-gray-400">
+            <div className="flex items-center rounded-xl border border-gray-200 focus-within:border-brand-blue focus-within:ring-2 focus-within:ring-blue-100 overflow-hidden bg-white transition-all">
+              <span className="px-3.5 py-2.5 text-xs font-mono text-gray-500 bg-gray-50 select-none shrink-0 border-r border-gray-100">
                 /{selectedCliente ? generateSlug(selectedCliente.nombre) : "cliente"}/
               </span>
               <input
@@ -199,7 +199,7 @@ export default function CreateCalendarModal({
                     isSlugModified: true
                   });
                 }}
-                className="w-full h-11 pl-32 pr-4 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-blue-100 outline-none text-sm font-mono text-pink-600 transition-all"
+                className="w-full h-11 px-3 outline-none text-sm font-mono text-pink-600 bg-transparent"
               />
             </div>
             <p className="text-[11px] text-gray-400 mt-1">

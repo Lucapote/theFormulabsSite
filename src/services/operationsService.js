@@ -23,7 +23,8 @@ export async function ensureCicloActual(
   mes = null,
   anio = null,
   montoDefault = 0,
-  cantProducciones = 1
+  cantProducciones = 1,
+  tipoSesion = "organica"
 ) {
   if (!clienteId) {
     return { success: false, error: "ID de cliente no provisto." };
@@ -87,11 +88,13 @@ export async function ensureCicloActual(
 
     // 3. Crear las producciones asociadas según la cantidad estipulada
     const totalSessions = Math.max(1, Number(cantProducciones) || 1);
+    const resolvedTipo = tipoSesion || "organica";
     const produccionesPayload = Array.from({ length: totalSessions }, (_, idx) => ({
       cliente_id: clienteId,
       ciclo_id: nuevoCiclo.id,
       numero_sesion: idx + 1,
-      tipo: "reels_batch",
+      tipo: resolvedTipo,
+      duracion_horas: resolvedTipo === "profesional" ? 6 : 4,
       estado: "pendiente_agendamiento",
       created_at: new Date().toISOString()
     }));
@@ -242,6 +245,7 @@ export async function updateProduccion(produccionId, prodData = {}) {
     }
 
     const updatePayload = {};
+    if (prodData.nombre !== undefined) updatePayload.nombre = prodData.nombre;
     if (prodData.estado !== undefined) updatePayload.estado = prodData.estado;
     if (prodData.fecha_produccion !== undefined) {
       updatePayload.fecha_produccion = prodData.fecha_produccion || null;
@@ -250,12 +254,27 @@ export async function updateProduccion(produccionId, prodData = {}) {
     if (prodData.notas_brief !== undefined) updatePayload.notas_brief = prodData.notas_brief;
     if (prodData.tipo !== undefined) updatePayload.tipo = prodData.tipo;
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("producciones")
       .update(updatePayload)
       .eq("id", produccionId)
       .select()
       .single();
+
+    // Fallback defensivo si la columna 'nombre' aún no existe en Supabase
+    if (error && error.message && error.message.includes("column \"nombre\"") && updatePayload.nombre !== undefined) {
+      const fallbackPayload = { ...updatePayload };
+      delete fallbackPayload.nombre;
+      const retry = await supabase
+        .from("producciones")
+        .update(fallbackPayload)
+        .eq("id", produccionId)
+        .select()
+        .single();
+      if (!retry.error) {
+        return { success: true, data: { ...retry.data, nombre: updatePayload.nombre } };
+      }
+    }
 
     if (error) {
       console.error("updateProduccion error:", error);
@@ -401,7 +420,7 @@ export async function getProduccionByToken(token) {
       .from("producciones")
       .select(`
         *,
-        cliente:clientes(nombre, empresa),
+        cliente:clientes(nombre, empresa, tipo_sesion_default, esquema_pago),
         ciclo:ciclos_mensuales(mes, anio)
       `)
       .eq("token_reserva", token)
@@ -452,7 +471,7 @@ export async function confirmarReservaProduccion(token, reservaData = {}) {
       .eq("token_reserva", token)
       .select(`
         *,
-        cliente:clientes(nombre, empresa),
+        cliente:clientes(nombre, empresa, tipo_sesion_default, esquema_pago),
         ciclo:ciclos_mensuales(mes, anio)
       `)
       .single();

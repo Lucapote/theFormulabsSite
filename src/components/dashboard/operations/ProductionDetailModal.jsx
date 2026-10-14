@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Copy, Check, MapPin, Calendar, FileText, Activity } from "lucide-react";
+import { Copy, Check, MapPin, Calendar, FileText, Activity, ExternalLink, Sparkles } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,28 +9,35 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { updateProduccion } from "@/services/operationsService";
+import { getSessionDisplayName, getBookingUrl } from "@/utils/formatters";
 
 export default function ProductionDetailModal({
   isOpen,
   onClose,
   produccion,
   clienteNombre = "",
+  ciclo = null,
   onUpdated
 }) {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [formData, setFormData] = useState({
+    nombre: "",
     estado: "pendiente_agendamiento",
     fecha_produccion: "",
     locacion: "",
     notas_brief: ""
   });
 
+  const totalSesiones = ciclo?.producciones?.length || 1;
+  const defaultSuggestedName = produccion
+    ? getSessionDisplayName(produccion, ciclo?.mes, totalSesiones)
+    : "Sesión de Producción";
+
   useEffect(() => {
     if (produccion) {
       let formattedDate = "";
       if (produccion.fecha_produccion) {
-        // Formato para input datetime-local: YYYY-MM-DDTHH:mm
         const d = new Date(produccion.fecha_produccion);
         if (!isNaN(d.getTime())) {
           const tzOffset = d.getTimezoneOffset() * 60000;
@@ -39,6 +46,7 @@ export default function ProductionDetailModal({
       }
 
       setFormData({
+        nombre: produccion.nombre || "",
         estado: produccion.estado || "pendiente_agendamiento",
         fecha_produccion: formattedDate,
         locacion: produccion.locacion || "",
@@ -49,9 +57,7 @@ export default function ProductionDetailModal({
 
   if (!produccion) return null;
 
-  const reservationUrl = produccion.token_reserva
-    ? `https://www.theformulab.io/reservar/produccion?token=${produccion.token_reserva}`
-    : "";
+  const reservationUrl = getBookingUrl(produccion.token_reserva);
 
   const handleCopyLink = () => {
     if (!reservationUrl) return;
@@ -65,7 +71,10 @@ export default function ProductionDetailModal({
     e.preventDefault();
     setLoading(true);
 
+    const resolvedNombre = formData.nombre.trim() || defaultSuggestedName;
+
     const payload = {
+      nombre: resolvedNombre,
       estado: formData.estado,
       locacion: formData.locacion,
       notas_brief: formData.notas_brief,
@@ -86,24 +95,43 @@ export default function ProductionDetailModal({
     }
   };
 
+  const displayName = formData.nombre.trim() || defaultSuggestedName;
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-lg bg-white p-6 rounded-2xl shadow-xl border-gray-100">
+      <DialogContent className="max-w-lg bg-white p-6 rounded-2xl shadow-xl border-gray-100 max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-2 border-b border-gray-100">
           <DialogTitle className="font-sora text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-blue" />
-            Producción #{produccion.numero_sesion || 1} &mdash; {clienteNombre}
+            <span className="w-2.5 h-2.5 rounded-full bg-brand-blue shrink-0" />
+            <span className="truncate">{displayName} &mdash; {clienteNombre}</span>
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+          {/* Nombre de la Sesión */}
+          <div>
+            <label className="text-xs font-sora font-semibold text-gray-700 mb-1 flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-brand-magenta" /> Nombre de la Sesión
+            </label>
+            <input
+              type="text"
+              value={formData.nombre}
+              placeholder={defaultSuggestedName}
+              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+              className="w-full text-xs font-inter bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue"
+            />
+            <p className="text-[11px] font-inter text-gray-400 mt-1">
+              Por defecto sugerido: <span className="font-medium text-gray-600">{defaultSuggestedName}</span>
+            </p>
+          </div>
+
           {/* Link de Reserva */}
           {reservationUrl && (
             <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-3">
               <span className="text-[11px] font-sora font-semibold text-brand-blue uppercase tracking-wider block mb-1">
                 Link de Agendamiento Directo (Cliente)
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <input
                   type="text"
                   readOnly
@@ -113,11 +141,22 @@ export default function ProductionDetailModal({
                 <button
                   type="button"
                   onClick={handleCopyLink}
-                  className="h-8 px-3 rounded-lg bg-white border border-blue-200 hover:bg-blue-50 text-brand-blue text-xs font-sora font-semibold flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer"
+                  title="Copiar enlace"
+                  className="h-8 px-2.5 rounded-lg bg-white border border-blue-200 hover:bg-blue-50 text-brand-blue text-xs font-sora font-semibold flex items-center gap-1 shrink-0 transition-colors cursor-pointer"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copied ? "Copiado" : "Copiar"}</span>
                 </button>
+                <a
+                  href={reservationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Abrir enlace en nueva pestaña"
+                  className="h-8 px-2.5 rounded-lg bg-brand-blue hover:bg-blue-600 text-white text-xs font-sora font-semibold flex items-center gap-1 shrink-0 transition-colors shadow-sm shadow-blue-200 cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Abrir</span>
+                </a>
               </div>
             </div>
           )}
