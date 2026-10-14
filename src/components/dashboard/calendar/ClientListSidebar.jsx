@@ -1,4 +1,4 @@
-import { Building2, Plus, Sparkles, Users, Mail, Trash2, ChevronRight } from "lucide-react";
+import { Building2, Plus, Sparkles, Users, Mail, Trash2, ChevronRight, Settings } from "lucide-react";
 
 /**
  * ClientListSidebar
@@ -11,7 +11,8 @@ export default function ClientListSidebar({
   deletingId = null,
   onSelectClient,
   onOpenClientModal,
-  onDeleteClient
+  onDeleteClient,
+  onEditClient
 }) {
   return (
     <div className="lg:col-span-4 bg-white rounded-[2rem] p-6 shadow-xl border border-gray-100 space-y-4">
@@ -86,6 +87,17 @@ export default function ClientListSidebar({
                 </div>
 
                 <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditClient && onEditClient(c);
+                    }}
+                    className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-all cursor-pointer"
+                    title="Editar configuración y retainer del cliente"
+                  >
+                    <Settings className="w-3.5 h-3.5" />
+                  </button>
                   <button
                     type="button"
                     onClick={(e) => onDeleteClient(c, e)}

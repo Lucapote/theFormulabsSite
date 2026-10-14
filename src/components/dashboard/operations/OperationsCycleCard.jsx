@@ -9,7 +9,8 @@ import {
   Plus,
   Check,
   Clock,
-  Sparkles
+  Sparkles,
+  Settings
 } from "lucide-react";
 import { updateCicloFinanzas } from "@/services/operationsService";
 import { getSessionDisplayName, getBookingUrl } from "@/utils/formatters";
@@ -19,7 +20,8 @@ export default function OperationsCycleCard({
   onOpenProductionModal,
   onOpenFinanceModal,
   onStatusUpdated,
-  onOpenCreateCalendar
+  onOpenCreateCalendar,
+  onEditClient = null
 }) {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const cliente = ciclo.cliente || {};
@@ -103,6 +105,16 @@ export default function OperationsCycleCard({
             <h3 className="font-sora font-bold text-gray-900 text-base tracking-tight truncate">
               {cliente.nombre || "Cliente sin nombre"}
             </h3>
+            {onEditClient && (
+              <button
+                type="button"
+                onClick={() => onEditClient(cliente)}
+                title="Editar configuración, retainer y locación del cliente"
+                className="p-1 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
+              >
+                <Settings className="w-3.5 h-3.5" />
+              </button>
+            )}
             {cliente.permite_descarga && (
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-sora font-semibold bg-pink-50 text-pink-600 border border-pink-100 shrink-0">
                 <Download className="w-2.5 h-2.5" /> Descarga
@@ -116,11 +128,24 @@ export default function OperationsCycleCard({
                 {cliente.empresa}
               </span>
             )}
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-inter font-medium bg-gray-100 text-gray-600 border border-gray-200">
-              {cliente.esquema_pago === "dos_pagos" || cliente.esquema_pago === "quincenal" || cliente.dia_corte_pago_2
-                ? `Cortes: Días ${cliente.dia_corte_pago || 1} y ${cliente.dia_corte_pago_2 || 15}`
-                : `Corte: Día ${cliente.dia_corte_pago || 1}`}
-            </span>
+            {onEditClient ? (
+              <button
+                type="button"
+                onClick={() => onEditClient(cliente)}
+                title="Clic para editar días de corte y retainer del cliente"
+                className="px-2.5 py-0.5 rounded-full text-[10px] font-inter font-medium bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 border border-gray-200 transition-colors cursor-pointer text-left"
+              >
+                {cliente.esquema_pago === "dos_pagos" || cliente.esquema_pago === "quincenal" || cliente.dia_corte_pago_2
+                  ? `Cortes: Días ${cliente.dia_corte_pago || 1} y ${cliente.dia_corte_pago_2 || 15}`
+                  : `Corte: Día ${cliente.dia_corte_pago || 1}`}
+              </button>
+            ) : (
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-inter font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                {cliente.esquema_pago === "dos_pagos" || cliente.esquema_pago === "quincenal" || cliente.dia_corte_pago_2
+                  ? `Cortes: Días ${cliente.dia_corte_pago || 1} y ${cliente.dia_corte_pago_2 || 15}`
+                  : `Corte: Día ${cliente.dia_corte_pago || 1}`}
+              </span>
+            )}
             <span className="px-2 py-0.5 rounded-full text-[10px] font-sora font-semibold bg-blue-50 text-brand-blue border border-blue-100">
               {cliente.tipo_sesion_default === "profesional" ? "Pro (6h)" : "Orgánica (4h)"}
             </span>

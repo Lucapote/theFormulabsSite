@@ -15,6 +15,7 @@ import OperationsMetricsHeader from "./OperationsMetricsHeader";
 import OperationsCycleCard from "./OperationsCycleCard";
 import ProductionDetailModal from "./ProductionDetailModal";
 import FinanceCostModal from "./FinanceCostModal";
+import EditClientModal from "../calendar/EditClientModal";
 
 const MESES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -29,6 +30,7 @@ export default function OperationsTabSection() {
   const [clientes, setClientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
   const [activeProductionModal, setActiveProductionModal] = useState({ isOpen: false, produccion: null, clienteNombre: "" });
   const [activeFinanceModal, setActiveFinanceModal] = useState({ isOpen: false, ciclo: null, clienteNombre: "" });
 
@@ -169,6 +171,7 @@ export default function OperationsTabSection() {
               onOpenCreateCalendar={() => {
                 toast.info("Dirígete a la pestaña de Calendarios para crear uno nuevo.");
               }}
+              onEditClient={(c) => setEditingClient(c)}
             />
           ))}
         </div>
@@ -223,6 +226,13 @@ export default function OperationsTabSection() {
           setActiveFinanceModal({ isOpen: false, ciclo: null, clienteNombre: "" })
         }
         onUpdated={loadData}
+      />
+
+      <EditClientModal
+        isOpen={Boolean(editingClient)}
+        cliente={editingClient}
+        onClose={() => setEditingClient(null)}
+        onClientUpdated={loadData}
       />
     </div>
   );

@@ -21,6 +21,7 @@ import ScheduledPostsList from "./ScheduledPostsList";
 import ClientListSidebar from "./ClientListSidebar";
 import ClientCalendarsGrid from "./ClientCalendarsGrid";
 import CreateClientModal from "./CreateClientModal";
+import EditClientModal from "./EditClientModal";
 import CreateCalendarModal from "./CreateCalendarModal";
 import ActiveCalendarHeader from "./ActiveCalendarHeader";
 import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
@@ -91,6 +92,7 @@ export default function ClientsCalendarSection() {
     producciones_por_mes: 1
   });
   const [isSavingClient, setIsSavingClient] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
 
   // Confirm Modal State
   const [confirmModal, setConfirmModal] = useState({
@@ -115,6 +117,7 @@ export default function ClientsCalendarSection() {
     plataformasSeleccionadas: ["Instagram", "Facebook"],
     cantReels: 4,
     cantCarruseles: 4,
+    permite_descarga: null,
     isSlugModified: false
   };
 
@@ -321,7 +324,8 @@ export default function ClientsCalendarSection() {
       anio: Number(calendarForm.anio),
       slug: calendarForm.slug,
       tipo_contenido: strTipo,
-      plataformas: strPlataformas
+      plataformas: strPlataformas,
+      permite_descarga: calendarForm.permite_descarga !== undefined ? calendarForm.permite_descarga : null
     });
 
     if (res.success && res.data?.id) {
@@ -347,6 +351,7 @@ export default function ClientsCalendarSection() {
         plataformasSeleccionadas: ["Instagram", "Facebook"],
         cantReels: 4,
         cantCarruseles: 4,
+        permite_descarga: null,
         isSlugModified: false
       });
       setShowCalendarModal(false);
@@ -549,6 +554,7 @@ export default function ClientsCalendarSection() {
           onSelectClient={setSelectedCliente}
           onOpenClientModal={() => setShowClientModal(true)}
           onDeleteClient={handleDeleteClient}
+          onEditClient={(c) => setEditingClient(c)}
         />
 
         <ClientCalendarsGrid
@@ -561,6 +567,7 @@ export default function ClientsCalendarSection() {
           onCopyCalendarLink={copyCalendarLink}
           onSelectActiveCalendar={setActiveCalendar}
           onToggleDownloadPermission={handleToggleDownloadPermission}
+          onEditClient={(c) => setEditingClient(c)}
         />
       </div>
 
@@ -572,6 +579,18 @@ export default function ClientsCalendarSection() {
         setClientForm={setClientForm}
         onSubmit={handleSaveClient}
         isSaving={isSavingClient}
+      />
+
+      <EditClientModal
+        isOpen={Boolean(editingClient)}
+        cliente={editingClient}
+        onClose={() => setEditingClient(null)}
+        onClientUpdated={async (updatedCliente) => {
+          await loadClientes(updatedCliente.id);
+          if (selectedCliente?.id === updatedCliente.id) {
+            setSelectedCliente(updatedCliente);
+          }
+        }}
       />
 
       <CreateCalendarModal

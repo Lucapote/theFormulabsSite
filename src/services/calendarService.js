@@ -85,6 +85,7 @@ export async function createCliente({
   dia_corte_pago_2 = 15,
   esquema_pago = "mensual",
   tipo_sesion_default = "organica",
+  locacion_default = null,
   producciones_por_mes = 1,
   propuesta_origen_id = null
 }) {
@@ -110,6 +111,7 @@ export async function createCliente({
       dia_corte_pago: Math.max(1, Math.min(31, Number(dia_corte_pago) || 1)),
       dia_corte_pago_2: isDosPagos ? Math.max(1, Math.min(31, Number(dia_corte_pago_2) || 15)) : null,
       tipo_sesion_default: tipo_sesion_default || "organica",
+      locacion_default: locacion_default ? locacion_default.trim() : null,
       producciones_por_mes: Math.max(1, Number(producciones_por_mes) || 1),
       propuesta_origen_id: propuesta_origen_id || null,
       created_at: new Date().toISOString()
@@ -121,8 +123,9 @@ export async function createCliente({
       .select();
 
     // Fallback defensivo si alguna columna adicional aún no existe en Supabase
-    if (error && (error.message.includes("dia_corte_pago_2") || error.message.includes("esquema_pago") || error.message.includes("tipo_sesion_default"))) {
+    if (error && (error.message.includes("locacion_default") || error.message.includes("dia_corte_pago_2") || error.message.includes("esquema_pago") || error.message.includes("tipo_sesion_default"))) {
       const fallbackPayload = { ...payload };
+      delete fallbackPayload.locacion_default;
       delete fallbackPayload.dia_corte_pago_2;
       delete fallbackPayload.esquema_pago;
       delete fallbackPayload.tipo_sesion_default;
@@ -143,6 +146,74 @@ export async function createCliente({
     return { success: true, data: data[0] };
   } catch (err) {
     console.error("createCliente catch error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Actualiza los datos de un cliente existente
+ * @param {string} clienteId - UUID del cliente
+ * @param {object} payload - Campos a actualizar
+ * @returns {Promise<{ success: boolean, data?: object, error?: string }>}
+ */
+export async function updateCliente(clienteId, payload = {}) {
+  if (!clienteId) return { success: false, error: "ID de cliente no provisto" };
+
+  try {
+    if (!supabase) return { success: false, error: "Supabase no configurado" };
+
+    const updatePayload = {};
+    if (payload.nombre !== undefined) updatePayload.nombre = payload.nombre.trim();
+    if (payload.empresa !== undefined) updatePayload.empresa = payload.empresa.trim();
+    if (payload.email !== undefined) updatePayload.email = payload.email.trim();
+    if (payload.permite_descarga !== undefined) updatePayload.permite_descarga = Boolean(payload.permite_descarga);
+    if (payload.monto_retainer !== undefined) updatePayload.monto_retainer = Math.max(0, Number(payload.monto_retainer) || 0);
+    if (payload.esquema_pago !== undefined) updatePayload.esquema_pago = payload.esquema_pago;
+    if (payload.dia_corte_pago !== undefined) updatePayload.dia_corte_pago = Math.max(1, Math.min(31, Number(payload.dia_corte_pago) || 1));
+    if (payload.dia_corte_pago_2 !== undefined) {
+      updatePayload.dia_corte_pago_2 = payload.dia_corte_pago_2 ? Math.max(1, Math.min(31, Number(payload.dia_corte_pago_2))) : null;
+    }
+    if (payload.producciones_por_mes !== undefined) updatePayload.producciones_por_mes = Math.max(1, Number(payload.producciones_por_mes) || 1);
+    if (payload.tipo_sesion_default !== undefined) updatePayload.tipo_sesion_default = payload.tipo_sesion_default;
+    if (payload.locacion_default !== undefined) {
+      updatePayload.locacion_default = payload.locacion_default ? payload.locacion_default.trim() : null;
+    }
+
+    let { data, error } = await supabase
+      .from("clientes")
+      .update(updatePayload)
+      .eq("id", clienteId)
+      .select()
+      .single();
+
+    // Fallback defensivo si locacion_default u otra columna no existiera aún en Supabase
+    if (error && (error.message.includes("locacion_default") || error.message.includes("dia_corte_pago_2") || error.message.includes("tipo_sesion_default") || error.message.includes("esquema_pago"))) {
+      const fallbackPayload = { ...updatePayload };
+      delete fallbackPayload.locacion_default;
+      delete fallbackPayload.dia_corte_pago_2;
+      delete fallbackPayload.tipo_sesion_default;
+      delete fallbackPayload.esquema_pago;
+
+      const retry = await supabase
+        .from("clientes")
+        .update(fallbackPayload)
+        .eq("id", clienteId)
+        .select()
+        .single();
+
+      if (!retry.error) {
+        return { success: true, data: { ...retry.data, ...updatePayload } };
+      }
+    }
+
+    if (error) {
+      console.error("updateCliente error:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    console.error("updateCliente catch error:", err);
     return { success: false, error: err.message };
   }
 }
@@ -275,7 +346,17 @@ export async function getCalendariosByCliente(clienteId) {
 /**
  * Inserta un nuevo calendario en la tabla calendarios
  */
-export async function createCalendario({ cliente_id, clienteNombre = "", nombre, mes, anio, slug, tipo_contenido, plataformas }) {
+export async function createCalendario({
+  cliente_id,
+  clienteNombre = "",
+  nombre,
+  mes,
+  anio,
+  slug,
+  tipo_contenido,
+  plataformas,
+  permite_descarga = null
+}) {
   if (!cliente_id) return { success: false, error: "Cliente no seleccionado" };
   if (!nombre || !nombre.trim()) return { success: false, error: "El nombre del calendario es obligatorio" };
 
@@ -340,13 +421,26 @@ export async function createCalendario({ cliente_id, clienteNombre = "", nombre,
       slug: candidateSlug,
       tipo_contenido: tipo_contenido || "Reels y Carruseles",
       plataformas: plataformas || "Instagram y Facebook",
+      permite_descarga: permite_descarga !== undefined ? permite_descarga : null,
       created_at: new Date().toISOString()
     };
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("calendarios")
       .insert([payload])
       .select("*, cliente:clientes(nombre, empresa, email, permite_descarga)");
+
+    if (error && error.message && error.message.includes("permite_descarga")) {
+      const fallbackPayload = { ...payload };
+      delete fallbackPayload.permite_descarga;
+      const retry = await supabase
+        .from("calendarios")
+        .insert([fallbackPayload])
+        .select("*, cliente:clientes(nombre, empresa, email, permite_descarga)");
+      if (!retry.error) {
+        return { success: true, data: retry.data[0] };
+      }
+    }
 
     if (error) {
       console.error("createCalendario error:", error);
@@ -356,6 +450,60 @@ export async function createCalendario({ cliente_id, clienteNombre = "", nombre,
     return { success: true, data: data[0] };
   } catch (err) {
     console.error("createCalendario catch error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Actualiza los datos de un calendario existente
+ * @param {string} calendarioId - UUID del calendario
+ * @param {object} payload - Campos a actualizar (nombre, mes, anio, slug, tipo_contenido, plataformas, permite_descarga)
+ * @returns {Promise<{ success: boolean, data?: object, error?: string }>}
+ */
+export async function updateCalendario(calendarioId, payload = {}) {
+  if (!calendarioId) return { success: false, error: "ID de calendario no provisto" };
+
+  try {
+    if (!supabase) return { success: false, error: "Supabase no configurado" };
+
+    const updatePayload = {};
+    if (payload.nombre !== undefined) updatePayload.nombre = payload.nombre.trim();
+    if (payload.mes !== undefined) updatePayload.mes = Number(payload.mes);
+    if (payload.anio !== undefined) updatePayload.anio = Number(payload.anio);
+    if (payload.slug !== undefined) updatePayload.slug = payload.slug;
+    if (payload.tipo_contenido !== undefined) updatePayload.tipo_contenido = payload.tipo_contenido;
+    if (payload.plataformas !== undefined) updatePayload.plataformas = payload.plataformas;
+    if (payload.permite_descarga !== undefined) updatePayload.permite_descarga = payload.permite_descarga;
+
+    let { data, error } = await supabase
+      .from("calendarios")
+      .update(updatePayload)
+      .eq("id", calendarioId)
+      .select("*, cliente:clientes(nombre, empresa, email, permite_descarga)")
+      .single();
+
+    if (error && error.message && error.message.includes("permite_descarga") && updatePayload.permite_descarga !== undefined) {
+      const fallbackPayload = { ...updatePayload };
+      delete fallbackPayload.permite_descarga;
+      const retry = await supabase
+        .from("calendarios")
+        .update(fallbackPayload)
+        .eq("id", calendarioId)
+        .select("*, cliente:clientes(nombre, empresa, email, permite_descarga)")
+        .single();
+      if (!retry.error) {
+        return { success: true, data: { ...retry.data, permite_descarga: updatePayload.permite_descarga } };
+      }
+    }
+
+    if (error) {
+      console.error("updateCalendario error:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    console.error("updateCalendario catch error:", err);
     return { success: false, error: err.message };
   }
 }

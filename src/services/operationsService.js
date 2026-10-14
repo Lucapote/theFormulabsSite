@@ -86,7 +86,19 @@ export async function ensureCicloActual(
       return { success: false, error: insertCicloErr.message };
     }
 
-    // 3. Crear las producciones asociadas según la cantidad estipulada
+    // 3. Obtener locación default del cliente si está configurada
+    let defaultLocacion = "";
+    const { data: clienteRecord } = await supabase
+      .from("clientes")
+      .select("locacion_default")
+      .eq("id", clienteId)
+      .maybeSingle();
+
+    if (clienteRecord?.locacion_default) {
+      defaultLocacion = clienteRecord.locacion_default.trim();
+    }
+
+    // 4. Crear las producciones asociadas según la cantidad estipulada
     const totalSessions = Math.max(1, Number(cantProducciones) || 1);
     const resolvedTipo = tipoSesion || "organica";
     const produccionesPayload = Array.from({ length: totalSessions }, (_, idx) => ({
@@ -95,6 +107,7 @@ export async function ensureCicloActual(
       numero_sesion: idx + 1,
       tipo: resolvedTipo,
       duracion_horas: resolvedTipo === "profesional" ? 6 : 4,
+      locacion: defaultLocacion || null,
       estado: "pendiente_agendamiento",
       created_at: new Date().toISOString()
     }));

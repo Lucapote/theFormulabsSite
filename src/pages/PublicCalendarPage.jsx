@@ -158,6 +158,11 @@ export default function PublicCalendarPage() {
   const tipoContenido = calendario.tipo_contenido || "Reels y Carruseles";
   const plataformas = calendario.plataformas || "Instagram y Facebook";
 
+  const permiteDescargaFinal =
+    calendario?.permite_descarga !== null && calendario?.permite_descarga !== undefined
+      ? Boolean(calendario.permite_descarga)
+      : Boolean(calendario?.cliente?.permite_descarga);
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-inter pb-20 selection:bg-[#188ff0] selection:text-white">
       {/* PUBLIC HEADER */}
@@ -225,7 +230,7 @@ export default function PublicCalendarPage() {
             anio={calendario.anio}
             posts={postsList}
             readOnly={true}
-            permiteDescarga={Boolean(calendario?.cliente?.permite_descarga)}
+            permiteDescarga={permiteDescargaFinal}
           />
         ) : (
           /* VIEW 2: FEED / SEQUENTIAL LIST VIEW */
@@ -248,7 +253,7 @@ export default function PublicCalendarPage() {
           hasNextPost={hasNextPost}
           onPrevPost={goToPrevPost}
           onNextPost={goToNextPost}
-          permiteDescarga={Boolean(calendario?.cliente?.permite_descarga)}
+          permiteDescarga={permiteDescargaFinal}
         />
       )}
     </div>

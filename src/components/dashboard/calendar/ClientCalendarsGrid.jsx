@@ -10,7 +10,8 @@ import {
   Check,
   Film,
   ExternalLink,
-  Download
+  Download,
+  Settings
 } from "lucide-react";
 import { formatCalendarUrlPath } from "@/services/calendarService";
 
@@ -42,7 +43,8 @@ export default function ClientCalendarsGrid({
   onDeleteCalendar,
   onCopyCalendarLink,
   onSelectActiveCalendar,
-  onToggleDownloadPermission = null
+  onToggleDownloadPermission = null,
+  onEditClient = null
 }) {
   return (
     <div className="lg:col-span-8 bg-white rounded-[2rem] p-6 md:p-8 shadow-xl border border-gray-100 space-y-6">
@@ -72,6 +74,17 @@ export default function ClientCalendarsGrid({
                       : "Descargas inactivas"}
                   </span>
                 </button>
+                {onEditClient && (
+                  <button
+                    type="button"
+                    onClick={() => onEditClient(selectedCliente)}
+                    title="Editar configuración, retainer y locación del cliente"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-sora font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200 transition-all cursor-pointer"
+                  >
+                    <Settings className="w-3.5 h-3.5 text-gray-500" />
+                    <span>Editar Cliente</span>
+                  </button>
+                )}
               </div>
               <h3 className="text-2xl font-sora font-extrabold text-gray-900 tracking-tight">
                 {selectedCliente.nombre}
