@@ -16,6 +16,7 @@ import OperationsCycleCard from "./OperationsCycleCard";
 import ProductionDetailModal from "./ProductionDetailModal";
 import FinanceCostModal from "./FinanceCostModal";
 import EditClientModal from "../calendar/EditClientModal";
+import { useWindowFocusRefresh } from "@/hooks/useWindowFocusRefresh";
 
 const MESES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -50,6 +51,8 @@ export default function OperationsTabSection() {
   }, [mes, anio]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  useWindowFocusRefresh(loadData, { minIntervalMs: 8000 });
 
   const activeClientesWithoutCycle = clientes.filter(
     (cl) => cl.activo !== false && !ciclos.some((c) => c.cliente_id === cl.id)

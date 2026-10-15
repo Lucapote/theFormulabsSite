@@ -53,25 +53,23 @@ export default function PostCardItem({
                   <img
                     src={firstFile.thumbnail_url}
                     alt="Post Preview"
+                    loading="lazy"
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <video
-                    src={firstFile.url}
-                    muted
-                    preload="metadata"
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
+                  <div className="w-full h-full bg-gradient-to-br from-gray-900 to-slate-950 flex items-center justify-center">
+                    <VideoIcon className="w-6 h-6 text-pink-400/90" />
+                  </div>
                 )}
                 <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/10 transition-colors">
-                  <Play className="w-4 h-4 text-white fill-current" />
+                  <Play className="w-4 h-4 text-white fill-current drop-shadow-xs" />
                 </div>
               </div>
             ) : (
               <img
                 src={firstFile.url}
                 alt="Post Preview"
+                loading="lazy"
                 className="w-full h-full object-cover"
               />
             )}

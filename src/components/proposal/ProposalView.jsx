@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { PROPOSAL_DATA as defaultData } from "@/data/proposalData";
+import { trackProposalEvent } from "@/services/proposalService";
 import ProposalHeroHeader from "./ProposalHeroHeader";
 import ProposalBaseFeatures from "./ProposalBaseFeatures";
 import ProposalCalculatorSection from "./ProposalCalculatorSection";
 import ProposalComparisonTable from "./ProposalComparisonTable";
 import ProposalWhyUsAndConditions from "./ProposalWhyUsAndConditions";
 import ProposalLabPdfReport from "./ProposalLabPdfReport";
+import ProposalActivationModal from "./ProposalActivationModal";
 
 /**
  * ProposalView
@@ -31,6 +33,8 @@ export default function ProposalView({ data = defaultData }) {
   };
 
   const [showSecondText, setShowSecondText] = useState(false);
+  const [showActivationModal, setShowActivationModal] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowSecondText(true);
@@ -71,6 +75,16 @@ export default function ProposalView({ data = defaultData }) {
 
   const totalPrice = basePrice + addonsPrice;
 
+  const handleOpenActivationModal = () => {
+    // Registro analítico del evento de aceptación/contratación
+    trackProposalEvent(proposal, "proposal_accept_clicked", {
+      planId: currentPlanObj?.id,
+      planName: currentPlanObj?.name,
+      totalPrice
+    });
+    setShowActivationModal(true);
+  };
+
   const selectedAddonList = [];
   addons.forEach((addon) => {
     if (addon.type === "checkbox" && selectedAddons[addon.id] && addon.priceValue) {
@@ -110,9 +124,18 @@ export default function ProposalView({ data = defaultData }) {
                 target.outerHTML = '<div class="font-black text-xl tracking-tighter flex items-center">the <span class="text-pink-500 ml-1">formu</span>lab</div>';
               }}
             />
-            <span className="text-xs font-sora font-bold text-white bg-[#188ff0] border border-[#188ff0] px-4 py-1.5 rounded-full shadow-xs hidden md:inline-block">
-              Propuesta para {clientData.shortName}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-sora font-semibold text-gray-600 bg-gray-100 border border-gray-200 px-3.5 py-1.5 rounded-full shadow-xs hidden md:inline-block">
+                Propuesta para {clientData.shortName}
+              </span>
+              <button
+                type="button"
+                onClick={handleOpenActivationModal}
+                className="text-xs font-sora font-bold text-white bg-emerald-500 hover:bg-emerald-600 px-4 py-1.5 rounded-full shadow-sm transition-all active:scale-[0.98] cursor-pointer"
+              >
+                Aceptar Propuesta
+              </button>
+            </div>
           </div>
         </nav>
 
@@ -135,14 +158,29 @@ export default function ProposalView({ data = defaultData }) {
           totalPrice={totalPrice}
           showMobileBreakdown={showMobileBreakdown}
           setShowMobileBreakdown={setShowMobileBreakdown}
+          onAcceptProposal={handleOpenActivationModal}
         />
 
         {/* Resumen Comparativo entre Planes */}
         <ProposalComparisonTable pricingPlans={pricingPlans} addons={addons} />
 
         {/* Why Us & Conditions */}
-        <ProposalWhyUsAndConditions whyUs={whyUs} conditions={conditions} contact={contact} />
+        <ProposalWhyUsAndConditions
+          whyUs={whyUs}
+          conditions={conditions}
+          contact={contact}
+          onAcceptProposal={handleOpenActivationModal}
+        />
       </div>
+
+      {/* Modal Clínico de Activación de Cuenta y Datos SPEI */}
+      <ProposalActivationModal
+        isOpen={showActivationModal}
+        onClose={() => setShowActivationModal(false)}
+        propuesta={proposal}
+        planSeleccionado={currentPlanObj}
+        montoTotal={totalPrice}
+      />
 
       {/* INFORME DE RESULTADO DE LABORATORIO (PDF IMPRESIÓN) */}
       <ProposalLabPdfReport

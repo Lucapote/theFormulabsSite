@@ -28,7 +28,8 @@ export default function ProposalCalculatorSection({
   basePrice = 0,
   totalPrice = 0,
   showMobileBreakdown = false,
-  setShowMobileBreakdown
+  setShowMobileBreakdown,
+  onAcceptProposal
 }) {
   const currentPlanObj = pricingPlans.find((p) => p.id === selectedPlan) || pricingPlans[0];
 
@@ -243,6 +244,7 @@ export default function ProposalCalculatorSection({
           totalPrice={totalPrice}
           showMobileBreakdown={showMobileBreakdown}
           setShowMobileBreakdown={setShowMobileBreakdown}
+          onAcceptProposal={onAcceptProposal}
         />
       </div>
     </section>

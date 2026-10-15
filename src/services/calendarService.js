@@ -617,6 +617,16 @@ export async function uploadMediaFile(calendarioId, file, progressOptions) {
     let fileToUpload = file;
     let thumbnailPublicUrl = null;
 
+    let authHeaderValue = "";
+    try {
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          authHeaderValue = `Bearer ${session.access_token}`;
+        }
+      }
+    } catch (_) {}
+
     if (isVideo) {
       // 1. Generar miniatura WebP ligera del video (~40-60 KB)
       try {
@@ -625,14 +635,19 @@ export async function uploadMediaFile(calendarioId, file, progressOptions) {
           const thumbTimestamp = Date.now();
           const thumbStorageKey = `calendarios/${calendarioId}/thumbnails/${thumbTimestamp}.webp`;
 
+          const thumbHeaders = {
+            "x-file-name": `${thumbTimestamp}.webp`,
+            "x-file-type": "image/webp",
+            "x-calendario-id": calendarioId,
+            "x-storage-key": thumbStorageKey,
+          };
+          if (authHeaderValue) {
+            thumbHeaders["Authorization"] = authHeaderValue;
+          }
+
           const thumbRes = await fetch("/api/upload-r2", {
             method: "POST",
-            headers: {
-              "x-file-name": `${thumbTimestamp}.webp`,
-              "x-file-type": "image/webp",
-              "x-calendario-id": calendarioId,
-              "x-storage-key": thumbStorageKey,
-            },
+            headers: thumbHeaders,
             body: thumbFile,
           });
 
@@ -675,14 +690,19 @@ export async function uploadMediaFile(calendarioId, file, progressOptions) {
 
     // 3. Subida del archivo principal a Cloudflare R2 mediante /api/upload-r2 con seguimiento de progreso real
     try {
+      const uploadHeaders = {
+        "x-file-name": encodeURIComponent(fileToUpload.name),
+        "x-file-type": contentType,
+        "x-calendario-id": calendarioId,
+      };
+      if (authHeaderValue) {
+        uploadHeaders["Authorization"] = authHeaderValue;
+      }
+
       const apiRes = await uploadBinaryWithProgress({
         url: "/api/upload-r2",
         method: "POST",
-        headers: {
-          "x-file-name": encodeURIComponent(fileToUpload.name),
-          "x-file-type": contentType,
-          "x-calendario-id": calendarioId,
-        },
+        headers: uploadHeaders,
         body: fileToUpload,
         onProgress: onUploadProgress,
       });

@@ -1,4 +1,30 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { createClient } from "@supabase/supabase-js";
+
+async function verifySupabaseAuth(req) {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return { authenticated: false, error: "Token de autorización requerido." };
+  }
+  const token = authHeader.slice(7).trim();
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return { authenticated: false, error: "Servicio de autenticación no configurado." };
+  }
+  const client = createClient(supabaseUrl, supabaseAnonKey);
+  const { data: { user }, error } = await client.auth.getUser(token);
+  if (error || !user) {
+    return { authenticated: false, error: "Sesión inválida o expirada." };
+  }
+  return { authenticated: true, user };
+}
+
+function sanitizeStorageKey(key) {
+  if (!key || typeof key !== "string") return null;
+  if (key.includes("..") || key.startsWith("/") || key.includes("\\")) return null;
+  return key.trim();
+}
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;
 const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME;
@@ -30,7 +56,7 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,POST,PUT");
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-Type, x-file-name, x-file-type, x-calendario-id"
+    "Authorization, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-Type, x-file-name, x-file-type, x-calendario-id, x-storage-key"
   );
 
   if (req.method === "OPTIONS") {
@@ -42,6 +68,10 @@ export default async function handler(req, res) {
   }
 
   try {
+    const auth = await verifySupabaseAuth(req);
+    if (!auth.authenticated) {
+      return res.status(401).json({ error: auth.error || "No autorizado para subir archivos." });
+    }
     const fileName = req.headers["x-file-name"] || req.query.fileName || "archivo";
     const fileType = req.headers["x-file-type"] || req.query.fileType || "application/octet-stream";
     const calendarioId = req.headers["x-calendario-id"] || req.query.calendarioId || "general";
@@ -57,7 +87,11 @@ export default async function handler(req, res) {
     }
 
     const cleanFileName = decodeURIComponent(fileName).replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_.-]/g, "");
-    const storageKey = req.headers["x-storage-key"] || req.query.storageKey || `calendarios/${calendarioId}/${Date.now()}-${cleanFileName}`;
+    const rawStorageKey = req.headers["x-storage-key"] || req.query.storageKey || `calendarios/${calendarioId}/${Date.now()}-${cleanFileName}`;
+    const storageKey = sanitizeStorageKey(rawStorageKey);
+    if (!storageKey) {
+      return res.status(400).json({ error: "La clave de almacenamiento tiene un formato inválido o inseguro." });
+    }
 
     const s3Client = getS3Client();
     const command = new PutObjectCommand({

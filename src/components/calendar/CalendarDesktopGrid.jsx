@@ -104,21 +104,23 @@ export default function CalendarDesktopGrid({
                                 <img
                                   src={firstFile.thumbnail_url}
                                   alt="Video thumbnail"
+                                  loading="lazy"
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <video
-                                  src={firstFile.url}
-                                  muted
-                                  preload="metadata"
-                                  playsInline
-                                  className="w-full h-full object-cover"
-                                />
+                                <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-950 flex items-center justify-center">
+                                  <VideoIcon className="w-2.5 h-2.5 text-pink-400" />
+                                </div>
                               )}
-                              <Play className="w-2.5 h-2.5 text-white absolute fill-current" />
+                              <Play className="w-2.5 h-2.5 text-white absolute fill-current drop-shadow-xs" />
                             </div>
                           ) : (
-                            <img src={firstFile.url} alt="Media" className="w-full h-full object-cover" />
+                            <img
+                              src={firstFile.url}
+                              alt="Media"
+                              loading="lazy"
+                              className="w-full h-full object-cover"
+                            />
                           )
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-white">

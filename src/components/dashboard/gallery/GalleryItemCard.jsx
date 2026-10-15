@@ -1,4 +1,4 @@
-import { Play, Eye, Check, Trash2 } from "lucide-react";
+import { Play, Eye, Check, Trash2, Video as VideoIcon } from "lucide-react";
 import { useLongPress } from "@/hooks/useLongPress";
 
 /**
@@ -47,16 +47,13 @@ export default function GalleryItemCard({
             <img
               src={item.thumbnail_url}
               alt={item.nombre_archivo}
+              loading="lazy"
               className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
             />
           ) : (
-            <video
-              src={item.url}
-              muted
-              preload="metadata"
-              playsInline
-              className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-            />
+            <div className="w-full h-full bg-gradient-to-br from-gray-900 to-slate-950 flex items-center justify-center">
+              <VideoIcon className="w-8 h-8 text-pink-400/80" />
+            </div>
           )}
           <div className="absolute inset-0 bg-black/30 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/95 text-gray-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
@@ -69,6 +66,7 @@ export default function GalleryItemCard({
           <img
             src={item.url}
             alt={item.nombre_archivo}
+            loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

@@ -18,6 +18,7 @@ import ProposalsTabSection from "@/components/dashboard/proposals/ProposalsTabSe
 import DiagnosticsTabSection from "@/components/dashboard/diagnostics/DiagnosticsTabSection";
 import OperationsTabSection from "@/components/dashboard/operations/OperationsTabSection";
 import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
+import { useWindowFocusRefresh } from "@/hooks/useWindowFocusRefresh";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -73,6 +74,11 @@ export default function Dashboard() {
     loadDiagnostics();
     loadProposals();
   }, []);
+
+  useWindowFocusRefresh(() => {
+    loadDiagnostics();
+    loadProposals();
+  }, { minIntervalMs: 8000 });
 
   const handleLogout = async () => {
     await logout();

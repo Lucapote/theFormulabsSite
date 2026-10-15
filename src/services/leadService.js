@@ -339,17 +339,23 @@ export async function convertLeadToClient(leadIdOrLead, clientData = {}) {
     const empresa = (clientData.empresa || clientData.nombre || lead?.nombre || nombre).trim();
     const email = clientData.email ? clientData.email.trim() : null;
     const monto_retainer = Math.max(0, Number(clientData.monto_retainer) || 0);
-    const esquema_pago = clientData.esquema_pago === "quincenal" ? "dos_pagos" : "mensual";
+    const esquema_pago = (clientData.esquema_pago === "quincenal" || clientData.esquema_pago === "dos_pagos") ? "dos_pagos" : "mensual";
     const dia_corte_pago = Math.min(31, Math.max(1, Number(clientData.dia_corte_pago) || 1));
     const dia_corte_pago_2 = Math.min(31, Math.max(1, Number(clientData.dia_corte_pago_2) || 15));
     const producciones_por_mes = clientData.producciones_por_mes !== undefined
       ? Math.max(0, Number(clientData.producciones_por_mes))
       : 0;
-    const tipo_sesion_default = clientData.tipo_sesion_default || "mentoria";
+
+    // Normalizar tipo de sesión al CHECK constraint de PostgreSQL
+    const validTipos = ["reels_batch", "fotos", "evento", "hibrido", "organica", "profesional"];
+    const tipo_sesion_default = validTipos.includes(clientData.tipo_sesion_default)
+      ? clientData.tipo_sesion_default
+      : "organica";
+
     const locacion_default = (clientData.locacion_default || lead?.ubicacion || "").trim() || null;
     const permite_descarga = Boolean(clientData.permite_descarga);
 
-    // 2. Insertar nuevo registro en la tabla clientes
+    // 2. Inserción atómica mediante RPC en Supabase
     const clientPayload = {
       nombre,
       empresa,
@@ -362,78 +368,35 @@ export async function convertLeadToClient(leadIdOrLead, clientData = {}) {
       dia_corte_pago_2: esquema_pago === "dos_pagos" ? dia_corte_pago_2 : null,
       producciones_por_mes,
       tipo_sesion_default,
-      locacion_default,
-      created_at: new Date().toISOString()
+      locacion_default
     };
 
-    let { data: newClient, error: insertErr } = await supabase
-      .from("clientes")
-      .insert([clientPayload])
-      .select()
-      .single();
+    const now = new Date();
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("onboard_cliente_atomic", {
+      p_cliente: clientPayload,
+      p_cant_producciones: producciones_por_mes,
+      p_monto: monto_retainer,
+      p_mes: now.getMonth() + 1,
+      p_anio: now.getFullYear(),
+      p_lead_id: leadId || null
+    });
 
-    // Fallback defensivo si alguna columna de migración pendiente no existe aún
-    if (insertErr) {
-      const fallbackPayload = { ...clientPayload };
-      let hadFallback = false;
-      if (insertErr.message && insertErr.message.includes("locacion_default")) {
-        delete fallbackPayload.locacion_default;
-        hadFallback = true;
-      }
-      if (
-        insertErr.message &&
-        (insertErr.message.includes("esquema_pago") ||
-          insertErr.message.includes("dia_corte_pago_2") ||
-          insertErr.message.includes("tipo_sesion_default"))
-      ) {
-        delete fallbackPayload.esquema_pago;
-        delete fallbackPayload.dia_corte_pago_2;
-        delete fallbackPayload.tipo_sesion_default;
-        hadFallback = true;
-      }
-      if (hadFallback) {
-        const retry = await supabase.from("clientes").insert([fallbackPayload]).select().single();
-        if (!retry.error && retry.data) {
-          newClient = retry.data;
-          insertErr = null;
-        }
-      }
+    if (rpcErr) {
+      console.error("convertLeadToClient rpc error:", rpcErr);
+      return { success: false, error: rpcErr.message };
     }
 
-    if (insertErr) {
-      console.error("convertLeadToClient insert error:", insertErr);
-      return { success: false, error: insertErr.message };
-    }
-
-    // 3. Actualizar la tabla leads marcando status = 'cliente_activo'
-    if (leadId) {
-      const { error: updateLeadErr } = await supabase
-        .from("leads")
-        .update({ status: "cliente_activo" })
-        .eq("id", leadId);
-
-      if (updateLeadErr) {
-        console.warn("Aviso: no se pudo actualizar status en leads:", updateLeadErr);
-      }
-    }
-
-    // 4. Si monto_retainer > 0 o producciones_por_mes > 0, inicializar ciclo mensual
-    if (monto_retainer > 0 || producciones_por_mes > 0) {
-      const now = new Date();
-      await ensureCicloActual(
-        newClient.id,
-        now.getMonth() + 1,
-        now.getFullYear(),
-        monto_retainer,
-        Math.max(1, producciones_por_mes),
-        tipo_sesion_default,
-        locacion_default
-      );
+    if (!rpcRes?.success) {
+      return { success: false, error: rpcRes?.error || "Error al convertir lead a cliente." };
     }
 
     return {
       success: true,
-      data: { cliente: newClient }
+      data: {
+        cliente: rpcRes.cliente,
+        ciclo: rpcRes.ciclo,
+        producciones: rpcRes.producciones || []
+      }
     };
   } catch (err) {
     console.error("convertLeadToClient unexpected error:", err);

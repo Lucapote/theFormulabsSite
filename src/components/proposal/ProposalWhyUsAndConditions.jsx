@@ -1,4 +1,4 @@
-import { HeartHandshake, Sparkles, Info, Phone, Mail, Instagram } from "lucide-react";
+import { HeartHandshake, Sparkles, Info, Phone, Mail, Instagram, CheckCircle2 } from "lucide-react";
 
 /**
  * ProposalWhyUsAndConditions
@@ -7,7 +7,8 @@ import { HeartHandshake, Sparkles, Info, Phone, Mail, Instagram } from "lucide-r
 export default function ProposalWhyUsAndConditions({
   whyUs = [],
   conditions = [],
-  contact = {}
+  contact = {},
+  onAcceptProposal
 }) {
   return (
     <>
@@ -60,9 +61,22 @@ export default function ProposalWhyUsAndConditions({
           <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-6 leading-tight font-sora">
             ¿Listos para empezar?
           </h2>
-          <p className="text-lg text-gray-600 leading-relaxed mb-10">
+          <p className="text-lg text-gray-600 leading-relaxed mb-6">
             No hay prisa por decidir, preferimos que elijan el paquete que de verdad tenga sentido para su marca en este momento. Si tienen dudas, aquí estamos.
           </p>
+
+          {onAcceptProposal && (
+            <div className="mb-10">
+              <button
+                type="button"
+                onClick={onAcceptProposal}
+                className="h-12 px-8 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-sora font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-600/20 transition-all active:scale-[0.98] inline-flex items-center gap-2 cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Aceptar Propuesta & Activar Cuenta</span>
+              </button>
+            </div>
+          )}
 
           <div className="bg-gray-900 text-white rounded-[2rem] p-10 md:p-12 shadow-2xl relative overflow-hidden inline-block w-full">
             <div className="absolute -top-32 -right-32 w-80 h-80 bg-pink-500 rounded-full opacity-20 blur-[80px] pointer-events-none" />

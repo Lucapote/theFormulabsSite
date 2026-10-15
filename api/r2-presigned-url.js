@@ -56,7 +56,7 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,DELETE,POST,PUT");
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+    "Authorization, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
   );
 
   if (req.method === "OPTIONS") {
@@ -121,12 +121,19 @@ export default async function handler(req, res) {
       });
     }
 
+    // Validar autenticación antes de generar URL prefirmada de subida (PUT)
+    const auth = await verifySupabaseAuth(req);
+    if (!auth.authenticated) {
+      return res.status(401).json({ error: auth.error || "No autorizado para generar enlaces de subida a R2." });
+    }
+
     if (!fileName || !calendarioId) {
       return res.status(400).json({ error: "Parámetros obligatorios faltantes: fileName, calendarioId" });
     }
 
     const cleanFileName = decodeURIComponent(fileName).replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_.-]/g, "");
-    const storageKey = `calendarios/${calendarioId}/${Date.now()}-${cleanFileName}`;
+    const cleanCalendarioId = sanitizeStorageKey(String(calendarioId).replace(/[^a-zA-Z0-9_-]/g, ""));
+    const storageKey = `calendarios/${cleanCalendarioId}/${Date.now()}-${cleanFileName}`;
 
     const command = new PutObjectCommand({
       Bucket: R2_BUCKET_NAME,

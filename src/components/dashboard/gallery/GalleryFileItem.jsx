@@ -33,21 +33,19 @@ export default function GalleryFileItem({
           <img
             src={file.thumbnail_url}
             alt={file.nombre_archivo || "Media"}
+            loading="lazy"
             className="w-full h-full object-cover pointer-events-none"
           />
         ) : (
-          <video
-            src={file.url}
-            muted
-            preload="metadata"
-            playsInline
-            className="w-full h-full object-cover pointer-events-none"
-          />
+          <div className="w-full h-full bg-gradient-to-br from-gray-900 to-slate-950 flex items-center justify-center pointer-events-none">
+            <VideoIcon className="w-6 h-6 text-pink-400/80" />
+          </div>
         )
       ) : (
         <img
           src={file.url}
           alt={file.nombre_archivo || "Media"}
+          loading="lazy"
           className="w-full h-full object-cover pointer-events-none"
         />
       )}

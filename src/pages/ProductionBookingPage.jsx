@@ -8,6 +8,7 @@ import { getSessionDisplayName } from "@/utils/formatters";
 import BookingHeader from "@/components/booking/BookingHeader";
 import BookingFormCard from "@/components/booking/BookingFormCard";
 import BookingSuccessCard from "@/components/booking/BookingSuccessCard";
+import BookingLockedCard from "@/components/booking/BookingLockedCard";
 
 export default function ProductionBookingPage() {
   const [searchParams] = useSearchParams();
@@ -33,8 +34,9 @@ export default function ProductionBookingPage() {
 
       if (res.success && res.data) {
         setProduccion(res.data);
-        // Si ya está agendada previamente y tiene fecha, mostrar pantalla de confirmación
-        if (res.data.estado === "agendada" && res.data.fecha_produccion) {
+        const estaPagado = res.data.estaDesbloqueada || res.data.ciclo?.estado_pago === "pagado";
+        // Si el ciclo está pagado y la producción ya está agendada, mostrar confirmación
+        if (estaPagado && res.data.estado === "agendada" && res.data.fecha_produccion) {
           setShowSuccess(true);
         }
       } else {
@@ -77,6 +79,8 @@ export default function ProductionBookingPage() {
       toast.error(res.error || "Ocurrió un error al confirmar la reserva.");
     }
   };
+
+  const isLocked = Boolean(produccion && !produccion.estaDesbloqueada);
 
   return (
     <div className="relative min-h-screen bg-[#f4f4f4] text-gray-900 font-inter antialiased overflow-x-hidden selection:bg-[#ef18d6]/20 selection:text-[#ef18d6]">
@@ -132,32 +136,43 @@ export default function ProductionBookingPage() {
         {/* Estado: Vista Activa de Reserva */}
         {!loading && !error && produccion && (
           <div>
-            <BookingHeader
-              sessionTitle={getSessionDisplayName(
-                produccion,
-                produccion.ciclo?.mes,
-                produccion.cliente?.producciones_por_mes || 1
-              )}
-              numeroSesion={produccion.numero_sesion || 1}
-              clienteNombre={produccion.cliente?.nombre || ""}
-              empresa={produccion.cliente?.empresa || ""}
-              tipo={produccion.tipo || produccion.cliente?.tipo_sesion_default || "organica"}
-              duracionHoras={produccion.duracion_horas}
-            />
-
-            {showSuccess ? (
-              <BookingSuccessCard
-                produccion={produccion}
-                onReschedule={() => setShowSuccess(false)}
+            {isLocked ? (
+              <BookingLockedCard
+                cliente={produccion.cliente}
+                ciclo={produccion.ciclo}
+                numeroSesion={produccion.numero_sesion || 1}
+                motivoBloqueo={produccion.motivoBloqueo || "pago_pendiente"}
               />
             ) : (
-              <BookingFormCard
-                initialData={produccion}
-                onSubmit={handleBookingSubmit}
-                isSubmitting={isSubmitting}
-                tipo={produccion.tipo || produccion.cliente?.tipo_sesion_default || "organica"}
-                duracionHoras={produccion.duracion_horas}
-              />
+              <div>
+                <BookingHeader
+                  sessionTitle={getSessionDisplayName(
+                    produccion,
+                    produccion.ciclo?.mes,
+                    produccion.cliente?.producciones_por_mes || 1
+                  )}
+                  numeroSesion={produccion.numero_sesion || 1}
+                  clienteNombre={produccion.cliente?.nombre || ""}
+                  empresa={produccion.cliente?.empresa || ""}
+                  tipo={produccion.tipo || produccion.cliente?.tipo_sesion_default || "organica"}
+                  duracionHoras={produccion.duracion_horas}
+                />
+
+                {showSuccess ? (
+                  <BookingSuccessCard
+                    produccion={produccion}
+                    onReschedule={() => setShowSuccess(false)}
+                  />
+                ) : (
+                  <BookingFormCard
+                    initialData={produccion}
+                    onSubmit={handleBookingSubmit}
+                    isSubmitting={isSubmitting}
+                    tipo={produccion.tipo || produccion.cliente?.tipo_sesion_default || "organica"}
+                    duracionHoras={produccion.duracion_horas}
+                  />
+                )}
+              </div>
             )}
           </div>
         )}

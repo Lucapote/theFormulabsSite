@@ -1,4 +1,4 @@
-import { Calculator, Download, ChevronDown, ChevronUp } from "lucide-react";
+import { Calculator, Download, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
 import { formatPrice } from "@/utils/formatters";
 
 /**
@@ -12,7 +12,8 @@ export default function ProposalCalculatorSummary({
   addons = [],
   totalPrice = 0,
   showMobileBreakdown = false,
-  setShowMobileBreakdown
+  setShowMobileBreakdown,
+  onAcceptProposal
 }) {
   const hasAddonsSelected = Object.entries(selectedAddons).some(
     ([_, val]) => val !== false && val !== null
@@ -72,25 +73,38 @@ export default function ProposalCalculatorSummary({
             )}
           </div>
 
-          <div className="bg-white/10 rounded-2xl p-5 border border-white/5">
-            <p className="text-gray-400 text-sm mb-1 font-medium">Inversión Estimada</p>
-            <div className="flex items-end gap-2">
-              <span className="text-4xl font-black text-pink-400 font-sora">
-                {formatPrice(totalPrice)}
-              </span>
-              <span className="text-gray-400 mb-2 font-semibold">MXN</span>
+          <div className="bg-white/10 rounded-2xl p-5 border border-white/5 space-y-3">
+            <div>
+              <p className="text-gray-400 text-sm mb-1 font-medium">Inversión Estimada</p>
+              <div className="flex items-end gap-2">
+                <span className="text-4xl font-black text-pink-400 font-sora">
+                  {formatPrice(totalPrice)}
+                </span>
+                <span className="text-gray-400 mb-2 font-semibold">MXN</span>
+              </div>
             </div>
+
+            {onAcceptProposal && (
+              <button
+                type="button"
+                onClick={onAcceptProposal}
+                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 px-5 rounded-full font-sora font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                Aceptar Propuesta
+              </button>
+            )}
 
             <button
               type="button"
               onClick={() => window.print()}
-              className="w-full mt-4 bg-brand-blue hover:bg-[#147bd0] text-white py-2.5 px-5 rounded-full font-bold text-sm shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full bg-white/10 hover:bg-white/20 text-white py-2.5 px-5 rounded-full font-sora font-semibold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-3.5 h-3.5" />
               Descargar PDF
             </button>
 
-            <p className="text-[11px] text-gray-400 mt-4 leading-tight">
+            <p className="text-[11px] text-gray-400 pt-1 leading-tight">
               *Pago mensual por adelantado. Precios no incluyen IVA en caso de requerir factura.
             </p>
           </div>
@@ -168,22 +182,29 @@ export default function ProposalCalculatorSummary({
           </div>
 
           <div className="flex items-center gap-2">
+            {onAcceptProposal && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAcceptProposal();
+                }}
+                className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-full font-sora font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-1.5 cursor-pointer active:scale-[0.98]"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Aceptar
+              </button>
+            )}
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 window.print();
               }}
-              className="bg-brand-blue hover:bg-[#147bd0] text-white px-4 py-2.5 rounded-full font-bold text-sm shadow-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="bg-white/10 hover:bg-white/20 text-white px-3.5 py-2.5 rounded-full font-sora font-semibold text-xs shadow-md transition-colors flex items-center gap-1 cursor-pointer"
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-3.5 h-3.5" />
               PDF
-            </button>
-            <button
-              type="button"
-              className="bg-pink-500 hover:bg-pink-600 text-white px-5 py-2.5 rounded-full font-bold text-sm shadow-lg transition-colors flex items-center gap-2 cursor-pointer"
-            >
-              Ver Detalle
             </button>
           </div>
         </div>

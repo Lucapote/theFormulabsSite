@@ -10,12 +10,12 @@ export default function LeadToClientModal({ isOpen, onClose, lead, onClientCreat
   const [formData, setFormData] = useState({
     nombre: "", empresa: "", email: "", monto_retainer: "",
     esquema_pago: "mensual", dia_corte_pago: 1, dia_corte_pago_2: 15,
-    producciones_por_mes: 0, tipo_sesion_default: "mentoria",
+    producciones_por_mes: 0, tipo_sesion_default: "organica",
     locacion_default: "", permite_descarga: false
   });
 
   useEffect(() => {
-    if (lead) {
+    if (lead && isOpen) {
       const suggestedPrice = lead.suggested_range
         ? parseInt(lead.suggested_range.replace(/\D/g, ""), 10) || ""
         : "";
@@ -28,7 +28,7 @@ export default function LeadToClientModal({ isOpen, onClose, lead, onClientCreat
         dia_corte_pago: 1,
         dia_corte_pago_2: 15,
         producciones_por_mes: 0,
-        tipo_sesion_default: "mentoria",
+        tipo_sesion_default: "organica",
         locacion_default: lead.ubicacion || "",
         permite_descarga: false
       });
@@ -43,7 +43,7 @@ export default function LeadToClientModal({ isOpen, onClose, lead, onClientCreat
     if (tipo === "retainer") {
       setFormData((prev) => ({ ...prev, tipo_sesion_default: "organica", producciones_por_mes: 2, permite_descarga: true }));
     } else if (tipo === "mentoria") {
-      setFormData((prev) => ({ ...prev, tipo_sesion_default: "mentoria", producciones_por_mes: 0, permite_descarga: false }));
+      setFormData((prev) => ({ ...prev, tipo_sesion_default: "organica", producciones_por_mes: 0, permite_descarga: false }));
     } else if (tipo === "servicio_unico") {
       setFormData((prev) => ({ ...prev, tipo_sesion_default: "profesional", producciones_por_mes: 1, permite_descarga: true }));
     }
@@ -146,13 +146,13 @@ export default function LeadToClientModal({ isOpen, onClose, lead, onClientCreat
                 <label className="text-[11px] font-sora font-bold text-gray-700 uppercase mb-1 block">Esquema de Cobro</label>
                 <div className="flex bg-gray-200/70 p-0.5 rounded-xl border border-gray-200 h-10">
                   <button type="button" onClick={() => setFormData({ ...formData, esquema_pago: "mensual" })} className={`flex-1 rounded-lg text-xs font-sora font-semibold transition-all ${formData.esquema_pago === "mensual" ? "bg-gray-900 text-white shadow-xs" : "text-gray-600 hover:text-gray-900"}`}>Mensual</button>
-                  <button type="button" onClick={() => setFormData({ ...formData, esquema_pago: "quincenal" })} className={`flex-1 rounded-lg text-xs font-sora font-semibold transition-all ${formData.esquema_pago === "quincenal" ? "bg-gray-900 text-white shadow-xs" : "text-gray-600 hover:text-gray-900"}`}>Quincenal</button>
+                  <button type="button" onClick={() => setFormData({ ...formData, esquema_pago: "dos_pagos" })} className={`flex-1 rounded-lg text-xs font-sora font-semibold transition-all ${(formData.esquema_pago === "dos_pagos" || formData.esquema_pago === "quincenal") ? "bg-gray-900 text-white shadow-xs" : "text-gray-600 hover:text-gray-900"}`}>Quincenal (2 Pagos)</button>
                 </div>
               </div>
             </div>
 
             {/* Días de corte */}
-            {formData.esquema_pago === "quincenal" ? (
+            {(formData.esquema_pago === "dos_pagos" || formData.esquema_pago === "quincenal") ? (
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <span className="text-[10px] font-sora text-gray-500 block mb-0.5">1er Día Corte</span>

@@ -23,6 +23,7 @@ import ClientCalendarsGrid from "./ClientCalendarsGrid";
 import CreateClientModal from "./CreateClientModal";
 import EditClientModal from "./EditClientModal";
 import CreateCalendarModal from "./CreateCalendarModal";
+import { useWindowFocusRefresh } from "@/hooks/useWindowFocusRefresh";
 import ActiveCalendarHeader from "./ActiveCalendarHeader";
 import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
 
@@ -79,7 +80,7 @@ export default function ClientsCalendarSection() {
   const [showCalendarModal, setShowCalendarModal] = useState(false);
 
   // Form states - Client
-  const [clientForm, setClientForm] = useState({
+  const DEFAULT_CLIENT_FORM = {
     nombre: "",
     empresa: "",
     email: "",
@@ -90,9 +91,21 @@ export default function ClientsCalendarSection() {
     dia_corte_pago_2: 15,
     tipo_sesion_default: "organica",
     producciones_por_mes: 1
-  });
+  };
+
+  const [clientForm, setClientForm] = useState(DEFAULT_CLIENT_FORM);
   const [isSavingClient, setIsSavingClient] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
+
+  const handleOpenClientModal = () => {
+    setClientForm({ ...DEFAULT_CLIENT_FORM });
+    setShowClientModal(true);
+  };
+
+  const handleCloseClientModal = () => {
+    setClientForm({ ...DEFAULT_CLIENT_FORM });
+    setShowClientModal(false);
+  };
 
   // Confirm Modal State
   const [confirmModal, setConfirmModal] = useState({
@@ -196,6 +209,10 @@ export default function ClientsCalendarSection() {
     loadClientes();
   }, []);
 
+  useWindowFocusRefresh(() => {
+    loadClientes(selectedCliente?.id);
+  }, { minIntervalMs: 8000 });
+
   useEffect(() => {
     if (selectedCliente?.id) {
       loadCalendarios(selectedCliente.id);
@@ -231,19 +248,7 @@ export default function ClientsCalendarSection() {
       }
 
       toast.success(`Cliente "${clientForm.nombre}" creado exitosamente.`);
-      setClientForm({
-        nombre: "",
-        empresa: "",
-        email: "",
-        permite_descarga: false,
-        monto_retainer: "",
-        esquema_pago: "mensual",
-        dia_corte_pago: 1,
-        dia_corte_pago_2: 15,
-        tipo_sesion_default: "organica",
-        producciones_por_mes: 1
-      });
-      setShowClientModal(false);
+      handleCloseClientModal();
       await loadClientes(nuevoCliente?.id);
     } else {
       toast.error(res.error || "No se pudo crear el cliente.");
@@ -525,7 +530,7 @@ export default function ClientsCalendarSection() {
 
           <button
             type="button"
-            onClick={() => setShowClientModal(true)}
+            onClick={handleOpenClientModal}
             className="h-11 px-5 bg-gray-900 hover:bg-gray-800 text-white font-sora font-bold text-xs rounded-full shadow-md transition-all flex items-center gap-2 cursor-pointer"
           >
             <UserPlus className="w-4 h-4 text-pink-400" />
@@ -552,7 +557,7 @@ export default function ClientsCalendarSection() {
           selectedCliente={selectedCliente}
           deletingId={deletingId}
           onSelectClient={setSelectedCliente}
-          onOpenClientModal={() => setShowClientModal(true)}
+          onOpenClientModal={handleOpenClientModal}
           onDeleteClient={handleDeleteClient}
           onEditClient={(c) => setEditingClient(c)}
         />
@@ -574,7 +579,7 @@ export default function ClientsCalendarSection() {
       {/* Modals */}
       <CreateClientModal
         isOpen={showClientModal}
-        onClose={() => setShowClientModal(false)}
+        onClose={handleCloseClientModal}
         clientForm={clientForm}
         setClientForm={setClientForm}
         onSubmit={handleSaveClient}
