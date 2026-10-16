@@ -25,7 +25,7 @@ CREATE OR REPLACE FUNCTION public.onboard_cliente_atomic(
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = public, extensions, pg_temp
 AS $$
 DECLARE
   v_cliente record;
@@ -163,7 +163,7 @@ BEGIN
         v_prod_duracion,
         v_cliente.locacion_default,
         'pendiente_agendamiento',
-        encode(gen_random_bytes(12), 'hex'),
+        encode(extensions.gen_random_bytes(12), 'hex'),
         NOW()
       );
     END LOOP;
@@ -200,7 +200,7 @@ CREATE OR REPLACE FUNCTION public.ensure_ciclo_actual_atomic(
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, pg_temp
+SET search_path = public, extensions, pg_temp
 AS $$
 DECLARE
   v_existing_ciclo record;
@@ -295,7 +295,7 @@ BEGIN
       v_prod_duracion,
       v_final_locacion,
       'pendiente_agendamiento',
-      encode(gen_random_bytes(12), 'hex'),
+      encode(extensions.gen_random_bytes(12), 'hex'),
       NOW()
     );
   END LOOP;

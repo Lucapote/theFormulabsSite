@@ -295,26 +295,20 @@ export async function convertProposalToClient(propuesta) {
     const dia_corte_pago = Math.min(31, Math.max(1, Number(contenido.billingDay || contenido.dia_corte_pago) || 1));
     const dia_corte_pago_2 = Math.min(31, Math.max(1, Number(contenido.billingDay2 || contenido.dia_corte_pago_2) || 15));
 
-    // 2.3 Parámetros Operativos
-    let producciones_por_mes = 1;
-    if (Number(contenido.producciones_por_mes) > 0) {
-      producciones_por_mes = Number(contenido.producciones_por_mes);
-    } else {
-      const planReels = Number(currentPlan.reels) || 0;
-      const planShoots = Number(currentPlan.shoots || currentPlan.rodajes || currentPlan.sesiones) || 0;
-      const hasTwoCoverages = Array.isArray(contenido.baseFeatures) &&
-        contenido.baseFeatures.some((f) => typeof f === "string" && /2\s+(coberturas|rodajes|sesiones)/i.test(f));
+    // 2.3 Parámetros Operativos y Scope
+    const extraSessions = Number(contenido.pricing?.extraSessionsCount) || 0;
+    const produccionesPorMes = Number(
+      contenido.scope?.producciones_por_mes ||
+      contenido.selectedPlan?.producciones_por_mes ||
+      contenido.producciones_por_mes ||
+      1
+    ) + extraSessions;
 
-      if (planShoots >= 2 || planReels > 10 || hasTwoCoverages) {
-        producciones_por_mes = 2;
-      } else if (planShoots === 1) {
-        producciones_por_mes = 1;
-      }
-    }
-
-    // Tipo de sesión predeterminado inferido de los formatos contratados o features
+    // Tipo de sesión predeterminado inferido de scope o formatos
     let tipo_sesion_default = "organica";
-    if (contenido.tipo_sesion_default) {
+    if (contenido.scope?.tipo_sesion_default) {
+      tipo_sesion_default = contenido.scope.tipo_sesion_default;
+    } else if (contenido.tipo_sesion_default) {
       tipo_sesion_default = contenido.tipo_sesion_default;
     } else if (contenido.tipo_sesion) {
       tipo_sesion_default = contenido.tipo_sesion;
@@ -355,7 +349,7 @@ export async function convertProposalToClient(propuesta) {
       esquema_pago: (esquema_pago === "quincenal" || esquema_pago === "dos_pagos") ? "dos_pagos" : "mensual",
       dia_corte_pago,
       dia_corte_pago_2,
-      producciones_por_mes,
+      producciones_por_mes: produccionesPorMes,
       tipo_sesion_default,
       locacion_default,
       propuesta_origen_id: propuesta.id
@@ -367,15 +361,43 @@ export async function convertProposalToClient(propuesta) {
 
     const { data: rpcRes, error: rpcErr } = await supabase.rpc("onboard_cliente_atomic", {
       p_cliente: clientPayload,
-      p_cant_producciones: producciones_por_mes,
+      p_cant_producciones: produccionesPorMes,
       p_monto: monto_retainer,
       p_mes: mesActual,
       p_anio: anioActual
     });
 
     if (rpcErr) {
-      console.error("convertProposalToClient rpc error:", rpcErr);
-      return { success: false, error: rpcErr.message };
+      console.warn("convertProposalToClient rpc fallback to ensureCicloActual:", rpcErr);
+      const { data: insertedClient, error: insertErr } = await supabase
+        .from("clientes")
+        .insert(clientPayload)
+        .select()
+        .single();
+
+      if (insertErr) {
+        console.error("convertProposalToClient insert error:", insertErr);
+        return { success: false, error: insertErr.message };
+      }
+
+      const cicloRes = await ensureCicloActual(
+        insertedClient.id,
+        mesActual,
+        anioActual,
+        monto_retainer,
+        produccionesPorMes,
+        tipo_sesion_default,
+        locacion_default
+      );
+
+      return {
+        success: true,
+        data: {
+          cliente: insertedClient,
+          ciclo: cicloRes.data?.ciclo || null,
+          producciones: cicloRes.data?.producciones || []
+        }
+      };
     }
 
     if (!rpcRes?.success) {

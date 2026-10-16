@@ -13,15 +13,19 @@ import ProductionBookingPage from "./pages/ProductionBookingPage.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { UploadProvider } from "./context/UploadContext.jsx";
+import { usePreventNumberInputScroll } from "./hooks/usePreventNumberInputScroll";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <UploadProvider>
-        <TooltipProvider>
-          <Sonner />
+const App = () => {
+  usePreventNumberInputScroll();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <UploadProvider>
+          <TooltipProvider>
+            <Sonner />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
@@ -47,6 +51,7 @@ const App = () => (
     </UploadProvider>
   </AuthProvider>
 </QueryClientProvider>
-);
+  );
+};
 
 export default App;

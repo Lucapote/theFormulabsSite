@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ProposalRow from "./ProposalRow";
 import CreateProposalVersionModal from "./CreateProposalVersionModal";
 import ProposalOnboardingDialog, { getProposalConversionDetails } from "./ProposalOnboardingDialog";
+import DeleteProposalVersionDialog from "./DeleteProposalVersionDialog";
 
 /**
  * ProposalsTabSection
@@ -29,6 +30,7 @@ export default function ProposalsTabSection({
   const [convertingProposal, setConvertingProposal] = useState(null);
   const [isConverting, setIsConverting] = useState(false);
   const [versioningProposal, setVersioningProposal] = useState(null);
+  const [deletingProposalData, setDeletingProposalData] = useState(null);
 
   // Agrupación Inteligente de Propuestas por Familia / Raíz
   const propuestasAgrupadas = useMemo(() => {
@@ -84,6 +86,11 @@ export default function ProposalsTabSection({
     return result;
   }, [proposals]);
 
+  // Conteo de propuestas reales (expedientes raíz) excluyendo versiones iteradas
+  const totalPropuestasReales = useMemo(() => {
+    return (proposals || []).filter((p) => !p.propuesta_padre_id).length;
+  }, [proposals]);
+
   // Cargar estado de propuestas que ya fueron convertidas a clientes
   const loadConvertedStatus = async () => {
     if (!supabase) return;
@@ -137,6 +144,18 @@ export default function ProposalsTabSection({
     setIsConverting(false);
   };
 
+  // Apertura Inmediata de Edición tras Crear Versión (Punto 8)
+  const handleVersionCreated = (nuevaVersion) => {
+    setVersioningProposal(null);
+    if (onRefresh) onRefresh();
+    if (onEditClick && nuevaVersion) {
+      onEditClick(nuevaVersion);
+    }
+    toast.success(
+      `Versión v${nuevaVersion?.version || ""} creada. Editando borrador...`
+    );
+  };
+
   return (
     <div className="space-y-6 font-inter overflow-x-hidden w-full">
       {/* Hero Welcome Card */}
@@ -154,6 +173,20 @@ export default function ProposalsTabSection({
             <p className="hidden sm:block text-gray-600 text-base mt-2 font-medium">
               Crea, versiona y supervisa las propuestas comerciales y sus iteraciones de negociación.
             </p>
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-sora font-semibold bg-blue-50 text-brand-blue border border-blue-100">
+                <FileText className="w-3.5 h-3.5 text-brand-blue" />
+                <span>
+                  {totalPropuestasReales}{" "}
+                  {totalPropuestasReales === 1 ? "propuesta raíz" : "propuestas raíz"}
+                </span>
+              </span>
+              {proposals.length > totalPropuestasReales && (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-inter text-gray-500 bg-gray-100 border border-gray-200">
+                  {proposals.length} versiones en total
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
@@ -242,7 +275,7 @@ export default function ProposalsTabSection({
                     copiedSlug={copiedSlug}
                     onCopyLink={onCopyLink}
                     onEditClick={onEditClick}
-                    onDeleteClick={onDeleteClick}
+                    onDeleteClick={(p, count) => setDeletingProposalData({ propuesta: p, totalVersiones: count, group })}
                     onConvertClick={(p) => setConvertingProposal(p)}
                     onNewVersionClick={(p) => setVersioningProposal(p)}
                   />
@@ -258,10 +291,7 @@ export default function ProposalsTabSection({
         isOpen={Boolean(versioningProposal)}
         onClose={() => setVersioningProposal(null)}
         propuesta={versioningProposal}
-        onSuccess={() => {
-          setVersioningProposal(null);
-          if (onRefresh) onRefresh();
-        }}
+        onSuccess={handleVersionCreated}
       />
 
       {/* Confirmation Dialog Clínico para Onboarding 1-Click */}
@@ -271,6 +301,19 @@ export default function ProposalsTabSection({
         proposal={convertingProposal}
         isConverting={isConverting}
         onConfirm={handleConfirmConvert}
+      />
+
+      {/* Confirmation Dialog Clínico para Borrado Inteligente de Versiones */}
+      <DeleteProposalVersionDialog
+        isOpen={Boolean(deletingProposalData)}
+        onClose={() => setDeletingProposalData(null)}
+        propuesta={deletingProposalData?.propuesta}
+        totalVersiones={deletingProposalData?.totalVersiones || 1}
+        group={deletingProposalData?.group}
+        onSuccess={() => {
+          setDeletingProposalData(null);
+          if (onRefresh) onRefresh();
+        }}
       />
     </div>
   );

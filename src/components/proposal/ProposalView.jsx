@@ -15,13 +15,7 @@ import ProposalActivationModal from "./ProposalActivationModal";
  */
 export default function ProposalView({ data = defaultData }) {
   const proposal = data || defaultData;
-  const clientInfo = proposal.client || {};
-  const baseFeatures = proposal.baseFeatures || [];
-  const pricingPlans = proposal.pricingPlans || [];
-  const addons = proposal.addons || [];
-  const whyUs = proposal.whyUs || [];
-  const conditions = proposal.conditions || [];
-  const contact = proposal.contact || {};
+  const { client: clientInfo = {}, baseFeatures = [], pricingPlans = [], addons = [], whyUs = [], conditions = [], contact = {} } = proposal;
 
   const clientData = {
     name: clientInfo.name || "Cliente Estimado",
@@ -36,29 +30,23 @@ export default function ProposalView({ data = defaultData }) {
   const [showActivationModal, setShowActivationModal] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowSecondText(true);
-    }, 700);
+    const timer = setTimeout(() => setShowSecondText(true), 700);
     return () => clearTimeout(timer);
   }, []);
 
+  const scope = proposal?.contenido?.scope || proposal?.content?.scope || {};
+  const baseShoots = Number(scope.producciones_por_mes || proposal?.contenido?.producciones_por_mes || 2);
+  const precioSesionExtra = Number(scope.precio_sesion_extra) || 3500;
+
   const [selectedPlan, setSelectedPlan] = useState(pricingPlans[1]?.id || pricingPlans[0]?.id || "crecimiento");
   const [selectedAddons, setSelectedAddons] = useState({});
+  const [extraSessionsCount, setExtraSessionsCount] = useState(
+    Number(proposal?.contenido?.pricing?.extraSessionsCount) || 0
+  );
   const [showMobileBreakdown, setShowMobileBreakdown] = useState(false);
 
-  const toggleAddon = (addonId) => {
-    setSelectedAddons((prev) => ({
-      ...prev,
-      [addonId]: !prev[addonId]
-    }));
-  };
-
-  const setRadioAddon = (addonId, optionId) => {
-    setSelectedAddons((prev) => ({
-      ...prev,
-      [addonId]: prev[addonId] === optionId ? null : optionId
-    }));
-  };
+  const toggleAddon = (id) => setSelectedAddons((prev) => ({ ...prev, [id]: !prev[id] }));
+  const setRadioAddon = (id, optId) => setSelectedAddons((prev) => ({ ...prev, [id]: prev[id] === optId ? null : optId }));
 
   const currentPlanObj = pricingPlans.find((p) => p.id === selectedPlan) || pricingPlans[0];
   const basePrice = currentPlanObj?.price || 0;
@@ -73,13 +61,16 @@ export default function ProposalView({ data = defaultData }) {
     }
   });
 
-  const totalPrice = basePrice + addonsPrice;
+  const extraSessionsPrice = extraSessionsCount * precioSesionExtra;
+  const totalPrice = basePrice + addonsPrice + extraSessionsPrice;
 
   const handleOpenActivationModal = () => {
     // Registro analítico del evento de aceptación/contratación
     trackProposalEvent(proposal, "proposal_accept_clicked", {
       planId: currentPlanObj?.id,
       planName: currentPlanObj?.name,
+      extraSessionsCount,
+      totalSessions: baseShoots + extraSessionsCount,
       totalPrice
     });
     setShowActivationModal(true);
@@ -104,6 +95,14 @@ export default function ProposalView({ data = defaultData }) {
       }
     }
   });
+
+  if (extraSessionsCount > 0) {
+    selectedAddonList.push({
+      title: `Producción Extra (${extraSessionsCount} ${extraSessionsCount === 1 ? "sesión" : "sesiones"})`,
+      price: extraSessionsPrice,
+      priceLabel: `+$${extraSessionsPrice.toLocaleString("es-MX")} MXN`
+    });
+  }
 
   return (
     <div className="min-h-screen bg-[#f4f4f4] text-gray-900 font-sans selection:bg-[#ef18d6]/20 selection:text-[#ef18d6] pb-24 md:pb-0 relative scroll-smooth">
@@ -156,6 +155,10 @@ export default function ProposalView({ data = defaultData }) {
           setRadioAddon={setRadioAddon}
           basePrice={basePrice}
           totalPrice={totalPrice}
+          extraSessionsCount={extraSessionsCount}
+          setExtraSessionsCount={setExtraSessionsCount}
+          precioSesionExtra={precioSesionExtra}
+          baseShoots={baseShoots}
           showMobileBreakdown={showMobileBreakdown}
           setShowMobileBreakdown={setShowMobileBreakdown}
           onAcceptProposal={handleOpenActivationModal}
@@ -177,7 +180,23 @@ export default function ProposalView({ data = defaultData }) {
       <ProposalActivationModal
         isOpen={showActivationModal}
         onClose={() => setShowActivationModal(false)}
-        propuesta={proposal}
+        propuesta={{
+          ...proposal,
+          contenido: {
+            ...(proposal?.contenido || proposal?.content || {}),
+            scope: {
+              ...(proposal?.contenido?.scope || {}),
+              producciones_por_mes: baseShoots,
+              precio_sesion_extra: precioSesionExtra
+            },
+            pricing: {
+              basePrice,
+              extraSessionsCount,
+              totalPrice
+            },
+            producciones_por_mes: baseShoots + extraSessionsCount
+          }
+        }}
         planSeleccionado={currentPlanObj}
         montoTotal={totalPrice}
       />

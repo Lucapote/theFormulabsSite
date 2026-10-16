@@ -249,7 +249,7 @@ export default function ProposalRow({
 
           {/* Eliminar */}
           <button
-            onClick={() => onDeleteClick(versionActiva)}
+            onClick={() => onDeleteClick?.(versionActiva, group?.versiones?.length || 1)}
             title="Eliminar propuesta"
             className="w-8 h-8 rounded-full bg-red-50 hover:bg-red-500 text-red-600 hover:text-white inline-flex items-center justify-center transition-all cursor-pointer shrink-0"
           >

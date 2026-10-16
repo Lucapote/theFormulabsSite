@@ -1,4 +1,5 @@
 import { Clapperboard, Sparkles, Clock } from "lucide-react";
+import { getSessionTypeInfo } from "@/utils/bookingHelpers";
 
 /**
  * Encabezado de la sesión de reserva
@@ -13,8 +14,7 @@ export default function BookingHeader({
   duracionHoras = null
 }) {
   const displayClient = empresa ? `${clienteNombre} (${empresa})` : clienteNombre;
-  const isProfesional = tipo === "profesional" || duracionHoras === 6;
-  const durationLabel = isProfesional ? "Profesional • 6h de levantamiento" : "Orgánica • 4h de levantamiento";
+  const typeInfo = getSessionTypeInfo(tipo, duracionHoras);
   const displaySession = sessionTitle || `Sesión #${numeroSesion}`;
 
   return (
@@ -26,7 +26,7 @@ export default function BookingHeader({
         </div>
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-100 text-purple-700 text-xs font-sora font-semibold">
           <Clock className="w-3.5 h-3.5" />
-          <span>{durationLabel}</span>
+          <span>{typeInfo.badge}</span>
         </div>
       </div>
 

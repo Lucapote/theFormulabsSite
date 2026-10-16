@@ -1,4 +1,4 @@
-import { UserPlus, RefreshCw, DollarSign, Calendar, Video } from "lucide-react";
+import { UserPlus, RefreshCw, DollarSign, Calendar, Video, MapPin } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
@@ -14,6 +14,7 @@ export default function CreateClientModal({
     nombre: "",
     empresa: "",
     email: "",
+    locacion_default: "",
     permite_descarga: false,
     monto_retainer: "",
     esquema_pago: "mensual",
@@ -55,44 +56,64 @@ export default function CreateClientModal({
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5">
-              Nombre del Cliente / Marca *
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="Ej. Clínica Aurora"
-              value={clientForm.nombre}
-              onChange={(e) => setClientForm({ ...clientForm, nombre: e.target.value })}
-              className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-sm text-gray-900 font-medium transition-all"
-            />
+          {/* Bloque 1: Identidad del Cliente */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5">
+                Nombre del Cliente / Marca *
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="Ej. Clínica Aurora"
+                value={clientForm.nombre || ""}
+                onChange={(e) => setClientForm({ ...clientForm, nombre: e.target.value })}
+                className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-sm text-gray-900 font-medium transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5">
+                Empresa / Razón Social
+              </label>
+              <input
+                type="text"
+                placeholder="Ej. Aurora Health Group S.A."
+                value={clientForm.empresa || ""}
+                onChange={(e) => setClientForm({ ...clientForm, empresa: e.target.value })}
+                className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-sm text-gray-900 font-medium transition-all"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5">
-              Empresa / Razón Social
-            </label>
-            <input
-              type="text"
-              placeholder="Ej. Aurora Health Group S.A."
-              value={clientForm.empresa}
-              onChange={(e) => setClientForm({ ...clientForm, empresa: e.target.value })}
-              className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-sm text-gray-900 font-medium transition-all"
-            />
-          </div>
+          {/* Bloque 2: Contacto y Locación */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5">
+                Email de Contacto
+              </label>
+              <input
+                type="email"
+                placeholder="Ej. contacto@clinicaaurora.com"
+                value={clientForm.email || ""}
+                onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })}
+                className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-sm text-gray-900 font-medium transition-all"
+              />
+            </div>
 
-          <div>
-            <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5">
-              Email de Contacto
-            </label>
-            <input
-              type="email"
-              placeholder="Ej. contacto@clinicaaurora.com"
-              value={clientForm.email}
-              onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })}
-              className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-sm text-gray-900 font-medium transition-all"
-            />
+            <div>
+              <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5 flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                Locación / Dirección base
+              </label>
+              <input
+                type="text"
+                placeholder="Ej. Av. Bonampak SM 4, Cancún"
+                value={clientForm.locacion_default || ""}
+                onChange={(e) => setClientForm({ ...clientForm, locacion_default: e.target.value })}
+                className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-100 outline-none text-sm text-gray-900 font-medium transition-all"
+              />
+            </div>
           </div>
 
           {/* Fila Operativa: Monto Retainer, Esquema de Pago y Días de Pago */}

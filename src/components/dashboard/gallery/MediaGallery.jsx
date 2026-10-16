@@ -5,8 +5,7 @@ import {
   RefreshCw,
   Sparkles,
   Film,
-  ArrowLeft,
-  AlertTriangle
+  ArrowLeft
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -23,6 +22,7 @@ import GalleryItemCard from "./GalleryItemCard";
 import MediaGalleryUploader from "./MediaGalleryUploader";
 import MediaGalleryFilterBar from "./MediaGalleryFilterBar";
 import FloatingBatchToolbar from "@/components/dashboard/calendar/FloatingBatchToolbar";
+import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
 import { getLocalDateString } from "@/utils/formatters";
 
 /**
@@ -450,101 +450,26 @@ export default function MediaGallery({
       )}
 
       {/* SINGLE DELETE CONFIRMATION MODAL */}
-      {deletingMedia && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[110] flex items-center justify-center p-4 animate-in fade-in duration-200 font-inter">
-          <div className="bg-white rounded-[2rem] p-6 md:p-8 max-w-md w-full shadow-2xl border border-gray-100 relative text-center">
-            <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-4 text-red-500">
-              <Trash2 className="w-7 h-7" />
-            </div>
-
-            <h3 className="text-xl font-sora font-extrabold text-gray-900 mb-2">
-              ¿Eliminar archivo?
-            </h3>
-
-            <p className="text-xs text-gray-500 mb-6 leading-relaxed">
-              ¿Estás seguro de que deseas eliminar{" "}
-              <strong className="text-gray-800">{deletingMedia.nombre_archivo}</strong> de la galería?
-              Esta acción no se puede deshacer.
-            </p>
-
-            <div className="flex items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => setDeletingMedia(null)}
-                disabled={isDeleting}
-                className="h-11 px-6 rounded-full border border-gray-300 hover:bg-gray-100 text-gray-700 font-sora font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
-              >
-                Cancelar
-              </button>
-
-              <button
-                type="button"
-                onClick={handleConfirmDelete}
-                disabled={isDeleting}
-                className="h-11 px-6 rounded-full bg-red-500 hover:bg-red-600 text-white font-sora font-bold text-xs uppercase tracking-wider shadow-lg shadow-red-200 transition-all cursor-pointer inline-flex items-center gap-2"
-              >
-                {isDeleting ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" /> Eliminando...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="w-4 h-4" /> Eliminar
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDeleteModal
+        isOpen={Boolean(deletingMedia)}
+        title="¿Eliminar archivo?"
+        message={`¿Estás seguro de que deseas eliminar "${deletingMedia?.nombre_archivo || 'este archivo'}" de la galería? Esta acción no se puede deshacer.`}
+        confirmText="Eliminar"
+        isProcessing={isDeleting}
+        onClose={() => setDeletingMedia(null)}
+        onConfirm={handleConfirmDelete}
+      />
 
       {/* BATCH DELETE CONFIRMATION MODAL */}
-      {showBatchDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-[110] flex items-center justify-center p-4 animate-in fade-in duration-200 font-inter">
-          <div className="bg-white rounded-[2.5rem] p-6 md:p-8 max-w-md w-full shadow-2xl border border-gray-100 relative text-center space-y-4">
-            <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mx-auto text-red-500">
-              <AlertTriangle className="w-7 h-7" />
-            </div>
-
-            <div className="space-y-1.5">
-              <h3 className="font-sora font-extrabold text-gray-900 text-lg">
-                ¿Eliminar {selectedFileIds.length} archivo(s)?
-              </h3>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                Esta acción eliminará de forma permanente los {selectedFileIds.length} archivos seleccionados de la galería y de Cloudflare R2.
-              </p>
-            </div>
-
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowBatchDeleteConfirm(false)}
-                disabled={isDeleting}
-                className="h-11 px-5 rounded-full border border-gray-300 hover:bg-gray-100 text-gray-700 font-sora font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
-              >
-                Cancelar
-              </button>
-
-              <button
-                type="button"
-                onClick={handleConfirmBatchDelete}
-                disabled={isDeleting}
-                className="h-11 px-5 rounded-full bg-red-500 hover:bg-red-600 text-white font-sora font-bold text-xs uppercase tracking-wider shadow-lg shadow-red-200 transition-all cursor-pointer inline-flex items-center gap-2"
-              >
-                {isDeleting ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 animate-spin" /> Eliminando...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="w-4 h-4" /> Confirmar Borrado
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDeleteModal
+        isOpen={showBatchDeleteConfirm}
+        title={`¿Eliminar ${selectedFileIds.length} archivo(s)?`}
+        message={`Esta acción eliminará de forma permanente los ${selectedFileIds.length} archivos seleccionados de la galería y de Cloudflare R2.`}
+        confirmText="Confirmar Borrado"
+        isProcessing={isDeleting}
+        onClose={() => setShowBatchDeleteConfirm(false)}
+        onConfirm={handleConfirmBatchDelete}
+      />
     </div>
   );
 }

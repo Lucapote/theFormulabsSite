@@ -1,4 +1,6 @@
+import { useState, useEffect } from "react";
 import { LockKeyhole, MessageCircle, RefreshCw, AlertCircle, Building2, Calendar } from "lucide-react";
+import { getDatosBancarios } from "@/services/configService";
 
 /**
  * BookingLockedCard
@@ -17,7 +19,17 @@ export default function BookingLockedCard({
   numeroSesion = 1,
   motivoBloqueo = "pago_pendiente"
 }) {
+  const [waPhone, setWaPhone] = useState("529981234567");
   const isSegundoPago = motivoBloqueo === "esperando_segundo_pago";
+
+  useEffect(() => {
+    getDatosBancarios().then((res) => {
+      if (res?.success && res?.data?.telefono) {
+        const clean = res.data.telefono.replace(/\D/g, "");
+        if (clean) setWaPhone(clean);
+      }
+    });
+  }, []);
 
   const formatPeriod = (mes, anio) => {
     if (!mes) return "Ciclo Actual";
@@ -38,7 +50,7 @@ export default function BookingLockedCard({
       ? `Hola The Formulab, ya realicé el segundo abono de mi ciclo de ${periodoLabel} (${clientName}${displayCompany ? ` - ${displayCompany}` : ""}). Les comparto mi comprobante para desbloquear la sesión #${numeroSesion}.`
       : `Hola The Formulab, ya realicé el pago de mi ciclo de ${periodoLabel} (${clientName}${displayCompany ? ` - ${displayCompany}` : ""}). Les comparto mi comprobante para desbloquear la reserva de rodaje.`
   );
-  const waUrl = `https://wa.me/529981234567?text=${waMessage}`;
+  const waUrl = `https://wa.me/${waPhone}?text=${waMessage}`;
 
   return (
     <div className="max-w-xl w-full mx-auto bg-white border border-gray-100 shadow-xl rounded-2xl p-6 md:p-8 text-center space-y-6 font-inter">

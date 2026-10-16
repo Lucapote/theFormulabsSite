@@ -44,8 +44,13 @@ export const getProposalConversionDetails = (proposal) => {
 
   // Sesiones por mes
   let producciones = 1;
-  if (Number(contenido.producciones_por_mes) > 0) {
-    producciones = Number(contenido.producciones_por_mes);
+  const scopeProducciones = Number(contenido.scope?.producciones_por_mes);
+  const extraSessions = Number(contenido.pricing?.extraSessionsCount) || 0;
+
+  if (scopeProducciones > 0) {
+    producciones = scopeProducciones + extraSessions;
+  } else if (Number(contenido.producciones_por_mes) > 0) {
+    producciones = Number(contenido.producciones_por_mes) + extraSessions;
   } else {
     const planReels = Number(currentPlan.reels) || 0;
     const planShoots = Number(currentPlan.shoots || currentPlan.rodajes || currentPlan.sesiones) || 0;
@@ -56,7 +61,9 @@ export const getProposalConversionDetails = (proposal) => {
       );
 
     if (planShoots >= 2 || planReels > 10 || hasTwoCoverages) {
-      producciones = 2;
+      producciones = 2 + extraSessions;
+    } else {
+      producciones = 1 + extraSessions;
     }
   }
 

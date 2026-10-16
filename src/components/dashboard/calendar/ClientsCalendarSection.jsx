@@ -84,6 +84,7 @@ export default function ClientsCalendarSection() {
     nombre: "",
     empresa: "",
     email: "",
+    locacion_default: "",
     permite_descarga: false,
     monto_retainer: "",
     esquema_pago: "mensual",
@@ -128,9 +129,8 @@ export default function ClientsCalendarSection() {
     slug: "",
     tiposSeleccionados: ["Reels", "Carruseles"],
     plataformasSeleccionadas: ["Instagram", "Facebook"],
-    cantReels: 4,
-    cantCarruseles: 4,
     permite_descarga: null,
+    isNameModified: false,
     isSlugModified: false
   };
 
@@ -234,18 +234,17 @@ export default function ClientsCalendarSection() {
     if (res.success) {
       const nuevoCliente = res.data;
 
-      // Si se especificó un retainer mensual, inicializar el ciclo del mes actual
-      if (Number(clientForm.monto_retainer) > 0) {
-        const now = new Date();
-        await ensureCicloActual(
-          nuevoCliente.id,
-          now.getMonth() + 1,
-          now.getFullYear(),
-          Number(clientForm.monto_retainer),
-          Number(clientForm.producciones_por_mes) || 1,
-          clientForm.tipo_sesion_default || "organica"
-        );
-      }
+      // Inicializar automáticamente el ciclo operativo y sesiones del mes corriente
+      const now = new Date();
+      await ensureCicloActual(
+        nuevoCliente.id,
+        now.getMonth() + 1,
+        now.getFullYear(),
+        Number(clientForm.monto_retainer) || 0,
+        Number(clientForm.producciones_por_mes) || 1,
+        clientForm.tipo_sesion_default || "organica",
+        clientForm.locacion_default?.trim() || null
+      );
 
       toast.success(`Cliente "${clientForm.nombre}" creado exitosamente.`);
       handleCloseClientModal();
@@ -334,31 +333,21 @@ export default function ClientsCalendarSection() {
     });
 
     if (res.success && res.data?.id) {
-      const draftRes = await createDraftPlaceholderPosts({
-        calendarioId: res.data.id,
-        cantReels: Number(calendarForm.cantReels) || 0,
-        cantCarruseles: Number(calendarForm.cantCarruseles) || 0,
-        mes: calendarForm.mes,
-        anio: calendarForm.anio
-      });
+      if (Number(calendarForm.cantReels) > 0 || Number(calendarForm.cantCarruseles) > 0) {
+        await createDraftPlaceholderPosts({
+          calendarioId: res.data.id,
+          cantReels: Number(calendarForm.cantReels) || 0,
+          cantCarruseles: Number(calendarForm.cantCarruseles) || 0,
+          mes: calendarForm.mes,
+          anio: calendarForm.anio
+        });
+      }
 
-      const count = draftRes.count || 0;
       toast.success(
-        `Calendario "${calendarForm.nombre}" creado con éxito con ${count} cajas vacías iniciales.`
+        `Calendario "${calendarForm.nombre}" creado con éxito.`
       );
 
-      setCalendarForm({
-        nombre: "",
-        mes: currentMonth,
-        anio: currentYear,
-        slug: "",
-        tiposSeleccionados: ["Reels", "Carruseles"],
-        plataformasSeleccionadas: ["Instagram", "Facebook"],
-        cantReels: 4,
-        cantCarruseles: 4,
-        permite_descarga: null,
-        isSlugModified: false
-      });
+      setCalendarForm({ ...DEFAULT_CALENDAR_FORM });
       setShowCalendarModal(false);
       loadCalendarios(selectedCliente.id);
     } else {

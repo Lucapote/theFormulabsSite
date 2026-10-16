@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { DollarSign, TrendingUp, Calendar, Link as LinkIcon, CheckCircle2 } from "lucide-react";
+import { DollarSign, TrendingUp, Calendar, Link as LinkIcon, CheckCircle2, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +9,7 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { updateCicloFinanzas } from "@/services/operationsService";
+import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
 
 export default function FinanceCostModal({
   isOpen,
@@ -18,6 +19,8 @@ export default function FinanceCostModal({
   onUpdated
 }) {
   const [loading, setLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({
     monto_cobrado: 0,
     costo_operativo: 0,
@@ -65,6 +68,27 @@ export default function FinanceCostModal({
       onClose();
     } else {
       toast.error(res.error || "Error al actualizar las finanzas.");
+    }
+  };
+
+  const handleConfirmResetCosts = async () => {
+    setIsDeleting(true);
+    const res = await updateCicloFinanzas(ciclo.id, {
+      costo_operativo: 0,
+      comprobante_url: null
+    });
+    setIsDeleting(false);
+    if (res.success) {
+      toast.success("Costos operativos y comprobante restablecidos a $0.");
+      setFormData((prev) => ({
+        ...prev,
+        costo_operativo: 0,
+        comprobante_url: ""
+      }));
+      if (onUpdated) onUpdated(res.data);
+      setShowDeleteConfirm(false);
+    } else {
+      toast.error(res.error || "No se pudieron restablecer los costos.");
     }
   };
 
@@ -172,25 +196,53 @@ export default function FinanceCostModal({
             />
           </div>
 
-          <DialogFooter className="pt-2 sm:space-x-2">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              className="h-10 px-5 rounded-full border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-sora font-bold uppercase tracking-wider transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="h-10 px-6 rounded-full bg-[#188ff0] hover:bg-blue-600 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-50"
-            >
-              {loading ? "Guardando..." : "Guardar Finanzas"}
-            </button>
+          <DialogFooter className="pt-2 flex flex-col-reverse sm:flex-row items-center justify-between gap-2.5">
+            <div>
+              {(costo > 0 || Boolean(formData.comprobante_url)) && (
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={loading || isDeleting}
+                  className="h-10 px-4 rounded-full border border-red-200 hover:bg-red-50 text-red-600 font-sora font-bold text-xs uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  title="Eliminar costos registrados y comprobante"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Restablecer Costos</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={loading || isDeleting}
+                className="h-10 px-5 rounded-full border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-sora font-bold uppercase tracking-wider transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={loading || isDeleting}
+                className="h-10 px-6 rounded-full bg-[#188ff0] hover:bg-blue-600 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+              >
+                {loading ? "Guardando..." : "Guardar Finanzas"}
+              </button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
+
+      {/* Modal de Confirmación Clínico para Eliminar/Restablecer Costos */}
+      <ConfirmDeleteModal
+        isOpen={showDeleteConfirm}
+        title="¿Restablecer costos operativos?"
+        message={`Esta acción eliminará el costo operativo y el enlace del comprobante del ciclo de "${clienteNombre}". El costo se fijará en $0.`}
+        confirmText="Restablecer a $0"
+        isProcessing={isDeleting}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleConfirmResetCosts}
+      />
     </Dialog>
   );
 }

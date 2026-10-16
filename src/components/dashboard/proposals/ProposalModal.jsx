@@ -20,8 +20,13 @@ export default function ProposalModal({
 
   // General fields
   const [slug, setSlug] = useState("");
+  const [isSlugModified, setIsSlugModified] = useState(false);
   const [clientName, setClientName] = useState("");
   const [shortName, setShortName] = useState("");
+  const [email, setEmail] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [location, setLocation] = useState("");
   const [proposalTitle, setProposalTitle] = useState("Propuesta de Contenido");
   const [greeting, setGreeting] = useState(defaultTemplate.client.greeting);
   const [vision, setVision] = useState(defaultTemplate.client.vision);
@@ -36,55 +41,56 @@ export default function ProposalModal({
   const [pricePauCreadora, setPricePauCreadora] = useState(3000);
   const [priceManejoRedes, setPriceManejoRedes] = useState(3000);
   const [priceMetaAds, setPriceMetaAds] = useState(2500);
+  // Scope fields
+  const [produccionesPorMes, setProduccionesPorMes] = useState(2);
+  const [precioSesionExtra, setPrecioSesionExtra] = useState(3500);
+  const [tipoSesionDefault, setTipoSesionDefault] = useState("reels_batch");
+  const [extraSessionsCount, setExtraSessionsCount] = useState(0);
 
   useEffect(() => {
     if (isOpen) {
       setActiveTab(1);
-      if (initialData) {
-        const content = initialData.contenido || defaultTemplate;
-        const client = content.client || {};
-        const plans = content.pricingPlans || defaultTemplate.pricingPlans;
-        const addons = content.addons || defaultTemplate.addons;
-
-        setSlug(initialData.slug || "");
-        setClientName(initialData.cliente || client.name || "");
-        setShortName(client.shortName || initialData.cliente || "");
-        setProposalTitle(client.proposalTitle || "Propuesta de Contenido");
-        setGreeting(client.greeting || defaultTemplate.client.greeting);
-        setVision(client.vision || defaultTemplate.client.vision);
-
-        const p1 = plans.find((p) => p.id === "esencial")?.price || 10000;
-        const p2 = plans.find((p) => p.id === "crecimiento")?.price || 14500;
-        const p3 = plans.find((p) => p.id === "escala")?.price || 18500;
-        setPriceEsencial(p1);
-        setPriceCrecimiento(p2);
-        setPriceEscala(p3);
-
-        const pauAddon = addons.find((a) => a.id === "addon_pau_camara");
-        const pPauM = pauAddon?.options?.find((o) => o.id === "pau_marca")?.priceValue || 2000;
-        const pPauC = pauAddon?.options?.find((o) => o.id === "pau_creadora")?.priceValue || 3000;
-        const pManejo = addons.find((a) => a.id === "addon_manejo")?.priceValue || 3000;
-        const pMeta = addons.find((a) => a.id === "addon_meta_ads")?.priceValue || 2500;
-
-        setPricePauMarca(pPauM);
-        setPricePauCreadora(pPauC);
-        setPriceManejoRedes(pManejo);
-        setPriceMetaAds(pMeta);
-      } else {
-        setSlug("");
-        setClientName("");
-        setShortName("");
-        setProposalTitle("Propuesta de Contenido");
-        setGreeting(defaultTemplate.client.greeting);
-        setVision(defaultTemplate.client.vision);
-        setPriceEsencial(10000);
-        setPriceCrecimiento(14500);
-        setPriceEscala(18500);
-        setPricePauMarca(2000);
-        setPricePauCreadora(3000);
-        setPriceManejoRedes(3000);
-        setPriceMetaAds(2500);
+      let content = initialData?.contenido || defaultTemplate;
+      if (typeof content === "string") {
+        try {
+          content = JSON.parse(content);
+        } catch {
+          content = defaultTemplate;
+        }
       }
+      const client = content?.client || {};
+      const plans = Array.isArray(content?.pricingPlans) ? content.pricingPlans : (defaultTemplate.pricingPlans || []);
+      const addons = Array.isArray(content?.addons) ? content.addons : (defaultTemplate.addons || []);
+      const scope = content?.scope || {};
+
+      setSlug(initialData?.slug || "");
+      setIsSlugModified(Boolean(initialData?.slug));
+      const rawName = initialData?.cliente || client.name || "";
+      setClientName(rawName === "Nombre del Cliente" ? "" : rawName);
+      const rawShortName = client.shortName || client.company || "";
+      setShortName(rawShortName === "Cliente" ? "" : rawShortName);
+      setEmail(client.email || "");
+      setWhatsapp(client.whatsapp || client.phone || "");
+      setInstagram(client.instagram || "");
+      setLocation(client.location || client.address || "");
+      setProposalTitle(client.proposalTitle || "Propuesta de Contenido");
+      setGreeting(client.greeting || defaultTemplate.client.greeting);
+      setVision(client.vision || defaultTemplate.client.vision);
+
+      setPriceEsencial(plans.find((p) => p.id === "esencial")?.price || 10000);
+      setPriceCrecimiento(plans.find((p) => p.id === "crecimiento")?.price || 14500);
+      setPriceEscala(plans.find((p) => p.id === "escala")?.price || 18500);
+
+      const pauAddon = addons.find((a) => a.id === "addon_pau_camara");
+      setPricePauMarca(pauAddon?.options?.find((o) => o.id === "pau_marca")?.priceValue || 2000);
+      setPricePauCreadora(pauAddon?.options?.find((o) => o.id === "pau_creadora")?.priceValue || 3000);
+      setPriceManejoRedes(addons.find((a) => a.id === "addon_manejo")?.priceValue || 3000);
+      setPriceMetaAds(addons.find((a) => a.id === "addon_meta_ads")?.priceValue || 2500);
+
+      setProduccionesPorMes(Number(scope.producciones_por_mes || content?.producciones_por_mes) || 2);
+      setPrecioSesionExtra(Number(scope.precio_sesion_extra) || 3500);
+      setTipoSesionDefault(scope.tipo_sesion_default || content?.tipo_sesion_default || "reels_batch");
+      setExtraSessionsCount(Number(content?.pricing?.extraSessionsCount) || 0);
     }
   }, [isOpen, initialData]);
 
@@ -96,6 +102,10 @@ export default function ProposalModal({
       slug,
       clientName,
       shortName,
+      email,
+      whatsapp,
+      instagram,
+      location,
       proposalTitle,
       greeting,
       vision,
@@ -106,6 +116,10 @@ export default function ProposalModal({
       pricePauCreadora: Number(pricePauCreadora) || 0,
       priceManejoRedes: Number(priceManejoRedes) || 0,
       priceMetaAds: Number(priceMetaAds) || 0,
+      produccionesPorMes: Number(produccionesPorMes) || 2,
+      precioSesionExtra: Number(precioSesionExtra) || 3500,
+      extraSessionsCount: Number(extraSessionsCount) || 0,
+      tipoSesionDefault: tipoSesionDefault || "reels_batch",
       existingContent: initialData?.contenido || defaultTemplate,
       id: initialData?.id
     });
@@ -113,7 +127,7 @@ export default function ProposalModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-xs p-4 overflow-y-auto font-inter">
-      <div className="bg-white rounded-[2rem] border border-gray-100 w-full max-w-xl max-h-[90vh] flex flex-col shadow-2xl my-auto overflow-hidden">
+      <div className="bg-white rounded-[2rem] border border-gray-100 w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl my-auto overflow-hidden">
         {/* Header */}
         <div className="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-900 text-white">
           <div>
@@ -165,10 +179,20 @@ export default function ProposalModal({
             <ProposalInfoTab
               slug={slug}
               setSlug={setSlug}
+              isSlugModified={isSlugModified}
+              setIsSlugModified={setIsSlugModified}
               clientName={clientName}
               setClientName={setClientName}
               shortName={shortName}
               setShortName={setShortName}
+              email={email}
+              setEmail={setEmail}
+              whatsapp={whatsapp}
+              setWhatsapp={setWhatsapp}
+              instagram={instagram}
+              setInstagram={setInstagram}
+              location={location}
+              setLocation={setLocation}
               proposalTitle={proposalTitle}
               setProposalTitle={setProposalTitle}
               greeting={greeting}
@@ -178,20 +202,17 @@ export default function ProposalModal({
             />
           ) : (
             <ProposalPricingTab
-              priceEsencial={priceEsencial}
-              setPriceEsencial={setPriceEsencial}
-              priceCrecimiento={priceCrecimiento}
-              setPriceCrecimiento={setPriceCrecimiento}
-              priceEscala={priceEscala}
-              setPriceEscala={setPriceEscala}
-              pricePauMarca={pricePauMarca}
-              setPricePauMarca={setPricePauMarca}
-              pricePauCreadora={pricePauCreadora}
-              setPricePauCreadora={setPricePauCreadora}
-              priceManejoRedes={priceManejoRedes}
-              setPriceManejoRedes={setPriceManejoRedes}
-              priceMetaAds={priceMetaAds}
-              setPriceMetaAds={setPriceMetaAds}
+              priceEsencial={priceEsencial} setPriceEsencial={setPriceEsencial}
+              priceCrecimiento={priceCrecimiento} setPriceCrecimiento={setPriceCrecimiento}
+              priceEscala={priceEscala} setPriceEscala={setPriceEscala}
+              pricePauMarca={pricePauMarca} setPricePauMarca={setPricePauMarca}
+              pricePauCreadora={pricePauCreadora} setPricePauCreadora={setPricePauCreadora}
+              priceManejoRedes={priceManejoRedes} setPriceManejoRedes={setPriceManejoRedes}
+              priceMetaAds={priceMetaAds} setPriceMetaAds={setPriceMetaAds}
+              produccionesPorMes={produccionesPorMes} setProduccionesPorMes={setProduccionesPorMes}
+              precioSesionExtra={precioSesionExtra} setPrecioSesionExtra={setPrecioSesionExtra}
+              tipoSesionDefault={tipoSesionDefault} setTipoSesionDefault={setTipoSesionDefault}
+              extraSessionsCount={extraSessionsCount} setExtraSessionsCount={setExtraSessionsCount}
             />
           )}
 

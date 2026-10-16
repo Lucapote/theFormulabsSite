@@ -4,6 +4,7 @@ import { GitBranch, RefreshCw, FileText, ArrowRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { duplicateProposalVersion } from "@/services/proposalCrudService";
+import SlugPreviewField from "@/components/common/SlugPreviewField";
 
 export default function CreateProposalVersionModal({ isOpen, onClose, propuesta, onSuccess }) {
   const [loading, setLoading] = useState(false);
@@ -49,7 +50,6 @@ export default function CreateProposalVersionModal({ isOpen, onClose, propuesta,
     setLoading(false);
 
     if (res.success) {
-      toast.success(`Versión v${proximaVersion} creada correctamente`);
       if (onSuccess) onSuccess(res.data);
       onClose();
     } else {
@@ -133,9 +133,11 @@ export default function CreateProposalVersionModal({ isOpen, onClose, propuesta,
                 className="w-full h-10 px-3 text-xs font-mono text-gray-900 bg-transparent focus:outline-none"
               />
             </div>
-            <p className="text-[10px] text-gray-400 mt-1">
-              Solo letras minúsculas, números y guiones.
-            </p>
+            <SlugPreviewField
+              prefix="theformulab.io/"
+              slug={nuevoSlug}
+              className="mt-2"
+            />
           </div>
 
           {/* Footer y Acciones */}

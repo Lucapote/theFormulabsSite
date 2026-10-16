@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Copy, Check, MapPin, Calendar, Clock, FileText, Activity, ExternalLink, RefreshCw } from "lucide-react";
+import { MapPin, Calendar, Clock, FileText, Activity, ExternalLink, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { updateProduccion } from "@/services/operationsService";
 import { getSessionDisplayName, getBookingUrl } from "@/utils/formatters";
+import SlugPreviewField from "@/components/common/SlugPreviewField";
 
 const STATUS_CONFIG = {
   pendiente_agendamiento: { label: "Pendiente de agendamiento", color: "bg-amber-500" },
@@ -17,7 +18,6 @@ export default function ProductionDetailModal({
   isOpen, onClose, produccion, clienteNombre = "", ciclo = null, onUpdated
 }) {
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [formData, setFormData] = useState({
     nombre: "", estado: "pendiente_agendamiento", fecha_produccion: "",
     duracion_horas: 4, locacion: "", notas_brief: ""
@@ -38,28 +38,26 @@ export default function ProductionDetailModal({
           formattedDate = new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
         }
       }
+      const initialLocacion =
+        produccion.locacion ||
+        ciclo?.cliente?.locacion_default ||
+        produccion?.cliente?.locacion_default ||
+        "";
+
       setFormData({
         nombre: produccion.nombre || "",
         estado: produccion.estado || "pendiente_agendamiento",
         fecha_produccion: formattedDate,
         duracion_horas: produccion.duracion_horas || (produccion.tipo === "profesional" ? 6 : 4),
-        locacion: produccion.locacion || "",
+        locacion: initialLocacion,
         notas_brief: produccion.notas_brief || ""
       });
     }
-  }, [produccion]);
+  }, [produccion, ciclo]);
 
   if (!produccion) return null;
 
   const reservationUrl = getBookingUrl(produccion.token_reserva);
-
-  const handleCopyLink = () => {
-    if (!reservationUrl) return;
-    navigator.clipboard.writeText(reservationUrl);
-    setCopied(true);
-    toast.success("Enlace de reserva copiado al portapapeles.");
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   const handleOpenMaps = () => {
     const loc = formData.locacion.trim();
@@ -73,11 +71,16 @@ export default function ProductionDetailModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    const resolvedLocacion =
+      formData.locacion.trim() ||
+      ciclo?.cliente?.locacion_default ||
+      produccion?.cliente?.locacion_default ||
+      "";
     const payload = {
       nombre: formData.nombre.trim() || defaultSuggestedName,
       estado: formData.estado,
       duracion_horas: Number(formData.duracion_horas) || 4,
-      locacion: formData.locacion.trim(),
+      locacion: resolvedLocacion,
       notas_brief: formData.notas_brief.trim(),
       fecha_produccion: formData.fecha_produccion ? new Date(formData.fecha_produccion).toISOString() : null
     };
@@ -96,7 +99,7 @@ export default function ProductionDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-lg w-full rounded-2xl bg-white border border-gray-100 shadow-2xl p-6 md:p-8 font-inter max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-lg w-full rounded-2xl bg-white border border-gray-100 shadow-2xl p-5 sm:p-7 font-inter max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader className="pb-3 border-b border-gray-100 text-left space-y-1.5">
           <span className="font-mono text-xs uppercase px-3 py-1 rounded-full bg-blue-50 text-[#188ff0] border border-blue-100 font-bold self-start inline-flex items-center gap-1.5">
             Sesión #{produccion.numero_sesion || 1} • {produccion.tipo?.toUpperCase() || "RODAJE"}
@@ -110,9 +113,9 @@ export default function ProductionDetailModal({
           </p>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+        <form onSubmit={handleSubmit} className="space-y-4 pt-2 w-full min-w-0 max-w-full overflow-hidden">
           {/* BLOQUE A — Cronograma y Estado */}
-          <div className="bg-gray-50/70 p-4 rounded-xl border border-gray-100 space-y-3">
+          <div className="bg-gray-50/70 p-4 rounded-xl border border-gray-100 space-y-3 w-full min-w-0">
             <span className="text-[11px] font-sora font-bold text-gray-500 uppercase tracking-wider block">A. Cronograma y Estado</span>
 
             <div>
@@ -137,19 +140,19 @@ export default function ProductionDetailModal({
               </select>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              <div className="sm:col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full min-w-0">
+              <div className="sm:col-span-2 min-w-0">
                 <label className="text-[11px] font-sora font-bold text-gray-700 uppercase mb-1 flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-brand-blue" /> Fecha y Hora
                 </label>
-                <input type="datetime-local" value={formData.fecha_produccion} onChange={(e) => setFormData({ ...formData, fecha_produccion: e.target.value })} className="w-full h-10 px-3 text-xs font-mono bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#188ff0]" />
+                <input type="datetime-local" value={formData.fecha_produccion} onChange={(e) => setFormData({ ...formData, fecha_produccion: e.target.value })} className="w-full min-w-0 h-10 px-2.5 sm:px-3 text-xs font-mono bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#188ff0]" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <label className="text-[11px] font-sora font-bold text-gray-700 uppercase mb-1 flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-gray-500" /> Duración
                 </label>
-                <div className="relative">
-                  <input type="number" min="1" max="24" value={formData.duracion_horas} onChange={(e) => setFormData({ ...formData, duracion_horas: e.target.value })} className="w-full h-10 pl-3 pr-8 text-xs font-sora font-bold bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#188ff0]" />
+                <div className="relative w-full min-w-0">
+                  <input type="number" min="1" max="24" value={formData.duracion_horas} onChange={(e) => setFormData({ ...formData, duracion_horas: e.target.value })} className="w-full min-w-0 h-10 pl-3 pr-8 text-xs font-sora font-bold bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#188ff0]" />
                   <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs font-mono text-gray-400 pointer-events-none">hrs</span>
                 </div>
               </div>
@@ -157,14 +160,20 @@ export default function ProductionDetailModal({
           </div>
 
           {/* BLOQUE B — Logística de Grabación */}
-          <div className="bg-gray-50/70 p-4 rounded-xl border border-gray-100 space-y-3">
+          <div className="bg-gray-50/70 p-4 rounded-xl border border-gray-100 space-y-3 w-full min-w-0">
             <span className="text-[11px] font-sora font-bold text-gray-500 uppercase tracking-wider block">B. Logística de Grabación</span>
             <div>
               <label className="text-[11px] font-sora font-bold text-gray-700 uppercase mb-1 flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-emerald-600" /> Locación / Dirección
               </label>
               <div className="flex items-center gap-2">
-                <input type="text" placeholder="Ej. Estudio The Formulab / Oficinas del cliente" value={formData.locacion} onChange={(e) => setFormData({ ...formData, locacion: e.target.value })} className="w-full h-10 px-3 text-xs font-inter bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#188ff0]" />
+                <input
+                  type="text"
+                  placeholder={ciclo?.cliente?.locacion_default || produccion?.cliente?.locacion_default || "En las instalaciones del cliente / Dirección de rodaje"}
+                  value={formData.locacion}
+                  onChange={(e) => setFormData({ ...formData, locacion: e.target.value })}
+                  className="w-full h-10 px-3 text-xs font-inter bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#188ff0]"
+                />
                 {formData.locacion.trim() && (
                   <button type="button" onClick={handleOpenMaps} title="Abrir en Google Maps" className="h-10 px-3 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs flex items-center gap-1 shrink-0 transition-colors cursor-pointer">
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -181,17 +190,16 @@ export default function ProductionDetailModal({
             </div>
           </div>
 
-          {/* BLOQUE C — Caja de Reserva Pública */}
+          {/* BLOQUE C — Previsualización Estandarizada de Enlace de Reserva */}
           {reservationUrl && (
-            <div className="bg-gray-50/70 border border-dashed border-gray-200 rounded-xl p-3.5 space-y-2">
-              <span className="text-xs text-gray-500 font-medium block">Enlace público para que el cliente elija o confirme su fecha:</span>
-              <div className="flex items-center gap-2">
-                <input type="text" readOnly value={reservationUrl} className="w-full h-9 text-xs font-mono bg-white border border-gray-200 rounded-xl px-3 text-gray-700 select-all focus:outline-none focus:ring-2 focus:ring-[#188ff0]" />
-                <button type="button" onClick={handleCopyLink} className="h-9 px-3.5 rounded-full bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-sora font-semibold flex items-center gap-1.5 transition-all shadow-xs shrink-0 cursor-pointer active:scale-[0.98]">
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
-                  <span>{copied ? "Copiado" : "Copiar Link"}</span>
-                </button>
-              </div>
+            <div className="bg-gray-50/70 border border-dashed border-gray-200 rounded-xl p-3 w-full min-w-0 max-w-full overflow-hidden">
+              <SlugPreviewField
+                label="Enlace público para que el cliente elija o confirme su fecha:"
+                prefix="theformulab.io/reservar/produccion?token="
+                slug={produccion.token_reserva}
+                copyable
+                fullUrl={reservationUrl}
+              />
             </div>
           )}
 

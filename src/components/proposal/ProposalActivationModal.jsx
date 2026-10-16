@@ -1,6 +1,7 @@
-import { useState } from "react";
-import { ShieldCheck, Building2, Copy, Check, LockKeyhole, MessageCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Sparkles, MessageCircle, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
+import { getDatosBancarios } from "@/services/configService";
 import {
   Dialog,
   DialogContent,
@@ -8,19 +9,11 @@ import {
   DialogTitle,
   DialogDescription
 } from "@/components/ui/dialog";
-import { formatPrice } from "@/utils/formatters";
 
 /**
  * ProposalActivationModal
- * Clinical protocol modal displayed when client clicks "Aceptar Propuesta" / "Activar Cuenta".
- * Details banking transfer information (SPEI) and outlines the production gatekeeper rule.
- *
- * @param {object} props
- * @param {boolean} props.isOpen
- * @param {() => void} props.onClose
- * @param {object} [props.propuesta] - Proposal payload or metadata
- * @param {object} [props.planSeleccionado] - Currently active pricing plan
- * @param {number} [props.montoTotal=0] - Total calculated investment amount
+ * Rediseño quirúrgico y enfocado a conversión para la activación de propuesta.
+ * 2 bloques claros: Monto Heroico y Datos Bancarios dinámicos con copiado rápido.
  */
 export default function ProposalActivationModal({
   isOpen,
@@ -29,12 +22,29 @@ export default function ProposalActivationModal({
   planSeleccionado = {},
   montoTotal = 0
 }) {
-  const [copiedKey, setCopiedKey] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [bankDetails, setBankDetails] = useState({
+    banco: "BBVA México",
+    beneficiario: "The Formulabs",
+    clabe: "012345678901234567",
+    concepto_default: "Servicio de Contenido",
+    telefono: "529981234567"
+  });
 
   const contenido = propuesta?.contenido || propuesta?.content || {};
   const clientInfo = propuesta?.client || contenido?.client || {};
-  const clientName = clientInfo?.name || propuesta?.cliente || "Cliente Estimado";
+  const clientName = clientInfo?.name || propuesta?.cliente || "Cliente";
   const planName = planSeleccionado?.name || "Estratégico Personalizado";
+
+  useEffect(() => {
+    if (isOpen) {
+      getDatosBancarios().then((res) => {
+        if (res?.success && res?.data) {
+          setBankDetails(res.data);
+        }
+      });
+    }
+  }, [isOpen]);
 
   // Identificar si son 2 sesiones (o esquema de 2 pagos acordados)
   const planShoots = Number(planSeleccionado?.shoots || planSeleccionado?.rodajes || planSeleccionado?.sesiones) || 0;
@@ -51,8 +61,6 @@ export default function ProposalActivationModal({
     Number(contenido?.producciones_por_mes || propuesta?.producciones_por_mes) ||
     (planShoots >= 2 || planReels >= 8 || hasTwoCoverages ? 2 : 1);
 
-  // Si son dos sesiones (o 2 pagos acordados): se abona únicamente el 50% inicial (1 por sesión).
-  // No damos opción de 100% para evitar redundancia con el acuerdo previo de dos pagos al mes.
   const isDosSesiones =
     totalSessions >= 2 ||
     contenido?.paymentFrequency === "quincenal" ||
@@ -62,161 +70,164 @@ export default function ProposalActivationModal({
     Boolean(propuesta?.cliente_data?.dia_corte_pago_2);
 
   const montoInicial = isDosSesiones ? Math.round(montoTotal / 2) : montoTotal;
+  const montoSegundo = isDosSesiones ? montoTotal - montoInicial : 0;
+  const montoEfectivo = montoInicial || montoTotal;
+  const conceptoSugerido = clientName.replace(/[^a-zA-Z0-9]/g, "").slice(0, 18) || bankDetails.concepto_default || "TheFormulab";
 
-  const bankDetails = {
-    banco: "BBVA México",
-    beneficiario: "The Formulabs S.A.S.",
-    clabe: "012180015487920194",
-    concepto: clientName.replace(/[^a-zA-Z0-9]/g, "").slice(0, 18) || "TheFormulab"
-  };
-
-  const handleCopy = (text, key, label) => {
+  const copyClabe = () => {
     if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(text);
-      setCopiedKey(key);
-      toast.success(`${label} copiado al portapapeles`);
-      setTimeout(() => setCopiedKey(null), 2000);
+      navigator.clipboard.writeText(bankDetails.clabe);
+      setCopied(true);
+      toast.success("Cuenta CLABE copiada al portapapeles");
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
   const waPaymentLabel = isDosSesiones
-    ? `del primer abono (50% - ${formatPrice(montoInicial)} MXN)`
-    : `de activación (${formatPrice(montoTotal)} MXN)`;
+    ? `del primer abono ($${Number(montoInicial).toLocaleString("es-MX")} MXN de un total de $${Number(montoTotal).toLocaleString("es-MX")} MXN)`
+    : `de activación ($${Number(montoTotal).toLocaleString("es-MX")} MXN)`;
 
   const waMessage = encodeURIComponent(
     `Hola The Formulab, acabo de realizar la transferencia ${waPaymentLabel} para el plan ${planName} de ${clientName}. Les comparto mi comprobante para validar la cuenta y agendar mi rodaje.`
   );
-  const waUrl = `https://wa.me/529981234567?text=${waMessage}`;
+  const cleanPhone = (bankDetails.telefono || "529981234567").replace(/\D/g, "") || "529981234567";
+  const waUrl = `https://wa.me/${cleanPhone}?text=${waMessage}`;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-lg w-full bg-white rounded-2xl border border-gray-100 shadow-2xl p-6 md:p-8 font-inter">
-        {/* Header Clínico */}
-        <DialogHeader className="space-y-1.5 text-left">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-[#188ff0] text-[11px] font-mono font-bold uppercase tracking-wider border border-blue-100 w-fit">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#188ff0]" />
-            <span>Protocolo de Kickoff • Paso 1 de 2</span>
-          </div>
-
-          <DialogTitle className="font-sora text-xl md:text-2xl font-bold text-gray-900 tracking-tight pt-1">
-            Activación de Cuenta y Servicio
+      <DialogContent className="max-w-md w-full bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-2xl p-5 sm:p-6 font-inter text-center max-h-[92vh] overflow-y-auto">
+        {/* Header Sintético y Minimalista */}
+        <DialogHeader className="space-y-0.5 text-center sm:text-center">
+          <Sparkles className="w-5 h-5 text-[#188ff0] mx-auto mb-1" />
+          <DialogTitle className="font-sora text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
+            ¡Todo listo para comenzar!
           </DialogTitle>
-
-          <DialogDescription className="text-xs text-gray-500 leading-relaxed">
-            Para asegurar la asignación exclusiva de equipo y slots de filmación en agenda, iniciamos formalmente con tu primer abono.
+          <DialogDescription className="text-[11px] text-gray-500 max-w-xs mx-auto">
+            Realiza tu transferencia de activación para agendar tu rodaje.
           </DialogDescription>
         </DialogHeader>
 
-        {/* Caja de Resumen Financiero */}
-        <div className="bg-gray-50/80 border border-gray-100 rounded-xl p-4 space-y-2 text-left">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-500">Plan Seleccionado:</span>
-            <span className="font-sora font-semibold text-gray-900">{planName}</span>
+        {/* Bloque 1: Inversión Total & Distribución de Cobros (Compacto) */}
+        <div className="my-2.5 p-3 bg-gray-50/90 border border-gray-100 rounded-xl sm:rounded-2xl text-left space-y-2">
+          {/* Fila: Total General del Contrato */}
+          <div className="flex items-center justify-between text-[11px] pb-1.5 border-b border-gray-200/70">
+            <span className="font-inter text-gray-500 font-medium">Inversión Total del Plan</span>
+            <div className="text-right">
+              <span className="font-sora text-xs sm:text-sm font-bold text-gray-900">
+                ${Number(montoTotal).toLocaleString("es-MX")}
+              </span>
+              <span className="text-[10px] font-mono text-gray-400 ml-1">MXN</span>
+            </div>
           </div>
 
-          <div className="pt-2 border-t border-gray-200/60 flex items-baseline justify-between">
-            <div>
-              <span className="text-[11px] font-sora font-semibold text-gray-400 uppercase tracking-wider block">
-                Monto Inicial a Transferir
-              </span>
-              <span className="text-2xl font-bold font-sora text-gray-900">
-                {formatPrice(montoInicial)} <span className="text-xs font-normal text-gray-500">MXN</span>
-              </span>
+          {/* Distribución de Cobros */}
+          {isDosSesiones ? (
+            <div className="grid grid-cols-2 gap-2">
+              {/* Cobro 1: Inmediato (Hero / Prioridad Alta) */}
+              <div className="p-2 sm:p-2.5 bg-white border-2 border-brand-blue/40 rounded-lg sm:rounded-xl shadow-2xs relative text-left">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[9px] font-bold text-brand-blue uppercase tracking-wider">
+                    1er Abono (50%)
+                  </span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-blue animate-pulse" />
+                </div>
+                <div className="font-sora text-base sm:text-lg font-black text-gray-900 tracking-tight mt-0.5">
+                  ${Number(montoInicial).toLocaleString("es-MX")}
+                  <span className="text-[9px] font-bold text-gray-400 ml-0.5">MXN</span>
+                </div>
+                <span className="text-[10px] font-inter font-semibold text-emerald-600 block leading-tight mt-0.5">
+                  ● A transferir hoy
+                </span>
+              </div>
+
+              {/* Cobro 2: Programado (Secundario) */}
+              <div className="p-2 sm:p-2.5 bg-gray-100/60 border border-gray-200/70 rounded-lg sm:rounded-xl opacity-80 text-left">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[9px] font-bold text-gray-500 uppercase tracking-wider">
+                    2do Abono (50%)
+                  </span>
+                </div>
+                <div className="font-sora text-base sm:text-lg font-bold text-gray-600 tracking-tight mt-0.5">
+                  ${Number(montoSegundo).toLocaleString("es-MX")}
+                  <span className="text-[9px] font-medium text-gray-400 ml-0.5">MXN</span>
+                </div>
+                <span className="text-[10px] font-inter text-gray-400 block leading-tight mt-0.5">
+                  Segundo corte / Sesión 2
+                </span>
+              </div>
             </div>
-            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-brand-blue border border-blue-100">
-              {isDosSesiones ? "Primer Abono (50%)" : "Primer Mes Adelantado"}
+          ) : (
+            <div className="p-2.5 bg-white border border-gray-200 rounded-xl text-center shadow-2xs">
+              <span className="font-mono text-[9px] font-bold text-brand-blue uppercase tracking-wider block mb-0.5">
+                Monto a Transferir (100% Activación)
+              </span>
+              <div className="font-sora text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
+                ${Number(montoTotal).toLocaleString("es-MX")}{" "}
+                <span className="text-xs font-bold text-gray-400">MXN</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bloque 2: Datos Bancarios Clave (Minimalista) */}
+        <div className="bg-blue-50/40 border border-blue-100 rounded-xl sm:rounded-2xl p-2.5 sm:p-3 text-left space-y-2 text-xs">
+          {/* Fila Banco / Beneficiario */}
+          <div className="text-[11px] text-gray-600 flex items-center justify-between flex-wrap gap-1">
+            <span>
+              Banco: <strong className="text-gray-900 font-semibold">{bankDetails.banco}</strong>
+            </span>
+            <span>
+              Beneficiario: <strong className="text-gray-900 font-semibold">{bankDetails.beneficiario}</strong>
             </span>
           </div>
-          <p className="text-[11px] text-gray-400 leading-tight">
-            {isDosSesiones
-              ? "*Cubre la primera sesión de filmación del ciclo (50%). El segundo 50% se abona para la segunda sesión."
-              : "*Cubre el primer ciclo operativo acordado para inicio de producción."}
-          </p>
-        </div>
 
-        {/* Tarjeta de Datos Bancarios (SPEI) */}
-        <div className="bg-blue-50/30 border border-blue-100 rounded-xl p-4 space-y-2.5 text-left text-xs">
-          <div className="flex items-center gap-1.5 text-brand-blue font-sora font-bold text-xs pb-1 border-b border-blue-100/60">
-            <Building2 className="w-3.5 h-3.5" />
-            <span>Datos de Transferencia (SPEI)</span>
-          </div>
-
-          {/* Banco & Beneficiario */}
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <div>
-              <span className="text-[10px] text-gray-400 uppercase font-semibold block">Banco</span>
-              <span className="font-semibold text-gray-800">{bankDetails.banco}</span>
-            </div>
-            <div>
-              <span className="text-[10px] text-gray-400 uppercase font-semibold block">Beneficiario</span>
-              <span className="font-semibold text-gray-800">{bankDetails.beneficiario}</span>
-            </div>
-          </div>
-
-          {/* CLABE con botón rápido */}
-          <div className="pt-1.5 flex items-center justify-between bg-white border border-blue-100/80 rounded-lg p-2.5">
-            <div>
-              <span className="text-[10px] text-gray-400 uppercase font-semibold block">Cuenta CLABE</span>
-              <span className="font-mono font-bold text-gray-900 tracking-wider text-xs">{bankDetails.clabe}</span>
-            </div>
+          {/* Fila CLABE destacada (Click to Copy) */}
+          <div className="flex items-center justify-between bg-white border border-blue-200/80 rounded-lg p-2 shadow-2xs">
+            <span className="font-mono text-xs sm:text-sm font-bold text-gray-900 tracking-wider">
+              {bankDetails.clabe}
+            </span>
             <button
               type="button"
-              onClick={() => handleCopy(bankDetails.clabe, "clabe", "Cuenta CLABE")}
-              className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors cursor-pointer shrink-0"
-              title="Copiar CLABE"
+              onClick={copyClabe}
+              className="rounded-full h-6 px-2.5 bg-[#188ff0] hover:bg-blue-600 text-white font-sora text-[10px] font-bold transition-all active:scale-[0.98] inline-flex items-center gap-1 cursor-pointer shrink-0"
             >
-              {copiedKey === "clabe" ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+              {copied ? <Check className="w-3 h-3 text-white" /> : <Copy className="w-3 h-3 text-white" />}
+              <span>{copied ? "Copiada" : "Copiar"}</span>
             </button>
           </div>
 
-          {/* Concepto con botón rápido */}
-          <div className="flex items-center justify-between bg-white border border-blue-100/80 rounded-lg p-2.5">
-            <div>
-              <span className="text-[10px] text-gray-400 uppercase font-semibold block">Concepto / Referencia</span>
-              <span className="font-mono font-semibold text-gray-800 text-xs">{bankDetails.concepto}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => handleCopy(bankDetails.concepto, "concepto", "Concepto")}
-              className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-colors cursor-pointer shrink-0"
-              title="Copiar Concepto"
-            >
-              {copiedKey === "concepto" ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-            </button>
+          {/* Concepto sugerido */}
+          <div className="text-[10px] text-gray-500 flex items-center justify-between">
+            <span>Concepto sugerido:</span>
+            <strong className="font-mono text-gray-800 bg-white/80 px-1.5 py-0.5 rounded border border-blue-100/60">
+              {conceptoSugerido}
+            </strong>
           </div>
         </div>
 
-        {/* Aviso Gatekeeper de Rodaje */}
-        <div className="bg-amber-50/60 border border-amber-200/70 rounded-xl p-3 flex items-start gap-2.5 text-xs text-amber-900 text-left">
-          <LockKeyhole className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-          <p className="leading-snug">
-            <strong>Paso 2 Automático:</strong>{" "}
-            {isDosSesiones
-              ? "Una vez acreditado tu primer abono del 50%, recibirás de inmediato tu acceso exclusivo para elegir en calendario tu primera sesión de grabación (la segunda sesión se desbloqueará al validar tu segundo abono)."
-              : "Una vez acreditada tu transferencia, recibirás de inmediato tu acceso exclusivo para elegir en calendario el día y la hora de tu primera sesión de grabación."}
-          </p>
-        </div>
+        {/* Botón Principal de Conversión */}
+        <a
+          href={waUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full h-10 sm:h-11 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-sora font-bold text-xs uppercase tracking-wider shadow-md shadow-emerald-100 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-2.5"
+        >
+          <MessageCircle className="w-4 h-4" />
+          <span>Enviar Comprobante por WhatsApp</span>
+        </a>
 
-        {/* Footer de Acciones */}
-        <div className="space-y-2.5 pt-2">
-          <a
-            href={waUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="h-11 px-6 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-sora font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-emerald-100 flex items-center justify-center gap-2 w-full active:scale-[0.98]"
-          >
-            <MessageCircle className="w-4 h-4" />
-            <span>Ya transferí, enviar comprobante por WhatsApp</span>
-          </a>
+        {/* Micro-texto legal y Gatekeeper */}
+        <p className="text-[10px] text-gray-400 mt-2 leading-tight">
+          Al transferir, tu enlace de reserva se habilitará para agendar de Lun a Vie con 3 días de anticipación.
+        </p>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-xs text-gray-400 hover:text-gray-700 font-medium transition-colors cursor-pointer py-1 block mx-auto"
-          >
-            Volver a la propuesta
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors mt-1.5 block mx-auto cursor-pointer"
+        >
+          Volver a la propuesta
+        </button>
       </DialogContent>
     </Dialog>
   );

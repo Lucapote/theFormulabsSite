@@ -10,6 +10,8 @@ export default function ProposalCalculatorSummary({
   basePrice = 0,
   selectedAddons = {},
   addons = [],
+  extraSessionsCount = 0,
+  precioSesionExtra = 3500,
   totalPrice = 0,
   showMobileBreakdown = false,
   setShowMobileBreakdown,
@@ -39,6 +41,18 @@ export default function ProposalCalculatorSummary({
                   <p className="font-semibold text-lg">{currentPlanObj.name}</p>
                 </div>
                 <p className="font-bold text-lg">{formatPrice(basePrice)}</p>
+              </div>
+            )}
+
+            {extraSessionsCount > 0 && (
+              <div className="flex justify-between items-start text-sm pt-4 border-t border-gray-800/80">
+                <div>
+                  <p className="text-xs text-brand-blue font-bold uppercase tracking-wider mb-0.5">
+                    Producción Adicional
+                  </p>
+                  <p className="text-gray-300">+{extraSessionsCount} {extraSessionsCount === 1 ? "Sesión extra" : "Sesiones extras"}</p>
+                </div>
+                <p className="font-semibold text-white whitespace-nowrap">{formatPrice(extraSessionsCount * precioSesionExtra)}</p>
               </div>
             )}
 
@@ -126,6 +140,12 @@ export default function ProposalCalculatorSummary({
               <span className="text-gray-300">Plan {currentPlanObj?.name}</span>
               <span className="font-bold">{formatPrice(basePrice)}</span>
             </div>
+            {extraSessionsCount > 0 && (
+              <div className="flex justify-between items-center mb-3 text-sm">
+                <span className="text-brand-blue font-medium">+{extraSessionsCount} {extraSessionsCount === 1 ? "Sesión extra" : "Sesiones extras"}</span>
+                <span className="font-bold">{formatPrice(extraSessionsCount * precioSesionExtra)}</span>
+              </div>
+            )}
             {hasAddonsSelected && (
               <div className="mt-4 pt-4 border-t border-gray-800/80 space-y-3">
                 <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-2">

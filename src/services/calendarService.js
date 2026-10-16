@@ -211,6 +211,19 @@ export async function updateCliente(clienteId, payload = {}) {
       return { success: false, error: error.message };
     }
 
+    // Sincronizar automáticamente la nueva locación en los rodajes pendientes del cliente
+    if (updatePayload.locacion_default !== undefined) {
+      const { error: syncErr } = await supabase
+        .from("producciones")
+        .update({ locacion: updatePayload.locacion_default })
+        .eq("cliente_id", clienteId)
+        .eq("estado", "pendiente_agendamiento");
+
+      if (syncErr) {
+        console.warn("No se pudieron sincronizar las producciones pendientes:", syncErr);
+      }
+    }
+
     return { success: true, data };
   } catch (err) {
     console.error("updateCliente catch error:", err);

@@ -166,6 +166,7 @@ export default function ProductionBookingPage() {
                 ) : (
                   <BookingFormCard
                     initialData={produccion}
+                    cliente={produccion.cliente}
                     onSubmit={handleBookingSubmit}
                     isSubmitting={isSubmitting}
                     tipo={produccion.tipo || produccion.cliente?.tipo_sesion_default || "organica"}

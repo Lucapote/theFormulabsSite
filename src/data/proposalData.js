@@ -4,8 +4,8 @@
 export const DEFAULT_PROPOSAL_TEMPLATE = {
   // 1. INFORMACIÓN DEL CLIENTE Y MENSAJE DE BIENVENIDA
   client: {
-    name: "Nombre del Cliente",
-    shortName: "Cliente",
+    name: "",
+    shortName: "",
     proposalTitle: "Propuesta de Contenido",
     logoUrl: "/logo.png",
     greeting: "Hola! Estuve dándole vueltas a lo que platicamos y a cómo podemos estructurar mejor la estrategia para la marca. Quería compartirte la visión completa y aterrizada de todo el proyecto para que estemos en la misma página con el camino que vamos a tomar.",
@@ -21,6 +21,20 @@ export const DEFAULT_PROPOSAL_TEMPLATE = {
     "4 carruseles mensuales",
     "Calendarios de reels e historias"
   ],
+
+  // 2.1 ALCANCE OPERATIVO Y SCOPE
+  scope: {
+    producciones_por_mes: 2,
+    precio_sesion_extra: 3500,
+    tipo_sesion_default: "reels_batch"
+  },
+
+  // 2.2 PRECIOS Y RESUMEN
+  pricing: {
+    basePrice: 14500,
+    extraSessionsCount: 0,
+    totalPrice: 14500
+  },
 
   // 3. PLANES DE PRECIOS BASE (EDITABLES EN DASHBOARD)
   pricingPlans: [

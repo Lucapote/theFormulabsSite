@@ -1,29 +1,37 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { LogOut, User, FileText, BarChart2, Users, Clapperboard } from "lucide-react";
+import { LogOut, User, FileText, BarChart2, Users, Clapperboard, ChevronDown, Settings } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { DEFAULT_PROPOSAL_TEMPLATE as defaultTemplate } from "@/data/proposalData";
 import { formatPriceLabel, formatAddonLabel } from "@/utils/formatters";
 import {
   fetchProposals,
   createProposal,
-  updateProposal,
-  deleteProposal
+  updateProposal
 } from "@/services/proposalService";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
 import ProposalModal from "@/components/dashboard/proposals/ProposalModal";
 import ClientsCalendarSection from "@/components/dashboard/calendar/ClientsCalendarSection";
 import ProposalsTabSection from "@/components/dashboard/proposals/ProposalsTabSection";
 import DiagnosticsTabSection from "@/components/dashboard/diagnostics/DiagnosticsTabSection";
 import OperationsTabSection from "@/components/dashboard/operations/OperationsTabSection";
-import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
+import BankSettingsModal from "@/components/dashboard/common/BankSettingsModal";
 import { useWindowFocusRefresh } from "@/hooks/useWindowFocusRefresh";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("proposals");
+  const [showBankModal, setShowBankModal] = useState(false);
 
   // Diagnostics state
   const [diagnostics, setDiagnostics] = useState([]);
@@ -35,19 +43,27 @@ export default function Dashboard() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [deletingItem, setDeletingItem] = useState(null);
   const [copiedSlug, setCopiedSlug] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Load diagnostics from Supabase
-  const loadDiagnostics = async () => {
+  // Conteo de propuestas reales (expedientes raíz) excluyendo versiones iteradas
+  const totalPropuestasReales = useMemo(() => {
+    return (proposals || []).filter((p) => !p.propuesta_padre_id).length;
+  }, [proposals]);
+
+  // Conteo reactivo de leads pendientes/nuevos sin atender
+  const leadsPendientesCount = useMemo(() => {
+    return (diagnostics || []).filter((d) => d.status === "nuevo").length;
+  }, [diagnostics]);
+
+  // Load diagnostics from Supabase (soporta refresco silencioso sin parpadeo)
+  const loadDiagnostics = useCallback(async (isSilent = false) => {
     if (!supabase) return;
-    setLoadingDb(true);
+    if (!isSilent) setLoadingDb(true);
     try {
       const { data, error } = await supabase
         .from("leads")
-        .select("id")
+        .select("id, status")
         .order("created_at", { ascending: false });
 
       if (!error && data) {
@@ -56,28 +72,68 @@ export default function Dashboard() {
     } catch (err) {
       console.error("Error loading diagnostics:", err);
     } finally {
-      setLoadingDb(false);
+      if (!isSilent) setLoadingDb(false);
     }
-  };
+  }, []);
 
-  // Load proposals using proposalService
-  const loadProposals = async () => {
-    setLoadingProposals(true);
+  // Load proposals using proposalService (soporta refresco silencioso sin parpadeo)
+  const loadProposals = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoadingProposals(true);
     const res = await fetchProposals();
     if (res.success) {
       setProposals(res.data);
     }
-    setLoadingProposals(false);
-  };
+    if (!isSilent) setLoadingProposals(false);
+  }, []);
 
   useEffect(() => {
     loadDiagnostics();
     loadProposals();
+  }, [loadDiagnostics, loadProposals]);
+
+  // Sincronización en tiempo real para conteo global de leads/diagnósticos en tabs
+  useEffect(() => {
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel("dashboard-leads-count-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "leads" },
+        (payload) => {
+          const nuevo = payload.new;
+          setDiagnostics((prev) => [nuevo, ...prev.filter((d) => d.id !== nuevo.id)]);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "leads" },
+        (payload) => {
+          const actualizado = payload.new;
+          setDiagnostics((prev) =>
+            prev.map((d) => (d.id === actualizado.id ? { ...d, ...actualizado } : d))
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "leads" },
+        (payload) => {
+          const eliminado = payload.old;
+          setDiagnostics((prev) => prev.filter((d) => d.id !== eliminado.id));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
+  // Sincronización pasiva sin parpadeo de pantalla al recuperar el foco
   useWindowFocusRefresh(() => {
-    loadDiagnostics();
-    loadProposals();
+    loadDiagnostics(true);
+    loadProposals(true);
   }, { minIntervalMs: 8000 });
 
   const handleLogout = async () => {
@@ -130,6 +186,25 @@ export default function Dashboard() {
 
     const token = existingContent.token || (Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 6));
 
+    const existingScope = existingContent.scope || {};
+    const existingPricing = existingContent.pricing || {};
+
+    const scope = {
+      producciones_por_mes: Number(formData.produccionesPorMes) || existingScope.producciones_por_mes || 2,
+      precio_sesion_extra: Number(formData.precioSesionExtra) || existingScope.precio_sesion_extra || 3500,
+      tipo_sesion_default: formData.tipoSesionDefault || existingScope.tipo_sesion_default || "reels_batch"
+    };
+
+    const basePrice = Number(formData.priceCrecimiento) || existingPricing.basePrice || 14500;
+    const extraSessionsCount = Number(formData.extraSessionsCount !== undefined ? formData.extraSessionsCount : existingPricing.extraSessionsCount) || 0;
+    const totalPrice = basePrice + (extraSessionsCount * scope.precio_sesion_extra);
+
+    const pricing = {
+      basePrice,
+      extraSessionsCount,
+      totalPrice
+    };
+
     return {
       ...existingContent,
       token,
@@ -137,12 +212,20 @@ export default function Dashboard() {
         ...(existingContent.client || {}),
         name: formData.clientName,
         shortName: formData.shortName || formData.clientName,
+        email: formData.email !== undefined ? formData.email : (existingContent.client?.email || ""),
+        whatsapp: formData.whatsapp !== undefined ? formData.whatsapp : (existingContent.client?.whatsapp || ""),
+        instagram: formData.instagram !== undefined ? formData.instagram : (existingContent.client?.instagram || ""),
+        location: formData.location !== undefined ? formData.location : (existingContent.client?.location || ""),
         proposalTitle: formData.proposalTitle || "Propuesta de Contenido",
         greeting: formData.greeting || defaultTemplate.client.greeting,
         vision: formData.vision || defaultTemplate.client.vision
       },
       pricingPlans: updatedPlans,
-      addons: updatedAddons
+      addons: updatedAddons,
+      scope,
+      pricing,
+      producciones_por_mes: scope.producciones_por_mes,
+      tipo_sesion_default: scope.tipo_sesion_default
     };
   };
 
@@ -194,21 +277,6 @@ export default function Dashboard() {
     setIsSaving(false);
   };
 
-  // Delete Proposal Handler
-  const handleConfirmDelete = async () => {
-    if (!deletingItem) return;
-    setIsDeleting(true);
-    const res = await deleteProposal(deletingItem.id);
-    if (res.success) {
-      toast.success(`Propuesta para "${deletingItem.cliente || deletingItem.slug}" eliminada.`);
-      setDeletingItem(null);
-      loadProposals();
-    } else {
-      toast.error(res.error || "Error al eliminar la propuesta.");
-    }
-    setIsDeleting(false);
-  };
-
   const copyProposalLink = (item) => {
     const slug = item.slug;
     const token = item.contenido?.token;
@@ -232,19 +300,40 @@ export default function Dashboard() {
             </a>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:inline-flex items-center h-10 px-4 rounded-full text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 gap-2">
-              <User className="w-3.5 h-3.5 text-pink-500 shrink-0" />
-              <span>{user?.email}</span>
-            </div>
-
-            <button
-              onClick={handleLogout}
-              className="h-10 px-3.5 sm:px-5 rounded-full border border-gray-300 hover:border-gray-900 text-gray-800 hover:bg-gray-900 hover:text-white font-sora font-bold text-xs tracking-wider uppercase transition-all inline-flex items-center gap-2 cursor-pointer shadow-2xs"
-            >
-              <LogOut className="w-3.5 h-3.5 shrink-0" />
-              <span className="hidden sm:inline">Cerrar Sesión</span>
-            </button>
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex items-center h-10 px-3.5 sm:px-4 rounded-full text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 shadow-2xs gap-2 transition-all cursor-pointer outline-hidden focus:ring-2 focus:ring-[#188ff0]/20 active:scale-[0.98]"
+                >
+                  <User className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+                  <span className="truncate max-w-[130px] sm:max-w-[200px]">{user?.email}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-400 shrink-0 transition-transform duration-200" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-2xl border border-gray-100 shadow-xl bg-white font-inter">
+                <div className="px-3 py-2 border-b border-gray-100 mb-1">
+                  <span className="text-[10px] font-mono font-bold text-gray-400 uppercase tracking-wider block">Cuenta Conectada</span>
+                  <span className="text-xs font-semibold text-gray-800 truncate block">{user?.email}</span>
+                </div>
+                <DropdownMenuItem
+                  onClick={() => setShowBankModal(true)}
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-sora font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-50 cursor-pointer transition-colors"
+                >
+                  <Settings className="w-4 h-4 text-[#188ff0]" />
+                  <span>Datos</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="my-1 bg-gray-100" />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-sora font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer transition-colors"
+                >
+                  <LogOut className="w-4 h-4 text-red-500" />
+                  <span>Cerrar Sesión</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
@@ -262,7 +351,7 @@ export default function Dashboard() {
             }`}
           >
             <FileText className="w-4 h-4 text-pink-400" />
-            Propuestas ({proposals.length})
+            Propuestas ({totalPropuestasReales})
           </button>
           <button
             onClick={() => setActiveTab("calendars")}
@@ -288,14 +377,22 @@ export default function Dashboard() {
           </button>
           <button
             onClick={() => setActiveTab("diagnostics")}
-            className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === "diagnostics"
                 ? "bg-gray-900 text-white shadow-md"
                 : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
             }`}
           >
             <BarChart2 className="w-4 h-4 text-brand-blue" />
-            Diagnósticos ({diagnostics.length})
+            <span>Diagnósticos</span>
+            <span className={activeTab === "diagnostics" ? "text-gray-300 font-normal" : "text-gray-400 font-normal"}>
+              ({diagnostics.length})
+            </span>
+            {leadsPendientesCount > 0 && (
+              <span className="ml-1.5 px-2 py-0.5 text-[10px] font-mono font-bold bg-[#188ff0] text-white rounded-full">
+                {leadsPendientesCount}
+              </span>
+            )}
           </button>
         </div>
 
@@ -318,7 +415,6 @@ export default function Dashboard() {
               setEditingItem(item);
               setShowEditModal(true);
             }}
-            onDeleteClick={(item) => setDeletingItem(item)}
             copiedSlug={copiedSlug}
             setActiveTab={setActiveTab}
           />
@@ -357,15 +453,10 @@ export default function Dashboard() {
         isSaving={isSaving}
       />
 
-      {/* DELETE CONFIRMATION MODAL - Reusing ConfirmDeleteModal */}
-      <ConfirmDeleteModal
-        isOpen={Boolean(deletingItem)}
-        title="¿Eliminar propuesta?"
-        message={`Estás a punto de eliminar la propuesta para "${deletingItem?.cliente || deletingItem?.slug || ""}". Esta acción no se puede deshacer.`}
-        confirmText="Eliminar"
-        isProcessing={isDeleting}
-        onClose={() => setDeletingItem(null)}
-        onConfirm={handleConfirmDelete}
+      {/* BANK SETTINGS MODAL */}
+      <BankSettingsModal
+        isOpen={showBankModal}
+        onClose={() => setShowBankModal(false)}
       />
     </div>
   );

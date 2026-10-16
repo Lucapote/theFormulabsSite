@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { FlaskConical, ArrowDownWideNarrow, ArrowUpNarrowWide } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import { getLeads, getLeadStats, deleteLead, updateLeadStatus, sendLeadEmailNotification } from "@/services/leadService";
 import { Skeleton } from "@/components/ui/skeleton";
 import LeadMetricsHeader from "./LeadMetricsHeader";
@@ -60,6 +61,57 @@ export default function DiagnosticsTabSection() {
 
     return () => clearTimeout(timer);
   }, [loadLeadsData]);
+
+  // Suscripción en tiempo real a leads (Supabase Realtime)
+  useEffect(() => {
+    if (!supabase) return;
+
+    const leadsChannel = supabase
+      .channel("leads-realtime-dashboard")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "leads" },
+        (payload) => {
+          const nuevoLead = payload.new;
+          // 1. Insertar el nuevo lead al principio del estado local
+          setLeads((prev) => [nuevoLead, ...prev.filter((l) => l.id !== nuevoLead.id)]);
+          loadStats();
+
+          // 2. Alerta visual con audio/sonner sutil
+          toast.info(`Nuevo diagnóstico recibido: ${nuevoLead.nombre || "Nuevo prospecto"}`, {
+            description: `Score: ${nuevoLead.score || 0}/100 • Ruta: ${nuevoLead.route_name || "General"}`,
+            duration: 6000
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "leads" },
+        (payload) => {
+          const leadActualizado = payload.new;
+          setLeads((prev) =>
+            prev.map((l) => (l.id === leadActualizado.id ? leadActualizado : l))
+          );
+          setSelectedLead((prev) => (prev && prev.id === leadActualizado.id ? leadActualizado : prev));
+          loadStats();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "leads" },
+        (payload) => {
+          const { old: leadEliminado } = payload;
+          setLeads((prev) => prev.filter((l) => l.id !== leadEliminado.id));
+          loadStats();
+        }
+      )
+      .subscribe();
+
+    // Cleanup estricto al desmontar el componente
+    return () => {
+      supabase.removeChannel(leadsChannel);
+    };
+  }, [loadStats]);
 
   // Actualizar estado del lead
   const handleStatusChange = async (leadId, newStatus) => {
@@ -211,7 +263,12 @@ export default function DiagnosticsTabSection() {
         ) : (
           <div className="space-y-3">
             <div className="flex items-center justify-between px-1 text-[11px] font-sora font-bold text-gray-400 uppercase tracking-wider">
-              <span>Mostrando {leads.length} expedientes</span>
+              <div className="flex items-center gap-2.5">
+                <span>Mostrando {leads.length} expedientes</span>
+                <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> En Vivo
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={() => setSortOrder((prev) => (prev === "desc" ? "asc" : "desc"))}

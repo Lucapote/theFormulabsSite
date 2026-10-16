@@ -51,9 +51,14 @@ export default function LeadMetricsHeader({ stats, loading = false }) {
       >
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] font-sora font-bold tracking-wider text-gray-400 uppercase">
-              TOTAL DIAGNÓSTICOS
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-sora font-bold tracking-wider text-gray-400 uppercase">
+                TOTAL DIAGNÓSTICOS
+              </span>
+              <span className="inline-flex items-center gap-1.5 font-mono text-[11px] text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> En Vivo
+              </span>
+            </div>
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg border flex items-center justify-center shrink-0 bg-blue-50 border-blue-100 text-brand-blue">
               <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>

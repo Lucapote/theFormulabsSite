@@ -305,6 +305,111 @@ export async function deleteProposal(id) {
 }
 
 /**
+ * Elimina una versión específica de propuesta.
+ * - Si es una versión hija (propuesta_padre_id no es null): elimina directamente la fila.
+ * - Si es una versión raíz pero no tiene hijas: elimina directamente la fila.
+ * - Si es raíz y tiene hijas: rechaza con error descriptivo.
+ *
+ * @param {string} versionId - ID de la versión a eliminar
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export async function deleteProposalSingleVersion(versionId) {
+  if (!versionId) return { success: false, error: "ID de versión no proporcionado." };
+
+  try {
+    if (supabase) {
+      const { data: prop, error: fetchErr } = await supabase
+        .from("propuestas")
+        .select("id, propuesta_padre_id")
+        .eq("id", versionId)
+        .single();
+
+      if (fetchErr) {
+        return { success: false, error: fetchErr.message };
+      }
+
+      if (!prop.propuesta_padre_id) {
+        // Si es raíz y tiene hijas, promover la versión siguiente a nueva raíz para no dejar huérfanos
+        const { data: hijas, error: countErr } = await supabase
+          .from("propuestas")
+          .select("id, version")
+          .eq("propuesta_padre_id", versionId)
+          .order("version", { ascending: true });
+
+        if (!countErr && hijas && hijas.length > 0) {
+          const nuevaRaiz = hijas[0];
+          await supabase
+            .from("propuestas")
+            .update({ propuesta_padre_id: null })
+            .eq("id", nuevaRaiz.id);
+
+          if (hijas.length > 1) {
+            const otrasHijasIds = hijas.slice(1).map((h) => h.id);
+            await supabase
+              .from("propuestas")
+              .update({ propuesta_padre_id: nuevaRaiz.id })
+              .in("id", otrasHijasIds);
+          }
+        }
+      }
+
+      const { error: delErr } = await supabase
+        .from("propuestas")
+        .delete()
+        .eq("id", versionId);
+
+      if (delErr) throw delErr;
+      return { success: true };
+    }
+
+    return await deleteProposal(versionId);
+  } catch (err) {
+    console.error("deleteProposalSingleVersion error:", err);
+    return { success: false, error: err.message || "Error al eliminar la versión." };
+  }
+}
+
+/**
+ * Elimina en bloque todas las versiones hijas y la propuesta raíz (expediente completo).
+ *
+ * @param {string} raizId - ID de la propuesta raíz
+ * @param {Array<string>} [versionIds=[]] - Lista explícita de IDs de versiones a eliminar
+ * @returns {Promise<{ success: boolean, error?: string }>}
+ */
+export async function deleteProposalTree(raizId, versionIds = []) {
+  if (!raizId && (!Array.isArray(versionIds) || versionIds.length === 0)) {
+    return { success: false, error: "ID de propuesta no proporcionado." };
+  }
+
+  try {
+    if (supabase) {
+      if (Array.isArray(versionIds) && versionIds.length > 0) {
+        const { error } = await supabase
+          .from("propuestas")
+          .delete()
+          .in("id", versionIds);
+
+        if (error) throw error;
+        return { success: true };
+      }
+
+      const { error } = await supabase
+        .from("propuestas")
+        .delete()
+        .or(`id.eq.${raizId},propuesta_padre_id.eq.${raizId}`);
+
+      if (error) throw error;
+      return { success: true };
+    }
+
+    return await deleteProposal(raizId);
+  } catch (err) {
+    console.error("deleteProposalTree error:", err);
+    return { success: false, error: err.message || "Error al eliminar el expediente completo." };
+  }
+}
+
+/**
  * Genera un slug URL-friendly a partir de un texto.
  */
 function slugify(text) {
