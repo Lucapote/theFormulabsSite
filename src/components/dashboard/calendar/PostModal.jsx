@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
 import {
-  X,
   Video as VideoIcon,
   Calendar as CalendarIcon,
   Clock,
   Film,
   RefreshCw,
-  Trash2,
   Sparkles,
   Layers
 } from "lucide-react";
 import { toast } from "sonner";
+import BaseFormModal from "@/components/common/BaseFormModal";
 import { getArchivosByCalendario } from "@/services/calendarService";
 import MediaDetailModal from "@/components/common/MediaDetailModal";
 import GalleryFileItem from "@/components/dashboard/gallery/GalleryFileItem";
@@ -177,47 +176,34 @@ export default function PostModal({
     });
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[100] flex items-center justify-center p-3 sm:p-6 font-inter animate-in fade-in duration-200 overflow-y-auto">
-      <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] max-w-xl w-full max-w-[calc(100vw-1.25rem)] my-auto shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[85dvh] sm:max-h-[88dvh] relative">
-        {/* Fixed Modal Header */}
-        <div className="flex items-center justify-between px-5 py-4 sm:px-8 sm:py-5 border-b border-gray-100 bg-white shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-brand-blue shrink-0">
-              <Film className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-            <div>
-              <h3 className="font-sora font-extrabold text-gray-900 text-base sm:text-xl tracking-tight leading-tight">
-                {isEditing ? "Editar Publicación" : "Programar Publicación"}
-              </h3>
-              <p className="text-[11px] sm:text-xs text-gray-500 font-medium line-clamp-1">
-                Selecciona formato, copy, horario y asigna medios.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 font-bold p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Scrollable Form Body */}
-        <form id="post-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 sm:p-8 space-y-5 sm:space-y-6">
+    <>
+      <BaseFormModal
+        isOpen={isOpen}
+        onClose={onClose}
+        onSubmit={handleSubmit}
+        eyebrow="GESTIÓN DE PUBLICACIÓN"
+        eyebrowColor="text-brand-magenta"
+        icon={Film}
+        title={isEditing ? "Editar Publicación" : "Programar Publicación"}
+        description="Selecciona formato, copy, horario y asigna medios de la galería."
+        maxWidth="max-w-xl"
+        cancelText="Cancelar"
+        submitText={isEditing ? "Guardar Cambios" : "Programar Publicación"}
+        loadingText="Guardando..."
+        isLoading={isSaving}
+      >
+        <div className="space-y-5 sm:space-y-6">
           {/* TIPO DE FORMATO */}
           <div>
-            <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-2">
+            <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-2">
               Formato de Publicación *
             </label>
             <div className="grid grid-cols-2 gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={() => handleFormatChange("reel")}
-                className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-2xl border font-sora text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
+                className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl border font-sora text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
                   tipoPost === "reel"
                     ? "bg-gray-900 text-white border-gray-900 shadow-md"
                     : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
@@ -230,7 +216,7 @@ export default function PostModal({
               <button
                 type="button"
                 onClick={() => handleFormatChange("carrousel")}
-                className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-2xl border font-sora text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
+                className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl border font-sora text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer ${
                   tipoPost === "carrousel"
                     ? "bg-gray-900 text-white border-gray-900 shadow-md"
                     : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
@@ -243,9 +229,9 @@ export default function PostModal({
           </div>
 
           {/* FECHA, HORA Y ESTADO */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5 flex items-center gap-1.5">
+              <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-1.5 flex items-center gap-1.5">
                 <CalendarIcon className="w-3.5 h-3.5 text-brand-blue" /> Fecha Programada *
               </label>
               <input
@@ -253,31 +239,31 @@ export default function PostModal({
                 required
                 value={fechaProgramada}
                 onChange={(e) => setFechaProgramada(e.target.value)}
-                className="w-full h-11 px-3 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-blue-100 outline-none text-sm text-gray-900 font-medium transition-all cursor-pointer"
+                className="w-full h-11 px-3 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-sm text-gray-900 font-medium bg-gray-50/50 transition-all cursor-pointer font-inter"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-brand-blue" /> Hora <br />Programada *
+              <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-1.5 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-brand-blue" /> Hora Programada *
               </label>
               <input
                 type="time"
                 required
                 value={horaProgramada}
                 onChange={(e) => setHoraProgramada(e.target.value)}
-                className="w-full h-11 px-3 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-blue-100 outline-none text-sm text-gray-900 font-medium transition-all cursor-pointer"
+                className="w-full h-11 px-3 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-sm text-gray-900 font-medium bg-gray-50/50 transition-all cursor-pointer font-inter"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-sora font-bold uppercase text-gray-700 mb-1.5">
-                Estado <br />Publicación
+              <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-1.5">
+                Estado Publicación
               </label>
               <select
                 value={estado}
                 onChange={(e) => setEstado(e.target.value)}
-                className="w-full h-11 px-3 rounded-xl border border-gray-200 focus:border-gray-900 outline-none text-sm font-sora font-bold text-gray-900 bg-white cursor-pointer"
+                className="w-full h-11 px-3 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-xs font-sora font-semibold text-gray-900 bg-gray-50/50 cursor-pointer transition-all"
               >
                 <option value="programado">Programado</option>
                 <option value="borrador">Borrador</option>
@@ -289,7 +275,7 @@ export default function PostModal({
           {/* CAPTION / COPYWRITING */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-sora font-bold uppercase text-gray-700">
+              <label className="text-xs font-sora font-bold uppercase text-gray-700 tracking-wide">
                 Caption / Copywriting del Post *
               </label>
               <span className="text-[11px] font-mono text-gray-400">
@@ -301,14 +287,14 @@ export default function PostModal({
               placeholder="Escribe el texto de la publicación, hashtags y llamadas a la acción..."
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
-              className="w-full p-4 rounded-2xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-blue-100 outline-none text-sm text-gray-900 font-medium transition-all leading-relaxed"
+              className="w-full p-3.5 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 bg-gray-50/50 outline-none text-sm text-gray-900 font-medium transition-all leading-relaxed font-inter"
             />
           </div>
 
           {/* BANCO UNIFICADO DE MEDIOS DE GALERÍA */}
           <div className="space-y-3 pt-2 border-t border-gray-100">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
-              <label className="text-xs font-sora font-bold uppercase text-gray-700 flex items-center gap-1.5">
+              <label className="text-xs font-sora font-bold uppercase text-gray-700 tracking-wide flex items-center gap-1.5">
                 <Film className="w-4 h-4 text-brand-blue" />
                 Medios de Galería ({archivos.length} asignados / {availableGalleryFiles.length} disponibles) *
               </label>
@@ -326,14 +312,14 @@ export default function PostModal({
             </div>
 
             {loadingGallery ? (
-              <div className="p-8 text-center bg-gray-50 rounded-2xl border border-gray-100">
+              <div className="p-8 text-center bg-gray-50/70 rounded-2xl border border-gray-100">
                 <Sparkles className="w-6 h-6 text-brand-blue animate-spin mx-auto mb-2" />
                 <p className="text-xs font-sora font-bold text-gray-600">
                   Cargando banco de medios...
                 </p>
               </div>
             ) : availableGalleryFiles.length === 0 ? (
-              <div className="p-6 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+              <div className="p-6 text-center bg-gray-50/70 rounded-2xl border border-dashed border-gray-200">
                 <Film className="w-8 h-8 text-gray-300 mx-auto mb-2" />
                 <p className="text-xs font-sora font-bold text-gray-700">
                   {tipoPost === "reel"
@@ -347,7 +333,7 @@ export default function PostModal({
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 max-h-64 overflow-y-auto">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 p-3 bg-gray-50/70 rounded-2xl border border-gray-100 max-h-64 overflow-y-auto">
                 {availableGalleryFiles.map((file) => {
                   const selectedIndex = archivos.findIndex((item) => item.id === file.id);
                   const isSelected = selectedIndex !== -1;
@@ -367,36 +353,8 @@ export default function PostModal({
               </div>
             )}
           </div>
-        </form>
-
-        {/* Fixed Action Footer */}
-        <div className="flex items-center justify-between px-5 py-3.5 sm:px-8 sm:py-4 border-t border-gray-100 bg-gray-50/50 shrink-0">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isSaving}
-            className="h-10 sm:h-11 px-4 sm:px-5 rounded-full border border-gray-300 hover:bg-gray-100 text-gray-700 font-sora font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            form="post-form"
-            disabled={isSaving}
-            className="h-10 sm:h-11 px-5 sm:px-7 bg-[#188ff0] hover:bg-blue-600 text-white font-sora font-bold text-xs uppercase tracking-wider rounded-full shadow-md shadow-blue-200 transition-all inline-flex items-center gap-2 cursor-pointer"
-          >
-            {isSaving ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" /> Guardando...
-              </>
-            ) : isEditing ? (
-              "Guardar Cambios"
-            ) : (
-              "Programar Publicación"
-            )}
-          </button>
         </div>
-      </div>
+      </BaseFormModal>
 
       {/* Lightbox details modal */}
       {previewMedia && (
@@ -406,6 +364,6 @@ export default function PostModal({
           showDelete={false}
         />
       )}
-    </div>
+    </>
   );
 }

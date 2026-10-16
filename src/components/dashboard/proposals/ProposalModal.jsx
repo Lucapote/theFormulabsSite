@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { FileText, DollarSign, X } from "lucide-react";
+import { FileText, DollarSign } from "lucide-react";
 import { DEFAULT_PROPOSAL_TEMPLATE as defaultTemplate } from "@/data/proposalData";
+import BaseFormModal from "@/components/common/BaseFormModal";
 import ProposalInfoTab from "./ProposalInfoTab";
 import ProposalPricingTab from "./ProposalPricingTab";
 
@@ -125,116 +126,90 @@ export default function ProposalModal({
     });
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-xs p-4 overflow-y-auto font-inter">
-      <div className="bg-white rounded-[2rem] border border-gray-100 w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl my-auto overflow-hidden">
-        {/* Header */}
-        <div className="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-900 text-white">
-          <div>
-            <span className="text-[10px] font-sora font-bold text-pink-400 uppercase tracking-widest block">
-              CONFIGURADOR ESTRATÉGICO
-            </span>
-            <h3 className="font-sora font-extrabold text-lg tracking-tight">{title}</h3>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-gray-300 hover:text-white transition-all cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* 2-Step Tabs Header */}
-        <div className="flex border-b border-gray-100 bg-gray-50/50 p-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab(1)}
-            className={`flex-1 py-3 px-4 font-sora text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
-              activeTab === 1
-                ? "bg-white text-gray-900 shadow-sm border border-gray-200"
-                : "text-gray-500 hover:text-gray-900"
-            }`}
-          >
-            <FileText className="w-4 h-4 text-pink-500" />
-            1. Info & Textos Generales
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab(2)}
-            className={`flex-1 py-3 px-4 font-sora text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
-              activeTab === 2
-                ? "bg-white text-gray-900 shadow-sm border border-gray-200"
-                : "text-gray-500 hover:text-gray-900"
-            }`}
-          >
-            <DollarSign className="w-4 h-4 text-brand-blue" />
-            2. Precios & Módulos
-          </button>
-        </div>
-
-        {/* Modal Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
-          {activeTab === 1 ? (
-            <ProposalInfoTab
-              slug={slug}
-              setSlug={setSlug}
-              isSlugModified={isSlugModified}
-              setIsSlugModified={setIsSlugModified}
-              clientName={clientName}
-              setClientName={setClientName}
-              shortName={shortName}
-              setShortName={setShortName}
-              email={email}
-              setEmail={setEmail}
-              whatsapp={whatsapp}
-              setWhatsapp={setWhatsapp}
-              instagram={instagram}
-              setInstagram={setInstagram}
-              location={location}
-              setLocation={setLocation}
-              proposalTitle={proposalTitle}
-              setProposalTitle={setProposalTitle}
-              greeting={greeting}
-              setGreeting={setGreeting}
-              vision={vision}
-              setVision={setVision}
-            />
-          ) : (
-            <ProposalPricingTab
-              priceEsencial={priceEsencial} setPriceEsencial={setPriceEsencial}
-              priceCrecimiento={priceCrecimiento} setPriceCrecimiento={setPriceCrecimiento}
-              priceEscala={priceEscala} setPriceEscala={setPriceEscala}
-              pricePauMarca={pricePauMarca} setPricePauMarca={setPricePauMarca}
-              pricePauCreadora={pricePauCreadora} setPricePauCreadora={setPricePauCreadora}
-              priceManejoRedes={priceManejoRedes} setPriceManejoRedes={setPriceManejoRedes}
-              priceMetaAds={priceMetaAds} setPriceMetaAds={setPriceMetaAds}
-              produccionesPorMes={produccionesPorMes} setProduccionesPorMes={setProduccionesPorMes}
-              precioSesionExtra={precioSesionExtra} setPrecioSesionExtra={setPrecioSesionExtra}
-              tipoSesionDefault={tipoSesionDefault} setTipoSesionDefault={setTipoSesionDefault}
-              extraSessionsCount={extraSessionsCount} setExtraSessionsCount={setExtraSessionsCount}
-            />
-          )}
-
-          {/* Form Footer */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="h-10 px-5 rounded-full border border-gray-300 hover:bg-gray-100 text-gray-700 font-sora font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="h-10 px-6 bg-pink-500 hover:bg-pink-600 text-white font-sora font-bold text-xs uppercase tracking-wider rounded-full shadow-md shadow-pink-200 transition-all cursor-pointer"
-            >
-              {isSaving ? "Guardando..." : "Guardar Propuesta"}
-            </button>
-          </div>
-        </form>
-      </div>
+  const tabsContent = (
+    <div className="flex bg-gray-100 p-1 rounded-full border border-gray-200 gap-1">
+      <button
+        type="button"
+        onClick={() => setActiveTab(1)}
+        className={`flex-1 py-2 px-4 font-sora text-xs font-bold rounded-full flex items-center justify-center gap-2 transition-all cursor-pointer ${
+          activeTab === 1
+            ? "bg-gray-900 text-white shadow-md"
+            : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
+        }`}
+      >
+        <FileText className={`w-3.5 h-3.5 ${activeTab === 1 ? "text-pink-400" : "text-gray-400"}`} />
+        1. Info & Textos Generales
+      </button>
+      <button
+        type="button"
+        onClick={() => setActiveTab(2)}
+        className={`flex-1 py-2 px-4 font-sora text-xs font-bold rounded-full flex items-center justify-center gap-2 transition-all cursor-pointer ${
+          activeTab === 2
+            ? "bg-gray-900 text-white shadow-md"
+            : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
+        }`}
+      >
+        <DollarSign className={`w-3.5 h-3.5 ${activeTab === 2 ? "text-[#188ff0]" : "text-gray-400"}`} />
+        2. Precios & Módulos
+      </button>
     </div>
+  );
+
+  return (
+    <BaseFormModal
+      isOpen={isOpen}
+      onClose={onClose}
+      onSubmit={handleSubmit}
+      eyebrow="CONFIGURADOR ESTRATÉGICO"
+      eyebrowColor="text-brand-magenta"
+      title={title}
+      maxWidth="max-w-2xl"
+      cancelText="Cancelar"
+      submitText="Guardar Propuesta"
+      loadingText="Guardando..."
+      isLoading={isSaving}
+      tabs={tabsContent}
+    >
+      {activeTab === 1 ? (
+        <ProposalInfoTab
+          slug={slug}
+          setSlug={setSlug}
+          isSlugModified={isSlugModified}
+          setIsSlugModified={setIsSlugModified}
+          clientName={clientName}
+          setClientName={setClientName}
+          shortName={shortName}
+          setShortName={setShortName}
+          email={email}
+          setEmail={setEmail}
+          whatsapp={whatsapp}
+          setWhatsapp={setWhatsapp}
+          instagram={instagram}
+          setInstagram={setInstagram}
+          location={location}
+          setLocation={setLocation}
+          proposalTitle={proposalTitle}
+          setProposalTitle={setProposalTitle}
+          greeting={greeting}
+          setGreeting={setGreeting}
+          vision={vision}
+          setVision={setVision}
+        />
+      ) : (
+        <ProposalPricingTab
+          priceEsencial={priceEsencial} setPriceEsencial={setPriceEsencial}
+          priceCrecimiento={priceCrecimiento} setPriceCrecimiento={setPriceCrecimiento}
+          priceEscala={priceEscala} setPriceEscala={setPriceEscala}
+          pricePauMarca={pricePauMarca} setPricePauMarca={setPricePauMarca}
+          pricePauCreadora={pricePauCreadora} setPricePauCreadora={setPricePauCreadora}
+          priceManejoRedes={priceManejoRedes} setPriceManejoRedes={setPriceManejoRedes}
+          priceMetaAds={priceMetaAds} setPriceMetaAds={setPriceMetaAds}
+          produccionesPorMes={produccionesPorMes} setProduccionesPorMes={setProduccionesPorMes}
+          precioSesionExtra={precioSesionExtra} setPrecioSesionExtra={setPrecioSesionExtra}
+          tipoSesionDefault={tipoSesionDefault} setTipoSesionDefault={setTipoSesionDefault}
+          extraSessionsCount={extraSessionsCount} setExtraSessionsCount={setExtraSessionsCount}
+        />
+      )}
+    </BaseFormModal>
   );
 }

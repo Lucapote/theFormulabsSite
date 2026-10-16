@@ -1,13 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { DollarSign, TrendingUp, Calendar, Link as LinkIcon, CheckCircle2, Trash2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter
-} from "@/components/ui/dialog";
+import BaseFormModal from "@/components/common/BaseFormModal";
 import { updateCicloFinanzas } from "@/services/operationsService";
 import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
 
@@ -92,19 +86,40 @@ export default function FinanceCostModal({
     }
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md bg-white p-6 rounded-2xl shadow-xl border-gray-100">
-        <DialogHeader className="pb-2 border-b border-gray-100">
-          <DialogTitle className="font-sora text-base sm:text-lg font-bold text-gray-900 flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-blue" />
-            Finanzas del Ciclo &mdash; {clienteNombre}
-          </DialogTitle>
-        </DialogHeader>
+  const resetCostsButton = (costo > 0 || Boolean(formData.comprobante_url)) ? (
+    <button
+      type="button"
+      onClick={() => setShowDeleteConfirm(true)}
+      disabled={loading || isDeleting}
+      className="h-11 px-4 rounded-full border border-red-200 hover:bg-red-50 text-red-600 font-sora font-bold text-xs uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+      title="Eliminar costos registrados y comprobante"
+    >
+      <Trash2 className="w-3.5 h-3.5" />
+      <span>Restablecer Costos</span>
+    </button>
+  ) : null;
 
-        <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+  return (
+    <>
+      <BaseFormModal
+        isOpen={isOpen}
+        onClose={onClose}
+        onSubmit={handleSubmit}
+        eyebrow="FINANZAS Y CONTROL"
+        eyebrowColor="text-brand-magenta"
+        icon={DollarSign}
+        title="Finanzas del Ciclo"
+        description={clienteNombre ? `Cliente: ${clienteNombre}` : undefined}
+        maxWidth="max-w-md"
+        cancelText="Cancelar"
+        submitText="Guardar Finanzas"
+        loadingText="Guardando..."
+        isLoading={loading}
+        footerExtra={resetCostsButton}
+      >
+        <div className="space-y-4">
           {/* Card de Margen en Vivo */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 flex items-center justify-between">
+          <div className="bg-gray-50/70 border border-gray-200 rounded-xl p-3.5 flex items-center justify-between">
             <div>
               <span className="text-[10px] font-sora font-semibold text-gray-500 uppercase tracking-wider block mb-0.5">
                 Margen Neto Proyectado
@@ -126,7 +141,7 @@ export default function FinanceCostModal({
           {/* Montos */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-sora font-semibold text-gray-700 mb-1 flex items-center gap-1">
+              <label className="text-xs font-sora font-bold text-gray-700 uppercase tracking-wide mb-1 flex items-center gap-1">
                 <DollarSign className="w-3.5 h-3.5 text-brand-blue" /> Monto Cobrado
               </label>
               <input
@@ -135,12 +150,12 @@ export default function FinanceCostModal({
                 step="any"
                 value={formData.monto_cobrado}
                 onChange={(e) => setFormData({ ...formData, monto_cobrado: e.target.value })}
-                className="w-full text-sm font-inter bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                className="w-full text-sm font-inter bg-white border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all font-semibold"
               />
             </div>
             <div>
-              <label className="text-xs font-sora font-semibold text-gray-700 mb-1 flex items-center gap-1">
-                <TrendingUp className="w-3.5 h-3.5 text-pink-500" /> Costo Operativo
+              <label className="text-xs font-sora font-bold text-gray-700 uppercase tracking-wide mb-1 flex items-center gap-1">
+                <TrendingUp className="w-3.5 h-3.5 text-brand-magenta" /> Costo Operativo
               </label>
               <input
                 type="number"
@@ -148,7 +163,7 @@ export default function FinanceCostModal({
                 step="any"
                 value={formData.costo_operativo}
                 onChange={(e) => setFormData({ ...formData, costo_operativo: e.target.value })}
-                className="w-full text-sm font-inter bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                className="w-full text-sm font-inter bg-white border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all font-semibold"
               />
             </div>
           </div>
@@ -156,13 +171,13 @@ export default function FinanceCostModal({
           {/* Estado de Pago y Fecha */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-sora font-semibold text-gray-700 mb-1 flex items-center gap-1">
+              <label className="text-xs font-sora font-bold text-gray-700 uppercase tracking-wide mb-1 flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Estado de Pago
               </label>
               <select
                 value={formData.estado_pago}
                 onChange={(e) => setFormData({ ...formData, estado_pago: e.target.value })}
-                className="w-full text-xs font-inter bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                className="w-full text-xs font-inter bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-gray-900 focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all cursor-pointer font-sora font-semibold"
               >
                 <option value="pendiente">Pendiente</option>
                 <option value="pagado">Pagado</option>
@@ -170,21 +185,21 @@ export default function FinanceCostModal({
               </select>
             </div>
             <div>
-              <label className="text-xs font-sora font-semibold text-gray-700 mb-1 flex items-center gap-1">
+              <label className="text-xs font-sora font-bold text-gray-700 uppercase tracking-wide mb-1 flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5 text-gray-500" /> Fecha de Pago
               </label>
               <input
                 type="date"
                 value={formData.fecha_pago}
                 onChange={(e) => setFormData({ ...formData, fecha_pago: e.target.value })}
-                className="w-full text-sm font-inter bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue"
+                className="w-full text-sm font-inter bg-white border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all cursor-pointer"
               />
             </div>
           </div>
 
           {/* Comprobante / Factura URL */}
           <div>
-            <label className="text-xs font-sora font-semibold text-gray-700 mb-1 flex items-center gap-1">
+            <label className="text-xs font-sora font-bold text-gray-700 uppercase tracking-wide mb-1 flex items-center gap-1">
               <LinkIcon className="w-3.5 h-3.5 text-brand-blue" /> URL Comprobante / Factura
             </label>
             <input
@@ -192,46 +207,11 @@ export default function FinanceCostModal({
               placeholder="https://..."
               value={formData.comprobante_url}
               onChange={(e) => setFormData({ ...formData, comprobante_url: e.target.value })}
-              className="w-full text-sm font-inter bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue"
+              className="w-full text-sm font-inter bg-white border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all"
             />
           </div>
-
-          <DialogFooter className="pt-2 flex flex-col-reverse sm:flex-row items-center justify-between gap-2.5">
-            <div>
-              {(costo > 0 || Boolean(formData.comprobante_url)) && (
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  disabled={loading || isDeleting}
-                  className="h-10 px-4 rounded-full border border-red-200 hover:bg-red-50 text-red-600 font-sora font-bold text-xs uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-                  title="Eliminar costos registrados y comprobante"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Restablecer Costos</span>
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={loading || isDeleting}
-                className="h-10 px-5 rounded-full border border-gray-200 hover:bg-gray-100 text-gray-700 text-xs font-sora font-bold uppercase tracking-wider transition-colors cursor-pointer disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={loading || isDeleting}
-                className="h-10 px-6 rounded-full bg-[#188ff0] hover:bg-blue-600 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
-              >
-                {loading ? "Guardando..." : "Guardar Finanzas"}
-              </button>
-            </div>
-          </DialogFooter>
-        </form>
-      </DialogContent>
+        </div>
+      </BaseFormModal>
 
       {/* Modal de Confirmación Clínico para Eliminar/Restablecer Costos */}
       <ConfirmDeleteModal
@@ -243,6 +223,6 @@ export default function FinanceCostModal({
         onClose={() => setShowDeleteConfirm(false)}
         onConfirm={handleConfirmResetCosts}
       />
-    </Dialog>
+    </>
   );
 }
