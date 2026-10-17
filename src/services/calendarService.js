@@ -178,6 +178,10 @@ export async function updateCliente(clienteId, payload = {}) {
     if (payload.locacion_default !== undefined) {
       updatePayload.locacion_default = payload.locacion_default ? payload.locacion_default.trim() : null;
     }
+    if (payload.fb_page_id !== undefined) updatePayload.fb_page_id = payload.fb_page_id;
+    if (payload.fb_page_access_token !== undefined) updatePayload.fb_page_access_token = payload.fb_page_access_token;
+    if (payload.ig_business_account_id !== undefined) updatePayload.ig_business_account_id = payload.ig_business_account_id;
+    if (payload.auto_publish_enabled !== undefined) updatePayload.auto_publish_enabled = Boolean(payload.auto_publish_enabled);
 
     let { data, error } = await supabase
       .from("clientes")
@@ -187,12 +191,26 @@ export async function updateCliente(clienteId, payload = {}) {
       .single();
 
     // Fallback defensivo si locacion_default u otra columna no existiera aún en Supabase
-    if (error && (error.message.includes("locacion_default") || error.message.includes("dia_corte_pago_2") || error.message.includes("tipo_sesion_default") || error.message.includes("esquema_pago"))) {
+    if (
+      error &&
+      (error.message.includes("locacion_default") ||
+        error.message.includes("dia_corte_pago_2") ||
+        error.message.includes("tipo_sesion_default") ||
+        error.message.includes("esquema_pago") ||
+        error.message.includes("fb_page_id") ||
+        error.message.includes("fb_page_access_token") ||
+        error.message.includes("ig_business_account_id") ||
+        error.message.includes("auto_publish_enabled"))
+    ) {
       const fallbackPayload = { ...updatePayload };
       delete fallbackPayload.locacion_default;
       delete fallbackPayload.dia_corte_pago_2;
       delete fallbackPayload.tipo_sesion_default;
       delete fallbackPayload.esquema_pago;
+      delete fallbackPayload.fb_page_id;
+      delete fallbackPayload.fb_page_access_token;
+      delete fallbackPayload.ig_business_account_id;
+      delete fallbackPayload.auto_publish_enabled;
 
       const retry = await supabase
         .from("clientes")

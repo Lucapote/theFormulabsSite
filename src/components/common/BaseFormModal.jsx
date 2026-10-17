@@ -33,6 +33,7 @@ export default function BaseFormModal({
   submitButtonClass = "",
   cancelButtonClass = "",
   bodyClassName = "",
+  className = "",
   children
 }) {
   const generatedFormId = React.useId();
@@ -43,7 +44,7 @@ export default function BaseFormModal({
     const bodyContent = (
       <div
         className={cn(
-          "flex-1 overflow-y-auto px-6 py-6 md:px-8 space-y-5 bg-white max-h-[70vh] md:max-h-[75vh]",
+          "flex-1 overflow-y-auto min-h-0 px-6 py-6 md:px-8 space-y-5 bg-white max-h-[70vh] md:max-h-[75vh]",
           bodyClassName
         )}
       >
@@ -99,7 +100,7 @@ export default function BaseFormModal({
         <form
           id={effectiveFormId}
           onSubmit={onSubmit}
-          className="flex flex-col flex-1 overflow-hidden"
+          className="flex flex-col flex-1 min-h-0 overflow-hidden"
         >
           {bodyContent}
           {footerContent}
@@ -108,7 +109,7 @@ export default function BaseFormModal({
     }
 
     return (
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
         {bodyContent}
         {footerContent}
       </div>
@@ -128,7 +129,8 @@ export default function BaseFormModal({
             "max-h-[90vh] rounded-[2rem] border border-gray-100 bg-white shadow-2xl overflow-hidden font-inter",
             "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
             "w-[calc(100vw-1.5rem)] sm:w-full",
-            maxWidth
+            maxWidth,
+            className
           )}
         >
           {/* Header Oficial Clínico */}

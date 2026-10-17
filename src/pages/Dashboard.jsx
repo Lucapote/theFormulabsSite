@@ -432,7 +432,7 @@ export default function Dashboard() {
       </main>
 
       {/* CREATE PROPOSAL MODAL */}
-      <ProposalModal
+      <ProposalMo1dal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSave={handleSaveCreate}
