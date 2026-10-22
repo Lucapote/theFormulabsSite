@@ -97,8 +97,38 @@ export async function uploadComprobantePublico({ file, tokenReserva }) {
     }
 
     const optimizedFile = compRes.file || file;
+    const fileType = optimizedFile.type || "image/webp";
 
-    // 2. Solicitar URL prefirmada validada por tokenReserva en el backend
+    // 2. Intentar subida directa vía Serverless Proxy (/api/upload-comprobante)
+    // Al ser del mismo origen (same-origin), elimina al 100% los bloqueos de CORS del navegador
+    try {
+      const serverlessRes = await fetch("/api/upload-comprobante", {
+        method: "POST",
+        headers: {
+          "x-token-reserva": tokenReserva.trim(),
+          "x-file-name": encodeURIComponent(optimizedFile.name),
+          "x-file-type": fileType
+        },
+        body: optimizedFile
+      });
+
+      if (serverlessRes.ok) {
+        const json = await serverlessRes.json();
+        if (json.success && json.publicUrl) {
+          return {
+            success: true,
+            publicUrl: json.publicUrl,
+            originalSize: compRes.originalSize,
+            compressedSize: compRes.compressedSize,
+            savedPercentage: compRes.savedPercentage
+          };
+        }
+      }
+    } catch (serverlessErr) {
+      console.warn("Aviso: /api/upload-comprobante no disponible, intentando URL prefirmada:", serverlessErr);
+    }
+
+    // 3. Fallback a URL prefirmada directa a Cloudflare R2
     const presignRes = await fetch("/api/r2-presigned-url", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -106,7 +136,7 @@ export async function uploadComprobantePublico({ file, tokenReserva }) {
         action: "put_comprobante",
         tokenReserva: tokenReserva.trim(),
         fileName: optimizedFile.name,
-        fileType: optimizedFile.type || "image/webp"
+        fileType
       })
     });
 
@@ -123,11 +153,11 @@ export async function uploadComprobantePublico({ file, tokenReserva }) {
       return { success: false, error: "Respuesta de almacenamiento incompleta." };
     }
 
-    // 3. Subir directamente el archivo comprimido a Cloudflare R2
+    // 4. Subir directamente el archivo comprimido a Cloudflare R2
     const putRes = await fetch(uploadUrl, {
       method: "PUT",
       headers: {
-        "Content-Type": optimizedFile.type || "image/webp"
+        "Content-Type": fileType
       },
       body: optimizedFile
     });
