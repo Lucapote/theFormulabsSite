@@ -84,8 +84,9 @@ export function viteR2DevServer() {
 
         const isUploadR2 = req.url.startsWith("/api/upload-r2");
         const isPresignedR2 = req.url.startsWith("/api/r2-presigned-url");
+        const isUploadComprobante = req.url.startsWith("/api/upload-comprobante");
 
-        if (!isUploadR2 && !isPresignedR2) {
+        if (!isUploadR2 && !isPresignedR2 && !isUploadComprobante) {
           return next();
         }
 
@@ -203,7 +204,51 @@ export function viteR2DevServer() {
               return;
             }
 
-            // Acción: GENERAR URL PREFIRMADA (SUBIDA)
+            // Acción: SUBIDA DE COMPROBANTE PÚBLICO (put_comprobante)
+            if (action === "put_comprobante") {
+              const tokenReserva = (body.tokenReserva || urlObj.searchParams.get("tokenReserva") || "").trim();
+              const fileName = body.fileName || urlObj.searchParams.get("fileName") || "comprobante.webp";
+              const fileType = body.fileType || urlObj.searchParams.get("fileType") || "image/webp";
+
+              let cicloId = "general";
+              try {
+                const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+                const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+                if (supabaseUrl && supabaseKey) {
+                  const { createClient } = await import("@supabase/supabase-js");
+                  const sbClient = createClient(supabaseUrl, supabaseKey);
+                  const { data: prodRow } = await sbClient
+                    .from("producciones")
+                    .select("ciclo_id")
+                    .eq("token_reserva", tokenReserva)
+                    .maybeSingle();
+                  if (prodRow?.ciclo_id) {
+                    cicloId = String(prodRow.ciclo_id);
+                  }
+                }
+              } catch (sbErr) {
+                console.warn("[Vite R2 Dev] No se pudo consultar ciclo_id en Supabase:", sbErr.message);
+              }
+
+              const cleanFileName = decodeURIComponent(fileName).replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_.-]/g, "");
+              const storageKey = `comprobantes/${cicloId}/${Date.now()}-${cleanFileName}`;
+
+              const command = new PutObjectCommand({
+                Bucket: bucketName,
+                Key: storageKey,
+                ContentType: fileType,
+              });
+
+              const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 900 });
+              const publicUrl = `${publicDomain}/${storageKey}`;
+
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ uploadUrl, publicUrl, key: storageKey, expiresIn: 900 }));
+              return;
+            }
+
+            // Acción: GENERAR URL PREFIRMADA (SUBIDA DE CONTENIDO GENERAL)
             const fileName = body.fileName || urlObj.searchParams.get("fileName");
             const fileType = body.fileType || urlObj.searchParams.get("fileType") || "application/octet-stream";
             const calendarioId = body.calendarioId || urlObj.searchParams.get("calendarioId") || "general";
@@ -277,6 +322,98 @@ export function viteR2DevServer() {
             );
 
             const publicUrl = `${publicDomain}/${storageKey}`;
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ success: true, publicUrl, key: storageKey }));
+            return;
+          }
+
+          // 3. MANEJO DE /api/upload-comprobante (Subida binaria de comprobantes de pago pública)
+          if (isUploadComprobante) {
+            const tokenReserva = (req.headers["x-token-reserva"] || urlObj.searchParams.get("tokenReserva") || "").trim();
+            const fileName = req.headers["x-file-name"] || urlObj.searchParams.get("fileName") || "comprobante.webp";
+            const fileType = req.headers["x-file-type"] || urlObj.searchParams.get("fileType") || "image/webp";
+
+            if (!tokenReserva) {
+              res.statusCode = 400;
+              res.setHeader("Content-Type", "application/json");
+              res.end(JSON.stringify({ error: "Token de reserva es requerido." }));
+              return;
+            }
+
+            let cicloId = "general";
+            try {
+              const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+              const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+              if (supabaseUrl && supabaseKey) {
+                const { createClient } = await import("@supabase/supabase-js");
+                const sbClient = createClient(supabaseUrl, supabaseKey);
+                const { data: prodRow } = await sbClient
+                  .from("producciones")
+                  .select("ciclo_id")
+                  .eq("token_reserva", tokenReserva)
+                  .maybeSingle();
+                if (prodRow?.ciclo_id) {
+                  cicloId = String(prodRow.ciclo_id);
+                }
+              }
+            } catch (sbErr) {
+              console.warn("[Vite R2 Dev] No se pudo consultar ciclo_id para comprobante:", sbErr.message);
+            }
+
+            const cleanFileName = decodeURIComponent(fileName).replace(/\s+/g, "_").replace(/[^a-zA-Z0-9_.-]/g, "");
+            const storageKey = `comprobantes/${cicloId}/${Date.now()}-${cleanFileName}`;
+
+            await s3Client.send(
+              new PutObjectCommand({
+                Bucket: bucketName,
+                Key: storageKey,
+                Body: rawBuffer,
+                ContentType: fileType,
+              })
+            );
+
+            const publicUrl = `${publicDomain}/${storageKey}`;
+
+            // Auto-vincular inmediatamente en Supabase para que aparezca en el Dashboard en desarrollo local
+            if (cicloId !== "general") {
+              try {
+                const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+                const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+                if (supabaseUrl && supabaseKey) {
+                  const { createClient } = await import("@supabase/supabase-js");
+                  const sbClient = createClient(supabaseUrl, supabaseKey);
+                  const { data: cicloRow } = await sbClient
+                    .from("ciclos_mensuales")
+                    .select("id, estado_pago, cliente:clientes(esquema_pago)")
+                    .eq("id", cicloId)
+                    .maybeSingle();
+
+                  const isSegundoPago =
+                    cicloRow?.cliente?.esquema_pago === "dos_pagos" &&
+                    cicloRow?.estado_pago === "primer_pago";
+
+                  const updatePayload = {
+                    comprobante_en_revision: true,
+                  };
+                  if (isSegundoPago) {
+                    updatePayload.comprobante_2_url = publicUrl;
+                  } else {
+                    updatePayload.comprobante_url = publicUrl;
+                  }
+
+                  await sbClient
+                    .from("ciclos_mensuales")
+                    .update(updatePayload)
+                    .eq("id", cicloId);
+
+                  console.log(`[Vite R2 Dev] Comprobante auto-vinculado exitosamente al ciclo ${cicloId}`);
+                }
+              } catch (dbErr) {
+                console.warn("[Vite R2 Dev] Aviso al auto-vincular ciclo en local:", dbErr.message);
+              }
+            }
+
             res.statusCode = 200;
             res.setHeader("Content-Type", "application/json");
             res.end(JSON.stringify({ success: true, publicUrl, key: storageKey }));

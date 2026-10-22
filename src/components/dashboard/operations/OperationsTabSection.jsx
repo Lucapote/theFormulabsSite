@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -6,7 +6,8 @@ import {
   RefreshCw,
   Sparkles,
   Users,
-  AlertCircle
+  AlertCircle,
+  FileCheck2
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCiclosByPeriodo, ensureCicloActual } from "@/services/operationsService";
@@ -15,6 +16,7 @@ import OperationsMetricsHeader from "./OperationsMetricsHeader";
 import OperationsCycleCard from "./OperationsCycleCard";
 import ProductionDetailModal from "./ProductionDetailModal";
 import FinanceCostModal from "./FinanceCostModal";
+import PendingReceiptsReviewModal from "./PendingReceiptsReviewModal";
 import EditClientModal from "../calendar/EditClientModal";
 import { useWindowFocusRefresh } from "@/hooks/useWindowFocusRefresh";
 
@@ -32,6 +34,8 @@ export default function OperationsTabSection() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedReviewCicloId, setSelectedReviewCicloId] = useState(null);
   const [activeProductionModal, setActiveProductionModal] = useState({ isOpen: false, produccion: null, clienteNombre: "" });
   const [activeFinanceModal, setActiveFinanceModal] = useState({ isOpen: false, ciclo: null, clienteNombre: "" });
 
@@ -57,6 +61,15 @@ export default function OperationsTabSection() {
   const activeClientesWithoutCycle = clientes.filter(
     (cl) => cl.activo !== false && !ciclos.some((c) => c.cliente_id === cl.id)
   );
+
+  // Comprobantes que requieren revisión por la agencia en este periodo
+  const pendingReceiptsCycles = useMemo(() => {
+    return (ciclos || []).filter((c) => {
+      const activeUrl = c.comprobante_url || c.comprobante_2_url;
+      const hasPreReserved = (c.producciones || []).some((p) => p.estado === "pre_reservada");
+      return Boolean(c.comprobante_en_revision) || (hasPreReserved && Boolean(activeUrl));
+    });
+  }, [ciclos]);
 
   const handleEnsureAllCycles = async () => {
     if (activeClientesWithoutCycle.length === 0) return;
@@ -109,6 +122,21 @@ export default function OperationsTabSection() {
         </div>
 
         <div className="flex items-center gap-2">
+          {pendingReceiptsCycles.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowReviewModal(true)}
+              className="h-9 px-4 rounded-full bg-blue-50 border border-blue-200 hover:bg-blue-100/80 text-[#188ff0] text-xs font-sora font-bold flex items-center gap-2 cursor-pointer shadow-xs transition-all active:scale-[0.98]"
+            >
+              <FileCheck2 className="w-4 h-4 text-[#188ff0]" />
+              <span className="hidden sm:inline">Comprobantes por Validar</span>
+              <span className="sm:hidden">Validar</span>
+              <span className="w-5 h-5 rounded-full bg-[#188ff0] text-white text-[11px] font-mono flex items-center justify-center font-bold">
+                {pendingReceiptsCycles.length}
+              </span>
+            </button>
+          )}
+
           {activeClientesWithoutCycle.length > 0 && (
             <button
               type="button"
@@ -175,6 +203,10 @@ export default function OperationsTabSection() {
                 toast.info("Dirígete a la pestaña de Calendarios para crear uno nuevo.");
               }}
               onEditClient={(c) => setEditingClient(c)}
+              onOpenReviewReceipt={(c) => {
+                setSelectedReviewCicloId(c.id);
+                setShowReviewModal(true);
+              }}
             />
           ))}
         </div>
@@ -236,6 +268,17 @@ export default function OperationsTabSection() {
         cliente={editingClient}
         onClose={() => setEditingClient(null)}
         onClientUpdated={loadData}
+      />
+
+      <PendingReceiptsReviewModal
+        isOpen={showReviewModal}
+        onClose={() => {
+          setShowReviewModal(false);
+          setSelectedReviewCicloId(null);
+        }}
+        pendingCycles={pendingReceiptsCycles}
+        initialSelectedCicloId={selectedReviewCicloId}
+        onCycleUpdated={loadData}
       />
     </div>
   );

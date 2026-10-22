@@ -115,6 +115,35 @@ export default async function handler(req, res) {
 
     const publicUrl = `${R2_PUBLIC_DOMAIN}/${storageKey}`;
 
+    // Registrar inmediatamente el comprobante en ciclos_mensuales para que aparezca en el Dashboard
+    try {
+      const { data: cicloRow } = await sbClient
+        .from("ciclos_mensuales")
+        .select("id, estado_pago, cliente:clientes(esquema_pago)")
+        .eq("id", prodRow.ciclo_id)
+        .maybeSingle();
+
+      const isSegundoPago =
+        cicloRow?.cliente?.esquema_pago === "dos_pagos" &&
+        cicloRow?.estado_pago === "primer_pago";
+
+      const updatePayload = {
+        comprobante_en_revision: true,
+      };
+      if (isSegundoPago) {
+        updatePayload.comprobante_2_url = publicUrl;
+      } else {
+        updatePayload.comprobante_url = publicUrl;
+      }
+
+      await sbClient
+        .from("ciclos_mensuales")
+        .update(updatePayload)
+        .eq("id", prodRow.ciclo_id);
+    } catch (dbErr) {
+      console.warn("Aviso: No se pudo auto-vincular comprobante en ciclos_mensuales:", dbErr.message);
+    }
+
     return res.status(200).json({
       success: true,
       publicUrl,

@@ -45,7 +45,8 @@ export default function OperationsCycleCard({
   onOpenFinanceModal,
   onStatusUpdated,
   onOpenCreateCalendar,
-  onEditClient = null
+  onEditClient = null,
+  onOpenReviewReceipt = null
 }) {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [isUnlocking, setIsUnlocking] = useState(false);
@@ -352,7 +353,16 @@ export default function OperationsCycleCard({
                   <FileCheck2 className="w-3.5 h-3.5 text-brand-blue shrink-0" />
                   Comprobante recibido
                 </span>
-                {activeComprobanteUrl && (
+                {onOpenReviewReceipt ? (
+                  <button
+                    type="button"
+                    onClick={() => onOpenReviewReceipt(ciclo)}
+                    className="inline-flex items-center gap-1 text-[10px] font-sora font-bold text-brand-blue hover:underline cursor-pointer"
+                  >
+                    <span>Revisar en visor</span>
+                    <ExternalLink className="w-2.5 h-2.5" />
+                  </button>
+                ) : activeComprobanteUrl && (
                   <a
                     href={activeComprobanteUrl}
                     target="_blank"

@@ -10,6 +10,8 @@ export const formatPrice = (price) => {
   }).format(price || 0);
 };
 
+export const formatCurrency = formatPrice;
+
 export const formatPriceLabel = (num) => `$${Number(num || 0).toLocaleString("es-MX")}`;
 
 export const formatAddonLabel = (num) => `+$${Number(num || 0).toLocaleString("es-MX")} MXN`;
