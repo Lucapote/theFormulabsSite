@@ -5,6 +5,7 @@
  */
 
 import { supabase } from "@/lib/supabase";
+import { compressReceiptFile } from "@/utils/mediaCompressor";
 
 async function getAuthHeaders() {
   const headers = { "Content-Type": "application/json" };
@@ -71,5 +72,79 @@ export async function deleteR2Object(storageKey) {
   } catch (err) {
     console.warn("deleteR2Object catch error:", err);
     return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Comprime el comprobante (imagen -> WebP ultraligero ~60-120 KB o PDF validado)
+ * y lo sube a Cloudflare R2 validando el token_reserva público de la sesión.
+ *
+ * @param {object} params
+ * @param {File} params.file - Archivo de imagen o PDF seleccionado por el cliente
+ * @param {string} params.tokenReserva - Token público de la sesión de producción
+ * @returns {Promise<{ success: boolean, publicUrl?: string, originalSize?: number, compressedSize?: number, savedPercentage?: number, error?: string }>}
+ */
+export async function uploadComprobantePublico({ file, tokenReserva }) {
+  if (!file || !tokenReserva) {
+    return { success: false, error: "Archivo y token de reserva son obligatorios." };
+  }
+
+  try {
+    // 1. Comprimir comprobante reutilizando el algoritmo de mediaCompressor.js
+    const compRes = await compressReceiptFile(file);
+    if (compRes.error) {
+      return { success: false, error: compRes.error };
+    }
+
+    const optimizedFile = compRes.file || file;
+
+    // 2. Solicitar URL prefirmada validada por tokenReserva en el backend
+    const presignRes = await fetch("/api/r2-presigned-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "put_comprobante",
+        tokenReserva: tokenReserva.trim(),
+        fileName: optimizedFile.name,
+        fileType: optimizedFile.type || "image/webp"
+      })
+    });
+
+    if (!presignRes.ok) {
+      const errJson = await presignRes.json().catch(() => ({}));
+      return {
+        success: false,
+        error: errJson.error || "No se pudo autorizar la subida del comprobante."
+      };
+    }
+
+    const { uploadUrl, publicUrl } = await presignRes.json();
+    if (!uploadUrl || !publicUrl) {
+      return { success: false, error: "Respuesta de almacenamiento incompleta." };
+    }
+
+    // 3. Subir directamente el archivo comprimido a Cloudflare R2
+    const putRes = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": optimizedFile.type || "image/webp"
+      },
+      body: optimizedFile
+    });
+
+    if (!putRes.ok) {
+      return { success: false, error: "Error al transferir el comprobante al servidor." };
+    }
+
+    return {
+      success: true,
+      publicUrl,
+      originalSize: compRes.originalSize,
+      compressedSize: compRes.compressedSize,
+      savedPercentage: compRes.savedPercentage
+    };
+  } catch (err) {
+    console.error("uploadComprobantePublico error:", err);
+    return { success: false, error: err.message || "Error inesperado al subir el comprobante." };
   }
 }

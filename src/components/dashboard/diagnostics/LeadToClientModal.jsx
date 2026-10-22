@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { UserCheck, DollarSign, MapPin, Briefcase, GraduationCap, Zap } from "lucide-react";
+import { UserCheck, DollarSign, MapPin, Briefcase, GraduationCap, Zap, LockKeyhole } from "lucide-react";
 import BaseFormModal from "@/components/common/BaseFormModal";
 import { convertLeadToClient } from "@/services/leadService";
+import { getPaymentSplitOptions, getDefaultFirstPaymentSessions } from "@/utils/bookingHelpers";
 
 export default function LeadToClientModal({ isOpen, onClose, lead, onClientCreated }) {
   const [loading, setLoading] = useState(false);
@@ -239,24 +240,69 @@ export default function LeadToClientModal({ isOpen, onClose, lead, onClientCreat
 
           {/* Producciones por mes si no es mentoría */}
           {tipoServicio !== "mentoria" && (
-            <div>
-              <label className="text-xs font-sora font-bold text-gray-700 uppercase tracking-wide mb-1 block">
-                Sesiones de Rodaje / Mes
-              </label>
-              <div className="flex bg-gray-200/70 p-0.5 rounded-full border border-gray-200 h-10 items-center">
-                {[1, 2, 3, 4].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setFormData({ ...formData, producciones_por_mes: n })}
-                    className={`flex-1 h-8 rounded-full text-xs font-sora font-bold transition-all cursor-pointer ${
-                      formData.producciones_por_mes === n ? "bg-brand-blue text-white shadow-xs" : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    {n}
-                  </button>
-                ))}
+            <div className="space-y-2.5">
+              <div>
+                <label className="text-xs font-sora font-bold text-gray-700 uppercase tracking-wide mb-1 block">
+                  Sesiones de Rodaje / Mes
+                </label>
+                <div className="flex bg-gray-200/70 p-0.5 rounded-full border border-gray-200 h-10 items-center">
+                  {[1, 2, 3, 4].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() =>
+                        setFormData({
+                          ...formData,
+                          producciones_por_mes: n,
+                          sesiones_primer_pago: getDefaultFirstPaymentSessions(n)
+                        })
+                      }
+                      className={`flex-1 h-8 rounded-full text-xs font-sora font-bold transition-all cursor-pointer ${
+                        formData.producciones_por_mes === n ? "bg-brand-blue text-white shadow-xs" : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              {(formData.esquema_pago === "dos_pagos" || formData.esquema_pago === "quincenal") &&
+                formData.producciones_por_mes >= 2 && (
+                  <div className="p-2.5 bg-white border border-blue-100 rounded-xl space-y-1.5">
+                    <span className="text-[10px] font-sora font-bold text-gray-700 flex items-center gap-1">
+                      <LockKeyhole className="w-3 h-3 text-brand-blue" />
+                      Desbloqueo por Pago:
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                      {getPaymentSplitOptions(formData.producciones_por_mes).map((opt) => {
+                        const isSelected =
+                          (Number(formData.sesiones_primer_pago) ||
+                            getDefaultFirstPaymentSessions(formData.producciones_por_mes)) ===
+                          opt.firstPaymentSessions;
+                        return (
+                          <button
+                            key={opt.firstPaymentSessions}
+                            type="button"
+                            onClick={() =>
+                              setFormData({
+                                ...formData,
+                                sesiones_primer_pago: opt.firstPaymentSessions
+                              })
+                            }
+                            className={`py-1.5 px-2.5 rounded-full text-[10px] font-sora font-semibold transition-all cursor-pointer border ${
+                              isSelected
+                                ? "bg-gray-900 text-white border-gray-900"
+                                : "bg-gray-50 text-gray-700 border-gray-200 hover:border-brand-blue"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
             </div>
           )}
 

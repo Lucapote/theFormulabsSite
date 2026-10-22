@@ -121,6 +121,63 @@ export default async function handler(req, res) {
       });
     }
 
+    // Manejar subida pública de comprobante de pago validada por token_reserva
+    if (action === "put_comprobante") {
+      const tokenReserva = (params.tokenReserva || "").trim();
+      if (!tokenReserva || !fileName) {
+        return res.status(400).json({ error: "Parámetros requeridos: tokenReserva y fileName." });
+      }
+
+      const allowedTypes = ["image/webp", "image/jpeg", "image/png", "image/jpg", "application/pdf"];
+      const normalizedType = (fileType || "image/webp").toLowerCase();
+      if (!allowedTypes.includes(normalizedType)) {
+        return res.status(400).json({ error: "Formato no permitido. Sube una imagen (JPG, PNG, WebP) o PDF." });
+      }
+
+      const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+      const supabaseKey =
+        process.env.SUPABASE_SERVICE_ROLE_KEY ||
+        process.env.SUPABASE_ANON_KEY ||
+        process.env.VITE_SUPABASE_ANON_KEY;
+
+      if (!supabaseUrl || !supabaseKey) {
+        return res.status(500).json({ error: "Servicio de base de datos no configurado." });
+      }
+
+      const sbClient = createClient(supabaseUrl, supabaseKey);
+      const { data: prodRow, error: prodErr } = await sbClient
+        .from("producciones")
+        .select("id, ciclo_id")
+        .eq("token_reserva", tokenReserva)
+        .maybeSingle();
+
+      if (prodErr || !prodRow?.ciclo_id) {
+        return res.status(403).json({ error: "Token de reserva inválido o no autorizado." });
+      }
+
+      const cleanFileName = decodeURIComponent(fileName)
+        .replace(/\s+/g, "_")
+        .replace(/[^a-zA-Z0-9_.-]/g, "");
+      const cleanCicloId = sanitizeStorageKey(String(prodRow.ciclo_id).replace(/[^a-zA-Z0-9_-]/g, ""));
+      const storageKey = `comprobantes/${cleanCicloId}/${Date.now()}-${cleanFileName}`;
+
+      const command = new PutObjectCommand({
+        Bucket: R2_BUCKET_NAME,
+        Key: storageKey,
+        ContentType: normalizedType
+      });
+
+      const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 900 });
+      const publicUrl = `${R2_PUBLIC_DOMAIN}/${storageKey}`;
+
+      return res.status(200).json({
+        uploadUrl,
+        publicUrl,
+        key: storageKey,
+        expiresIn: 900
+      });
+    }
+
     // Validar autenticación antes de generar URL prefirmada de subida (PUT)
     const auth = await verifySupabaseAuth(req);
     if (!auth.authenticated) {

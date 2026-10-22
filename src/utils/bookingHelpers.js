@@ -115,3 +115,183 @@ export function formatLocalDateToYMD(date) {
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
+
+/**
+ * Calcula cuántas sesiones por defecto libera el 1er pago en un esquema de 2 pagos.
+ * Conservador por defecto: floor(total / 2) (ej. 2 -> 1, 3 -> 1, 4 -> 2).
+ *
+ * @param {number} [totalSesiones=2]
+ * @returns {number}
+ */
+export function getDefaultFirstPaymentSessions(totalSesiones = 2) {
+  const total = Math.max(1, Number(totalSesiones) || 1);
+  if (total <= 1) return 1;
+  return Math.max(1, Math.floor(total / 2));
+}
+
+/**
+ * Genera las opciones de reparto de sesiones entre 1er Pago y 2do Pago
+ * cuando un cliente tiene 2 pagos mensuales y 2, 3 o 4 sesiones.
+ *
+ * @param {number} [totalSesiones=2]
+ * @returns {Array<{ firstPaymentSessions: number, secondPaymentSessions: number, label: string, shortLabel: string }>}
+ */
+export function getPaymentSplitOptions(totalSesiones = 2) {
+  const total = Math.max(1, Number(totalSesiones) || 1);
+  if (total <= 1) {
+    return [
+      {
+        firstPaymentSessions: 1,
+        secondPaymentSessions: 0,
+        label: "1er Pago: 1 sesión",
+        shortLabel: "1 sesión"
+      }
+    ];
+  }
+
+  if (total === 2) {
+    return [
+      {
+        firstPaymentSessions: 1,
+        secondPaymentSessions: 1,
+        label: "1er Pago: 1 ses. • 2do Pago: 1 ses.",
+        shortLabel: "1 y 1 ses."
+      }
+    ];
+  }
+
+  if (total === 3) {
+    return [
+      {
+        firstPaymentSessions: 1,
+        secondPaymentSessions: 2,
+        label: "1er Pago: 1 ses. • 2do Pago: 2 ses.",
+        shortLabel: "1ª: 1 ses • 2ª: 2 ses"
+      },
+      {
+        firstPaymentSessions: 2,
+        secondPaymentSessions: 1,
+        label: "1er Pago: 2 ses. • 2do Pago: 1 ses.",
+        shortLabel: "1ª: 2 ses • 2ª: 1 ses"
+      }
+    ];
+  }
+
+  // total >= 4
+  return [
+    {
+      firstPaymentSessions: 2,
+      secondPaymentSessions: total - 2,
+      label: `1er Pago: 2 ses. • 2do Pago: ${total - 2} ses.`,
+      shortLabel: `1ª: 2 ses • 2ª: ${total - 2} ses`
+    },
+    {
+      firstPaymentSessions: 1,
+      secondPaymentSessions: total - 1,
+      label: `1er Pago: 1 ses. • 2do Pago: ${total - 1} ses.`,
+      shortLabel: `1ª: 1 ses • 2ª: ${total - 1} ses`
+    },
+    {
+      firstPaymentSessions: 3,
+      secondPaymentSessions: Math.max(1, total - 3),
+      label: `1er Pago: 3 ses. • 2do Pago: ${Math.max(1, total - 3)} ses.`,
+      shortLabel: `1ª: 3 ses • 2ª: ${Math.max(1, total - 3)} ses`
+    }
+  ];
+}
+
+/**
+ * Determina si el tramo de pago requerido para una sesión específica ya fue acreditado.
+ *
+ * @param {object} produccion - { numero_sesion }
+ * @param {object} ciclo - { estado_pago }
+ * @param {object} cliente - { esquema_pago, dia_corte_pago_2, producciones_por_mes, sesiones_primer_pago }
+ * @param {number} [totalCount]
+ * @returns {{ pagoAcreditado: boolean, requiereSegundoPago: boolean, maxPrimerPago: number }}
+ */
+export function isSessionPaymentSatisfied(produccion, ciclo, cliente = {}, totalCount = null) {
+  const estadoPago = ciclo?.estado_pago || "pendiente";
+  const total = Math.max(1, Number(totalCount) || Number(cliente?.producciones_por_mes) || 1);
+  const isDosPagos =
+    (cliente?.esquema_pago === "quincenal" ||
+      cliente?.esquema_pago === "dos_pagos" ||
+      Boolean(cliente?.dia_corte_pago_2)) &&
+    total >= 2;
+
+  const configuredFirst = Number(cliente?.sesiones_primer_pago);
+  const maxPrimerPago =
+    isDosPagos && configuredFirst >= 1 && configuredFirst < total
+      ? configuredFirst
+      : getDefaultFirstPaymentSessions(total);
+
+  if (estadoPago === "pagado") {
+    return { pagoAcreditado: true, requiereSegundoPago: false, maxPrimerPago };
+  }
+
+  if (!isDosPagos) {
+    return { pagoAcreditado: false, requiereSegundoPago: false, maxPrimerPago: total };
+  }
+
+  const numSesion = Number(produccion?.numero_sesion) || 1;
+  if (numSesion <= maxPrimerPago) {
+    return {
+      pagoAcreditado: estadoPago === "primer_pago",
+      requiereSegundoPago: false,
+      maxPrimerPago
+    };
+  }
+
+  return {
+    pagoAcreditado: false,
+    requiereSegundoPago: true,
+    maxPrimerPago
+  };
+}
+
+/**
+ * Evalúa si una sesión con fecha programada (propuesta por agencia, pre-reservada o agendada)
+ * se encuentra "En riesgo / Falta pago" por estar a menos de 24 horas del rodaje sin pago acreditado.
+ *
+ * @param {object} produccion - { estado, fecha_produccion, numero_sesion }
+ * @param {object} ciclo - { estado_pago }
+ * @param {object} cliente - Configuración del cliente
+ * @param {number} [totalCount]
+ * @returns {{ enRiesgo: boolean, horasRestantes: number | null, plazoVencido: boolean }}
+ */
+export function checkProductionPaymentRisk(produccion, ciclo, cliente = {}, totalCount = null) {
+  if (!produccion || !produccion.fecha_produccion) {
+    return { enRiesgo: false, horasRestantes: null, plazoVencido: false };
+  }
+
+  if (["rodaje_completado", "en_edicion", "finalizada"].includes(produccion.estado)) {
+    return { enRiesgo: false, horasRestantes: null, plazoVencido: false };
+  }
+
+  const { pagoAcreditado } = isSessionPaymentSatisfied(produccion, ciclo, cliente, totalCount);
+  if (pagoAcreditado) {
+    return { enRiesgo: false, horasRestantes: null, plazoVencido: false };
+  }
+
+  const targetTime = new Date(produccion.fecha_produccion).getTime();
+  if (isNaN(targetTime)) {
+    return { enRiesgo: false, horasRestantes: null, plazoVencido: false };
+  }
+
+  const diffMs = targetTime - Date.now();
+  const horasRestantes = Math.round(diffMs / (1000 * 60 * 60));
+
+  // Si faltan 24 horas o menos para la grabación y el pago aún no está acreditado
+  if (horasRestantes <= 24) {
+    return {
+      enRiesgo: true,
+      horasRestantes,
+      plazoVencido: horasRestantes <= 0
+    };
+  }
+
+  return {
+    enRiesgo: false,
+    horasRestantes,
+    plazoVencido: false
+  };
+}

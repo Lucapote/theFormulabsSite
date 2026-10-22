@@ -1,7 +1,8 @@
-import { UserPlus, DollarSign, Calendar, Video, MapPin } from "lucide-react";
+import { UserPlus, DollarSign, Calendar, Video, MapPin, LockKeyhole } from "lucide-react";
 import BaseFormModal from "@/components/common/BaseFormModal";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { getPaymentSplitOptions, getDefaultFirstPaymentSessions } from "@/utils/bookingHelpers";
 
 /**
  * CreateClientModal
@@ -263,32 +264,78 @@ export default function CreateClientModal({
         </div>
 
         {/* Sesiones de Producción / Mes (Control Segmentado Lab) */}
-        <div className="pt-1">
-          <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-1.5 flex items-center gap-1">
-            <Video className="w-3.5 h-3.5 text-emerald-500" />
-            Sesiones de Producción / Mes
-          </label>
-          <div className="bg-gray-100 p-1 rounded-full border border-gray-200 grid grid-cols-4 gap-1">
-            {[1, 2, 3, 4].map((num) => {
-              const isActive = (Number(clientForm.producciones_por_mes) || 1) === num;
-              return (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() =>
-                    setClientForm({ ...clientForm, producciones_por_mes: num })
-                  }
-                  className={`h-8 text-[11px] font-sora font-bold rounded-full transition-all cursor-pointer flex items-center justify-center ${
-                    isActive
-                      ? "bg-gray-900 text-white shadow-md"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
-                  }`}
-                >
-                  {num} {num === 1 ? "sesión" : "sesiones"}
-                </button>
-              );
-            })}
+        <div className="pt-1 space-y-2.5">
+          <div>
+            <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-1.5 flex items-center gap-1">
+              <Video className="w-3.5 h-3.5 text-emerald-500" />
+              Sesiones de Producción / Mes
+            </label>
+            <div className="bg-gray-100 p-1 rounded-full border border-gray-200 grid grid-cols-4 gap-1">
+              {[1, 2, 3, 4].map((num) => {
+                const isActive = (Number(clientForm.producciones_por_mes) || 1) === num;
+                return (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() =>
+                      setClientForm({
+                        ...clientForm,
+                        producciones_por_mes: num,
+                        sesiones_primer_pago: getDefaultFirstPaymentSessions(num)
+                      })
+                    }
+                    className={`h-8 text-[11px] font-sora font-bold rounded-full transition-all cursor-pointer flex items-center justify-center ${
+                      isActive
+                        ? "bg-gray-900 text-white shadow-md"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
+                    }`}
+                  >
+                    {num} {num === 1 ? "sesión" : "sesiones"}
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
+          {/* Correlación Pagos <-> Sesiones cuando son 2 pagos y >= 2 sesiones */}
+          {(clientForm.esquema_pago === "dos_pagos" || clientForm.esquema_pago === "quincenal") &&
+            (Number(clientForm.producciones_por_mes) || 1) >= 2 && (
+              <div className="p-3 rounded-xl border border-blue-100 bg-blue-50/40 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-sora font-bold text-gray-800 flex items-center gap-1.5">
+                    <LockKeyhole className="w-3.5 h-3.5 text-brand-blue" />
+                    Desbloqueo de Sesiones por Pago (2 Pagos)
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  {getPaymentSplitOptions(Number(clientForm.producciones_por_mes) || 2).map((opt) => {
+                    const currentSplit =
+                      Number(clientForm.sesiones_primer_pago) ||
+                      getDefaultFirstPaymentSessions(Number(clientForm.producciones_por_mes) || 2);
+                    const isSelected = currentSplit === opt.firstPaymentSessions;
+                    return (
+                      <button
+                        key={opt.firstPaymentSessions}
+                        type="button"
+                        onClick={() =>
+                          setClientForm({
+                            ...clientForm,
+                            sesiones_primer_pago: opt.firstPaymentSessions
+                          })
+                        }
+                        className={`py-2 px-3 rounded-full text-[11px] font-sora font-semibold transition-all cursor-pointer border text-center ${
+                          isSelected
+                            ? "bg-gray-900 text-white border-gray-900 shadow-xs"
+                            : "bg-white text-gray-700 border-gray-200 hover:border-brand-blue"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
         </div>
 
         {/* Permiso de Descarga en Vista Pública */}

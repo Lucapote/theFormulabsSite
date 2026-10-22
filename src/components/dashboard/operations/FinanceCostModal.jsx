@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { DollarSign, TrendingUp, Calendar, Link as LinkIcon, CheckCircle2, Trash2 } from "lucide-react";
+import {
+  DollarSign,
+  TrendingUp,
+  Calendar,
+  Link as LinkIcon,
+  CheckCircle2,
+  Trash2,
+  ExternalLink
+} from "lucide-react";
 import BaseFormModal from "@/components/common/BaseFormModal";
 import { updateCicloFinanzas } from "@/services/operationsService";
 import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
@@ -20,7 +28,8 @@ export default function FinanceCostModal({
     costo_operativo: 0,
     estado_pago: "pendiente",
     fecha_pago: "",
-    comprobante_url: ""
+    comprobante_url: "",
+    comprobante_2_url: ""
   });
 
   useEffect(() => {
@@ -30,12 +39,18 @@ export default function FinanceCostModal({
         costo_operativo: Number(ciclo.costo_operativo) || 0,
         estado_pago: ciclo.estado_pago || "pendiente",
         fecha_pago: ciclo.fecha_pago ? ciclo.fecha_pago.slice(0, 10) : "",
-        comprobante_url: ciclo.comprobante_url || ""
+        comprobante_url: ciclo.comprobante_url || "",
+        comprobante_2_url: ciclo.comprobante_2_url || ""
       });
     }
   }, [ciclo]);
 
   if (!ciclo) return null;
+
+  const isDosPagos =
+    ciclo.cliente?.esquema_pago === "quincenal" ||
+    ciclo.cliente?.esquema_pago === "dos_pagos" ||
+    Boolean(ciclo.cliente?.dia_corte_pago_2);
 
   const cobrado = Number(formData.monto_cobrado) || 0;
   const costo = Number(formData.costo_operativo) || 0;
@@ -51,7 +66,9 @@ export default function FinanceCostModal({
       costo_operativo: costo,
       estado_pago: formData.estado_pago,
       fecha_pago: formData.fecha_pago || null,
-      comprobante_url: formData.comprobante_url || null
+      comprobante_url: formData.comprobante_url || null,
+      comprobante_2_url: formData.comprobante_2_url || null,
+      comprobante_en_revision: false
     });
 
     setLoading(false);
@@ -69,15 +86,18 @@ export default function FinanceCostModal({
     setIsDeleting(true);
     const res = await updateCicloFinanzas(ciclo.id, {
       costo_operativo: 0,
-      comprobante_url: null
+      comprobante_url: null,
+      comprobante_2_url: null,
+      comprobante_en_revision: false
     });
     setIsDeleting(false);
     if (res.success) {
-      toast.success("Costos operativos y comprobante restablecidos a $0.");
+      toast.success("Costos operativos y comprobantes restablecidos.");
       setFormData((prev) => ({
         ...prev,
         costo_operativo: 0,
-        comprobante_url: ""
+        comprobante_url: "",
+        comprobante_2_url: ""
       }));
       if (onUpdated) onUpdated(res.data);
       setShowDeleteConfirm(false);
@@ -86,18 +106,19 @@ export default function FinanceCostModal({
     }
   };
 
-  const resetCostsButton = (costo > 0 || Boolean(formData.comprobante_url)) ? (
-    <button
-      type="button"
-      onClick={() => setShowDeleteConfirm(true)}
-      disabled={loading || isDeleting}
-      className="h-11 px-4 rounded-full border border-red-200 hover:bg-red-50 text-red-600 font-sora font-bold text-xs uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-      title="Eliminar costos registrados y comprobante"
-    >
-      <Trash2 className="w-3.5 h-3.5" />
-      <span>Restablecer Costos</span>
-    </button>
-  ) : null;
+  const resetCostsButton =
+    costo > 0 || Boolean(formData.comprobante_url) || Boolean(formData.comprobante_2_url) ? (
+      <button
+        type="button"
+        onClick={() => setShowDeleteConfirm(true)}
+        disabled={loading || isDeleting}
+        className="h-11 px-4 rounded-full border border-red-200 hover:bg-red-50 text-red-600 font-sora font-bold text-xs uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+        title="Eliminar costos registrados y comprobantes"
+      >
+        <Trash2 className="w-3.5 h-3.5" />
+        <span>Restablecer Costos</span>
+      </button>
+    ) : null;
 
   return (
     <>
@@ -180,7 +201,8 @@ export default function FinanceCostModal({
                 className="w-full text-xs font-inter bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-gray-900 focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all cursor-pointer font-sora font-semibold"
               >
                 <option value="pendiente">Pendiente</option>
-                <option value="pagado">Pagado</option>
+                {isDosPagos && <option value="primer_pago">1er Abono (50%)</option>}
+                <option value="pagado">{isDosPagos ? "Pagado Completo" : "Pagado"}</option>
                 <option value="vencido">Vencido</option>
               </select>
             </div>
@@ -197,11 +219,25 @@ export default function FinanceCostModal({
             </div>
           </div>
 
-          {/* Comprobante / Factura URL */}
+          {/* Comprobante 1er Pago / Único */}
           <div>
-            <label className="text-xs font-sora font-bold text-gray-700 uppercase tracking-wide mb-1 flex items-center gap-1">
-              <LinkIcon className="w-3.5 h-3.5 text-brand-blue" /> URL Comprobante / Factura
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-sora font-bold text-gray-700 uppercase tracking-wide flex items-center gap-1">
+                <LinkIcon className="w-3.5 h-3.5 text-brand-blue" />
+                {isDosPagos ? "Comprobante 1er Pago" : "URL Comprobante / Factura"}
+              </label>
+              {formData.comprobante_url && (
+                <a
+                  href={formData.comprobante_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-[11px] font-sora font-bold text-brand-blue hover:underline"
+                >
+                  <span>Abrir comprobante</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+            </div>
             <input
               type="url"
               placeholder="https://..."
@@ -210,6 +246,35 @@ export default function FinanceCostModal({
               className="w-full text-sm font-inter bg-white border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all"
             />
           </div>
+
+          {/* Comprobante 2do Pago (solo si el cliente tiene esquema de 2 pagos) */}
+          {isDosPagos && (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-sora font-bold text-gray-700 uppercase tracking-wide flex items-center gap-1">
+                  <LinkIcon className="w-3.5 h-3.5 text-brand-magenta" /> Comprobante 2do Pago
+                </label>
+                {formData.comprobante_2_url && (
+                  <a
+                    href={formData.comprobante_2_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-sora font-bold text-brand-blue hover:underline"
+                  >
+                    <span>Abrir 2do comprobante</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+              <input
+                type="url"
+                placeholder="https://..."
+                value={formData.comprobante_2_url}
+                onChange={(e) => setFormData({ ...formData, comprobante_2_url: e.target.value })}
+                className="w-full text-sm font-inter bg-white border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all"
+              />
+            </div>
+          )}
         </div>
       </BaseFormModal>
 
@@ -217,7 +282,7 @@ export default function FinanceCostModal({
       <ConfirmDeleteModal
         isOpen={showDeleteConfirm}
         title="¿Restablecer costos operativos?"
-        message={`Esta acción eliminará el costo operativo y el enlace del comprobante del ciclo de "${clienteNombre}". El costo se fijará en $0.`}
+        message={`Esta acción eliminará el costo operativo y los enlaces de comprobantes del ciclo de "${clienteNombre}". El costo se fijará en $0.`}
         confirmText="Restablecer a $0"
         isProcessing={isDeleting}
         onClose={() => setShowDeleteConfirm(false)}

@@ -87,6 +87,7 @@ export async function createCliente({
   tipo_sesion_default = "organica",
   locacion_default = null,
   producciones_por_mes = 1,
+  sesiones_primer_pago = null,
   propuesta_origen_id = null
 }) {
   if (!nombre || !nombre.trim()) {
@@ -99,6 +100,11 @@ export async function createCliente({
     }
 
     const isDosPagos = esquema_pago === "dos_pagos" || esquema_pago === "quincenal";
+    const totalProds = Math.max(1, Number(producciones_por_mes) || 1);
+    const resolvedSesionesP1 =
+      isDosPagos && totalProds >= 2
+        ? Math.min(totalProds - 1, Math.max(1, Number(sesiones_primer_pago) || Math.floor(totalProds / 2)))
+        : null;
 
     const payload = {
       nombre: nombre.trim(),
@@ -112,7 +118,8 @@ export async function createCliente({
       dia_corte_pago_2: isDosPagos ? Math.max(1, Math.min(31, Number(dia_corte_pago_2) || 15)) : null,
       tipo_sesion_default: tipo_sesion_default || "organica",
       locacion_default: locacion_default ? locacion_default.trim() : null,
-      producciones_por_mes: Math.max(1, Number(producciones_por_mes) || 1),
+      producciones_por_mes: totalProds,
+      sesiones_primer_pago: resolvedSesionesP1,
       propuesta_origen_id: propuesta_origen_id || null,
       created_at: new Date().toISOString()
     };
@@ -123,12 +130,13 @@ export async function createCliente({
       .select();
 
     // Fallback defensivo si alguna columna adicional aún no existe en Supabase
-    if (error && (error.message.includes("locacion_default") || error.message.includes("dia_corte_pago_2") || error.message.includes("esquema_pago") || error.message.includes("tipo_sesion_default"))) {
+    if (error && (error.message.includes("locacion_default") || error.message.includes("dia_corte_pago_2") || error.message.includes("esquema_pago") || error.message.includes("tipo_sesion_default") || error.message.includes("sesiones_primer_pago"))) {
       const fallbackPayload = { ...payload };
       delete fallbackPayload.locacion_default;
       delete fallbackPayload.dia_corte_pago_2;
       delete fallbackPayload.esquema_pago;
       delete fallbackPayload.tipo_sesion_default;
+      delete fallbackPayload.sesiones_primer_pago;
       const retry = await supabase
         .from("clientes")
         .insert([fallbackPayload])
@@ -174,6 +182,9 @@ export async function updateCliente(clienteId, payload = {}) {
       updatePayload.dia_corte_pago_2 = payload.dia_corte_pago_2 ? Math.max(1, Math.min(31, Number(payload.dia_corte_pago_2))) : null;
     }
     if (payload.producciones_por_mes !== undefined) updatePayload.producciones_por_mes = Math.max(1, Number(payload.producciones_por_mes) || 1);
+    if (payload.sesiones_primer_pago !== undefined) {
+      updatePayload.sesiones_primer_pago = payload.sesiones_primer_pago ? Number(payload.sesiones_primer_pago) : null;
+    }
     if (payload.tipo_sesion_default !== undefined) updatePayload.tipo_sesion_default = payload.tipo_sesion_default;
     if (payload.locacion_default !== undefined) {
       updatePayload.locacion_default = payload.locacion_default ? payload.locacion_default.trim() : null;
@@ -197,6 +208,7 @@ export async function updateCliente(clienteId, payload = {}) {
         error.message.includes("dia_corte_pago_2") ||
         error.message.includes("tipo_sesion_default") ||
         error.message.includes("esquema_pago") ||
+        error.message.includes("sesiones_primer_pago") ||
         error.message.includes("fb_page_id") ||
         error.message.includes("fb_page_access_token") ||
         error.message.includes("ig_business_account_id") ||
@@ -207,6 +219,7 @@ export async function updateCliente(clienteId, payload = {}) {
       delete fallbackPayload.dia_corte_pago_2;
       delete fallbackPayload.tipo_sesion_default;
       delete fallbackPayload.esquema_pago;
+      delete fallbackPayload.sesiones_primer_pago;
       delete fallbackPayload.fb_page_id;
       delete fallbackPayload.fb_page_access_token;
       delete fallbackPayload.ig_business_account_id;

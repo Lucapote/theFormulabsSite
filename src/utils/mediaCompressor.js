@@ -300,6 +300,90 @@ export async function compressMediaFile(file, options = {}) {
 export const compressImage = compressMediaFile;
 
 /**
+ * Compresor ultraligero especializado para comprobantes de pago (imágenes a WebP ~60-120 KB o PDF <= 4 MB).
+ * Reutiliza el motor browser-image-compression sin bloquear el Event Loop.
+ *
+ * @param {File} file
+ * @returns {Promise<{ file: File, originalSize: number, compressedSize: number, savedPercentage: number, compressed: boolean, error?: string }>}
+ */
+export async function compressReceiptFile(file) {
+  if (!file) {
+    return { file: null, originalSize: 0, compressedSize: 0, savedPercentage: 0, compressed: false };
+  }
+
+  const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+  if (isPdf) {
+    const maxPdfBytes = 4 * 1024 * 1024;
+    if (file.size > maxPdfBytes) {
+      return {
+        file,
+        originalSize: file.size,
+        compressedSize: file.size,
+        savedPercentage: 0,
+        compressed: false,
+        error: "El archivo PDF supera el límite de 4 MB. Sube una captura de pantalla o un PDF más ligero."
+      };
+    }
+    return {
+      file,
+      originalSize: file.size,
+      compressedSize: file.size,
+      savedPercentage: 0,
+      compressed: false
+    };
+  }
+
+  const isImage = file.type.startsWith("image/") || /\.(jpg|jpeg|png|webp|heic)$/i.test(file.name);
+  if (!isImage) {
+    return {
+      file,
+      originalSize: file.size,
+      compressedSize: file.size,
+      savedPercentage: 0,
+      compressed: false,
+      error: "Formato no soportado. Sube una imagen (JPG, PNG, WebP) o PDF."
+    };
+  }
+
+  try {
+    const compressedBlob = await imageCompression(file, {
+      maxSizeMB: 0.25,
+      maxWidthOrHeight: 1400,
+      useWebWorker: true,
+      initialQuality: 0.8,
+      fileType: "image/webp"
+    });
+
+    const baseName = file.name.replace(/\.[^/.]+$/, "") || "comprobante";
+    const webpFile = new File([compressedBlob], `${baseName}.webp`, {
+      type: "image/webp",
+      lastModified: Date.now()
+    });
+    webpFile._alreadyCompressed = true;
+
+    const savedPercentage = Math.max(
+      0,
+      Math.round(((file.size - webpFile.size) / Math.max(1, file.size)) * 100)
+    );
+
+    return {
+      file: webpFile,
+      originalSize: file.size,
+      compressedSize: webpFile.size,
+      savedPercentage,
+      compressed: true
+    };
+  } catch (err) {
+    console.warn("No se pudo comprimir el comprobante a WebP, usando compressMediaFile fallback:", err);
+    return compressMediaFile(file, {
+      maxSizeMB: 0.35,
+      maxWidthOrHeight: 1400,
+      initialQuality: 0.8
+    });
+  }
+}
+
+/**
  * Formatea bytes a cadena legible (ej: 450 KB, 4.2 MB)
  */
 export function formatBytes(bytes, decimals = 1) {

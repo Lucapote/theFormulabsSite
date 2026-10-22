@@ -1,13 +1,33 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { MapPin, Calendar, Clock, FileText, Activity, ExternalLink } from "lucide-react";
+import {
+  MapPin,
+  Calendar,
+  Clock,
+  FileText,
+  Activity,
+  ExternalLink,
+  AlertTriangle,
+  Sparkles,
+  XCircle,
+  CheckCircle2
+} from "lucide-react";
 import BaseFormModal from "@/components/common/BaseFormModal";
 import { updateProduccion } from "@/services/operationsService";
 import { getSessionDisplayName, getBookingUrl } from "@/utils/formatters";
+import { checkProductionPaymentRisk } from "@/utils/bookingHelpers";
 import SlugPreviewField from "@/components/common/SlugPreviewField";
 
 const STATUS_CONFIG = {
   pendiente_agendamiento: { label: "Pendiente de agendamiento", color: "bg-amber-500" },
+  fecha_propuesta: {
+    label: "Fecha propuesta por agencia (Pago hasta 24h antes)",
+    color: "bg-sky-500"
+  },
+  pre_reservada: {
+    label: "Pre-reservada por cliente (Validando comprobante)",
+    color: "bg-indigo-500"
+  },
   agendada: { label: "Agendada (Fecha confirmada)", color: "bg-blue-500" },
   rodaje_completado: { label: "Rodaje completado", color: "bg-purple-500" },
   en_edicion: { label: "En edición / post-producción", color: "bg-pink-500" },
@@ -17,7 +37,7 @@ const STATUS_CONFIG = {
 /**
  * ProductionDetailModal
  * Modal clínico administrativo para gestionar y actualizar la sesión de rodaje/producción.
- * Clinical High-Tech Lab design system.
+ * Incluye gestión de propuestas de fecha (pago hasta 24h antes) y alerta operativa de riesgo.
  */
 export default function ProductionDetailModal({
   isOpen,
@@ -72,14 +92,37 @@ export default function ProductionDetailModal({
   if (!produccion) return null;
 
   const reservationUrl = getBookingUrl(produccion.token_reserva);
+  const riskInfo = checkProductionPaymentRisk(
+    produccion,
+    ciclo,
+    ciclo?.cliente || {},
+    totalSesiones
+  );
 
   const handleOpenMaps = () => {
     const loc = formData.locacion.trim();
     if (!loc) return;
-    const url = loc.startsWith("http://") || loc.startsWith("https://")
-      ? loc
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}`;
+    const url =
+      loc.startsWith("http://") || loc.startsWith("https://")
+        ? loc
+        : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc)}`;
     window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const handleCancelRiskSession = async () => {
+    setLoading(true);
+    const res = await updateProduccion(produccion.id, {
+      estado: "pendiente_agendamiento",
+      fecha_produccion: null
+    });
+    setLoading(false);
+    if (res.success) {
+      toast.info("Fecha liberada. La sesión regresó a pendiente de agendamiento.");
+      if (onUpdated) onUpdated(res.data);
+      onClose();
+    } else {
+      toast.error(res.error || "No se pudo liberar la fecha.");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -96,7 +139,9 @@ export default function ProductionDetailModal({
       duracion_horas: Number(formData.duracion_horas) || 4,
       locacion: resolvedLocacion,
       notas_brief: formData.notas_brief.trim(),
-      fecha_produccion: formData.fecha_produccion ? new Date(formData.fecha_produccion).toISOString() : null
+      fecha_produccion: formData.fecha_produccion
+        ? new Date(formData.fecha_produccion).toISOString()
+        : null
     };
     const res = await updateProduccion(produccion.id, payload);
     setLoading(false);
@@ -140,6 +185,46 @@ export default function ProductionDetailModal({
       submitButtonClass="bg-[#188ff0] hover:bg-blue-600 text-white shadow-md shadow-blue-200"
     >
       <div className="space-y-4 w-full min-w-0 max-w-full overflow-hidden">
+        {/* ALERTA OPERATIVA: Menos de 24h sin pago acreditado */}
+        {riskInfo.enRiesgo && (
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 space-y-2.5">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5 animate-pulse" />
+              <div className="text-xs text-rose-950 space-y-0.5">
+                <span className="font-sora font-bold block">
+                  Alerta Operativa: Rodaje en menos de 24h sin pago acreditado
+                </span>
+                <p className="text-[11px] text-rose-800 leading-relaxed">
+                  El cliente aún no tiene validado el pago correspondiente a esta sesión. Puedes liberar el cupo de agenda ahora o mantener la fecha bajo tu autorización.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={handleCancelRiskSession}
+                className="flex-1 h-8 px-3 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-sora font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+              >
+                <XCircle className="w-3.5 h-3.5" />
+                <span>Cancelar y Liberar Fecha</span>
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => {
+                  setFormData((prev) => ({ ...prev, estado: "agendada" }));
+                  toast.info("Manteniendo fecha activa. Pulsa Guardar Cambios para confirmar.");
+                }}
+                className="h-8 px-3 rounded-full bg-white border border-rose-200 hover:bg-rose-100/50 text-rose-800 text-[11px] font-sora font-semibold inline-flex items-center justify-center gap-1 cursor-pointer transition-colors"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Mantener</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* BLOQUE A — Cronograma y Estado */}
         <div className="bg-gray-50/70 p-4 rounded-xl border border-gray-100 space-y-3 w-full min-w-0">
           <span className="text-[11px] font-sora font-bold text-gray-500 uppercase tracking-wider block">
@@ -165,7 +250,11 @@ export default function ProductionDetailModal({
                 <Activity className="w-3.5 h-3.5 text-brand-magenta" /> Estado de la Producción
               </label>
               <span className="flex items-center gap-1.5 text-[11px] font-sora font-semibold text-gray-600">
-                <span className={`w-2 h-2 rounded-full ${STATUS_CONFIG[formData.estado]?.color || "bg-gray-400"}`} />
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    STATUS_CONFIG[formData.estado]?.color || "bg-gray-400"
+                  }`}
+                />
                 {STATUS_CONFIG[formData.estado]?.label.split(" ")[0]}
               </span>
             </div>
@@ -190,7 +279,19 @@ export default function ProductionDetailModal({
               <input
                 type="datetime-local"
                 value={formData.fecha_produccion}
-                onChange={(e) => setFormData({ ...formData, fecha_produccion: e.target.value })}
+                onChange={(e) => {
+                  const newDateVal = e.target.value;
+                  // Si asignan fecha desde la agencia y estaba en pendiente_agendamiento, sugerir 'fecha_propuesta'
+                  const nextEstado =
+                    newDateVal && formData.estado === "pendiente_agendamiento"
+                      ? "fecha_propuesta"
+                      : formData.estado;
+                  setFormData({
+                    ...formData,
+                    fecha_produccion: newDateVal,
+                    estado: nextEstado
+                  });
+                }}
                 className="w-full min-w-0 h-10 px-2.5 sm:px-3 text-xs font-mono bg-white border border-gray-200 rounded-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#188ff0]"
               />
             </div>
@@ -213,6 +314,16 @@ export default function ProductionDetailModal({
               </div>
             </div>
           </div>
+
+          {formData.estado === "fecha_propuesta" && (
+            <div className="p-2.5 rounded-lg bg-sky-50 border border-sky-200 text-[11px] text-sky-900 flex items-center gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-brand-blue shrink-0" />
+              <span>
+                El cliente podrá confirmar esta fecha sin pago previo y tendrá hasta{" "}
+                <strong>24h antes</strong> para subir su comprobante.
+              </span>
+            </div>
+          )}
         </div>
 
         {/* BLOQUE B — Logística de Grabación */}

@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { getDefaultFirstPaymentSessions } from "@/utils/bookingHelpers";
 
 /**
  * Service for Operaciones, Retainers y Producciones (Fase 1)
@@ -148,13 +149,38 @@ export async function updateCicloFinanzas(cicloId, finanzasData = {}) {
     if (finanzasData.comprobante_url !== undefined) {
       updatePayload.comprobante_url = finanzasData.comprobante_url || null;
     }
+    if (finanzasData.comprobante_2_url !== undefined) {
+      updatePayload.comprobante_2_url = finanzasData.comprobante_2_url || null;
+    }
+    if (finanzasData.comprobante_en_revision !== undefined) {
+      updatePayload.comprobante_en_revision = Boolean(finanzasData.comprobante_en_revision);
+    }
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("ciclos_mensuales")
       .update(updatePayload)
       .eq("id", cicloId)
       .select()
       .single();
+
+    if (
+      error &&
+      error.message &&
+      (error.message.includes("comprobante_2_url") || error.message.includes("comprobante_en_revision"))
+    ) {
+      const fallbackPayload = { ...updatePayload };
+      delete fallbackPayload.comprobante_2_url;
+      delete fallbackPayload.comprobante_en_revision;
+      const retry = await supabase
+        .from("ciclos_mensuales")
+        .update(fallbackPayload)
+        .eq("id", cicloId)
+        .select()
+        .single();
+      if (!retry.error) {
+        return { success: true, data: { ...retry.data, ...updatePayload } };
+      }
+    }
 
     if (error) {
       console.error("updateCicloFinanzas error:", error);
@@ -457,6 +483,24 @@ export function checkSesionDesbloqueada(produccion, ciclo, cliente = {}, totalCo
     return { estaDesbloqueada: true, motivoBloqueo: null };
   }
 
+  // Si la agencia propuso explícitamente una fecha ('fecha_propuesta'), el cliente puede verla y confirmarla (con regla de pago hasta 24h antes)
+  if (produccion.estado === "fecha_propuesta") {
+    return {
+      estaDesbloqueada: true,
+      modoPropuestaAgencia: true,
+      motivoBloqueo: null
+    };
+  }
+
+  // Si el cliente ya subió comprobante y realizó pre-reserva temporal
+  if (produccion.estado === "pre_reservada") {
+    return {
+      estaDesbloqueada: true,
+      modoPreReserva: true,
+      motivoBloqueo: null
+    };
+  }
+
   const estadoPago = ciclo?.estado_pago || "pendiente";
 
   if (estadoPago === "pendiente" || estadoPago === "vencido") {
@@ -480,8 +524,12 @@ export function checkSesionDesbloqueada(produccion, ciclo, cliente = {}, totalCo
   }
 
   if (estadoPago === "primer_pago") {
-    const total = Number(totalCount) || Number(cliente?.producciones_por_mes) || 2;
-    const maxDesbloqueadasPrimerPago = total === 4 ? 2 : Math.max(1, Math.floor(total / 2));
+    const total = Math.max(1, Number(totalCount) || Number(cliente?.producciones_por_mes) || 2);
+    const configuredFirst = Number(cliente?.sesiones_primer_pago);
+    const maxDesbloqueadasPrimerPago =
+      configuredFirst >= 1 && configuredFirst < total
+        ? configuredFirst
+        : getDefaultFirstPaymentSessions(total);
     const numSesion = Number(produccion.numero_sesion) || 1;
 
     if (numSesion <= maxDesbloqueadasPrimerPago) {
@@ -510,15 +558,30 @@ export async function getProduccionByToken(token) {
       return { success: false, error: "Supabase no está configurado." };
     }
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("producciones")
       .select(`
         *,
-        cliente:clientes(id, nombre, empresa, email, locacion_default, tipo_sesion_default, producciones_por_mes, esquema_pago, dia_corte_pago, dia_corte_pago_2),
-        ciclo:ciclos_mensuales(id, mes, anio, estado_pago, monto_cobrado)
+        cliente:clientes(id, nombre, empresa, email, locacion_default, tipo_sesion_default, producciones_por_mes, sesiones_primer_pago, esquema_pago, dia_corte_pago, dia_corte_pago_2, monto_retainer),
+        ciclo:ciclos_mensuales(id, mes, anio, estado_pago, monto_cobrado, comprobante_url, comprobante_2_url, comprobante_en_revision)
       `)
       .eq("token_reserva", token)
       .single();
+
+    // Fallback si las columnas nuevas aún no fueron migradas en Supabase
+    if (error && error.message && (error.message.includes("sesiones_primer_pago") || error.message.includes("comprobante_2_url"))) {
+      const retry = await supabase
+        .from("producciones")
+        .select(`
+          *,
+          cliente:clientes(id, nombre, empresa, email, locacion_default, tipo_sesion_default, producciones_por_mes, esquema_pago, dia_corte_pago, dia_corte_pago_2, monto_retainer),
+          ciclo:ciclos_mensuales(id, mes, anio, estado_pago, monto_cobrado, comprobante_url)
+        `)
+        .eq("token_reserva", token)
+        .single();
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error || !data) {
       console.error("getProduccionByToken error:", error);
@@ -532,6 +595,8 @@ export async function getProduccionByToken(token) {
       data: {
         ...data,
         estaDesbloqueada: check.estaDesbloqueada,
+        modoPropuestaAgencia: Boolean(check.modoPropuestaAgencia),
+        modoPreReserva: Boolean(check.modoPreReserva),
         motivoBloqueo: check.motivoBloqueo
       }
     };
@@ -542,11 +607,11 @@ export async function getProduccionByToken(token) {
 }
 
 /**
- * Confirma la auto-reserva de una sesión de producción por parte del cliente.
- * Gatekeeper de Producción: Valida el estado de desbloqueo de la sesión según el esquema pactado.
+ * Confirma la auto-reserva o pre-reserva de una sesión de producción por parte del cliente.
+ * Gatekeeper de Producción: Valida el estado de desbloqueo, propuesta de agencia o comprobante subido.
  *
  * @param {string} token - Token de reserva de la producción
- * @param {object} reservaData - { fecha_produccion, locacion, notas_brief }
+ * @param {object} reservaData - { fecha_produccion, locacion, notas_brief, comprobante_url }
  * @returns {Promise<{ success: boolean, data?: object, error?: string }>}
  */
 export async function confirmarReservaProduccion(token, reservaData = {}) {
@@ -559,12 +624,25 @@ export async function confirmarReservaProduccion(token, reservaData = {}) {
       return { success: false, error: "Supabase no está configurado." };
     }
 
-    const { data: rpcRes, error: rpcErr } = await supabase.rpc("confirmar_reserva_produccion_rpc", {
+    let { data: rpcRes, error: rpcErr } = await supabase.rpc("confirmar_reserva_produccion_rpc", {
       p_token: token.trim(),
       p_fecha: reservaData.fecha_produccion || null,
       p_locacion: reservaData.locacion || null,
-      p_notas: reservaData.notas_brief || null
+      p_notas: reservaData.notas_brief || null,
+      p_comprobante_url: reservaData.comprobante_url || null
     });
+
+    // Fallback defensivo si la firma de 4 argumentos aún está activa en BD
+    if (rpcErr && rpcErr.message && rpcErr.message.includes("p_comprobante_url")) {
+      const retry = await supabase.rpc("confirmar_reserva_produccion_rpc", {
+        p_token: token.trim(),
+        p_fecha: reservaData.fecha_produccion ? reservaData.fecha_produccion.slice(0, 10) : null,
+        p_locacion: reservaData.locacion || null,
+        p_notas: reservaData.notas_brief || null
+      });
+      rpcRes = retry.data;
+      rpcErr = retry.error;
+    }
 
     if (rpcErr) {
       console.error("confirmarReservaProduccion rpc error:", rpcErr);
@@ -595,12 +673,13 @@ export async function confirmarReservaProduccion(token, reservaData = {}) {
 }
 
 /**
- * Valida el pago de un ciclo mensual, desbloquea las reservas y dispara email al cliente.
- * Soporta esquema de 2 pagos ('primer_pago' para el 50% o 'pagado' para el 100%).
+ * Valida el pago de un ciclo mensual, desbloquea las reservas, confirma pre-reservas
+ * cubiertas por el tramo de pago y dispara email al cliente.
+ * Soporta esquema de 2 pagos ('primer_pago' para el 1er tramo o 'pagado' para el 100%).
  *
  * @param {object} params
  * @param {string} params.cicloId - UUID del ciclo mensual
- * @param {object} [params.cliente] - Datos del cliente { email, nombre, empresa }
+ * @param {object} [params.cliente] - Datos del cliente { email, nombre, empresa, esquema_pago, producciones_por_mes, sesiones_primer_pago }
  * @param {object} [params.produccionPrincipal] - Producción asignada para obtener el token_reserva
  * @param {number} [params.montoCobrado=0] - Monto del ciclo
  * @param {number} [params.mes] - Mes del ciclo
@@ -629,43 +708,67 @@ export async function validarPagoYDesbloquear({
     // 1. Verificación previa de idempotencia
     const { data: currentCiclo, error: fetchErr } = await supabase
       .from("ciclos_mensuales")
-      .select("id, estado_pago, fecha_pago")
+      .select("id, estado_pago, fecha_pago, comprobante_en_revision")
       .eq("id", cicloId)
       .maybeSingle();
 
-    if (fetchErr) throw fetchErr;
-    if (!currentCiclo) {
-      return { success: false, error: "Ciclo no encontrado." };
-    }
+    if (fetchErr && !fetchErr.message?.includes("comprobante_en_revision")) throw fetchErr;
 
-    // Si ya se encuentra en el estado solicitado o ya fue pagado en su totalidad, retornar sin duplicar efectos
-    if (
-      currentCiclo.estado_pago === nuevoEstado ||
-      (nuevoEstado === "primer_pago" && currentCiclo.estado_pago === "pagado")
-    ) {
-      return {
-        success: true,
-        alreadyValidated: true,
-        data: currentCiclo
-      };
-    }
-
-    // 2. Actualizar el ciclo mensual al estado indicado
+    // 2. Actualizar el ciclo mensual al estado indicado y limpiar bandera de revisión
     const fechaHoy = new Date().toISOString().split("T")[0];
-    const { data: updatedCiclo, error: cicloError } = await supabase
+    let { data: updatedCiclo, error: cicloError } = await supabase
       .from("ciclos_mensuales")
       .update({
         estado_pago: nuevoEstado,
-        fecha_pago: currentCiclo.fecha_pago || fechaHoy
+        fecha_pago: currentCiclo?.fecha_pago || fechaHoy,
+        comprobante_en_revision: false
       })
       .eq("id", cicloId)
       .select()
       .single();
 
+    if (cicloError && cicloError.message?.includes("comprobante_en_revision")) {
+      const retry = await supabase
+        .from("ciclos_mensuales")
+        .update({
+          estado_pago: nuevoEstado,
+          fecha_pago: currentCiclo?.fecha_pago || fechaHoy
+        })
+        .eq("id", cicloId)
+        .select()
+        .single();
+      updatedCiclo = retry.data;
+      cicloError = retry.error;
+    }
+
     if (cicloError) throw cicloError;
 
-    // 3. Disparar email al cliente en segundo plano solo en la primera transición válida
-    if (cliente?.email && produccionPrincipal?.token_reserva) {
+    // 3. Promover automáticamente sesiones en 'pre_reservada' (con fecha) a 'agendada' según el tramo cubierto
+    const totalSesiones = Math.max(1, Number(cliente?.producciones_por_mes) || 1);
+    const maxPrimerPago =
+      Number(cliente?.sesiones_primer_pago) >= 1 && Number(cliente?.sesiones_primer_pago) < totalSesiones
+        ? Number(cliente.sesiones_primer_pago)
+        : getDefaultFirstPaymentSessions(totalSesiones);
+
+    let prodQuery = supabase
+      .from("producciones")
+      .update({ estado: "agendada" })
+      .eq("ciclo_id", cicloId)
+      .in("estado", ["pre_reservada", "fecha_propuesta"])
+      .not("fecha_produccion", "is", null);
+
+    if (nuevoEstado === "primer_pago") {
+      prodQuery = prodQuery.lte("numero_sesion", maxPrimerPago);
+    }
+
+    await prodQuery;
+
+    // 4. Disparar email al cliente en segundo plano solo en la primera transición válida
+    const alreadyHadSameStatus =
+      currentCiclo?.estado_pago === nuevoEstado ||
+      (nuevoEstado === "primer_pago" && currentCiclo?.estado_pago === "pagado");
+
+    if (!alreadyHadSameStatus && cliente?.email && produccionPrincipal?.token_reserva) {
       try {
         await fetch("/api/notify-payment-unlocked", {
           method: "POST",
@@ -690,6 +793,60 @@ export async function validarPagoYDesbloquear({
     return { success: true, data: updatedCiclo };
   } catch (err) {
     console.error("Error al validar pago y desbloquear:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Rechaza un comprobante subido por el cliente y libera las pre-reservas temporales no pagadas.
+ *
+ * @param {string} cicloId - UUID del ciclo mensual
+ * @param {boolean} [esSegundoPago=false] - Si corresponde al 2do abono
+ * @returns {Promise<{ success: boolean, data?: object, error?: string }>}
+ */
+export async function rechazarComprobanteCiclo(cicloId, esSegundoPago = false) {
+  if (!cicloId) {
+    return { success: false, error: "ID de ciclo no provisto." };
+  }
+
+  try {
+    if (!supabase) {
+      return { success: false, error: "Supabase no está configurado." };
+    }
+
+    const updateFields = {
+      comprobante_en_revision: false
+    };
+    if (esSegundoPago) {
+      updateFields.comprobante_2_url = null;
+    } else {
+      updateFields.comprobante_url = null;
+    }
+
+    const { data, error } = await supabase
+      .from("ciclos_mensuales")
+      .update(updateFields)
+      .eq("id", cicloId)
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    // Revertir sesiones que estaban en pre_reservada a pendiente_agendamiento
+    await supabase
+      .from("producciones")
+      .update({
+        estado: "pendiente_agendamiento",
+        fecha_produccion: null
+      })
+      .eq("ciclo_id", cicloId)
+      .eq("estado", "pre_reservada");
+
+    return { success: true, data };
+  } catch (err) {
+    console.error("rechazarComprobanteCiclo error:", err);
     return { success: false, error: err.message };
   }
 }

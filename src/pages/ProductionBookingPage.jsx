@@ -19,6 +19,7 @@ export default function ProductionBookingPage() {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [comprobanteSubidoUrl, setComprobanteSubidoUrl] = useState(null);
 
   useEffect(() => {
     async function fetchBookingDetails() {
@@ -34,9 +35,10 @@ export default function ProductionBookingPage() {
 
       if (res.success && res.data) {
         setProduccion(res.data);
-        const estaPagado = res.data.estaDesbloqueada || res.data.ciclo?.estado_pago === "pagado";
-        // Si el ciclo está pagado y la producción ya está agendada, mostrar confirmación
-        if (estaPagado && res.data.estado === "agendada" && res.data.fecha_produccion) {
+        const isAlreadyScheduled =
+          (res.data.estado === "agendada" || res.data.estado === "pre_reservada") &&
+          Boolean(res.data.fecha_produccion);
+        if (isAlreadyScheduled) {
           setShowSuccess(true);
         }
       } else {
@@ -49,13 +51,21 @@ export default function ProductionBookingPage() {
 
   const handleBookingSubmit = async (formData) => {
     setIsSubmitting(true);
-    const res = await confirmarReservaProduccion(token, formData);
+    const res = await confirmarReservaProduccion(token, {
+      ...formData,
+      comprobante_url: formData.comprobante_url || comprobanteSubidoUrl || null
+    });
     setIsSubmitting(false);
 
     if (res.success && res.data) {
       setProduccion(res.data);
       setShowSuccess(true);
-      toast.success("¡Fecha de rodaje agendada con éxito!");
+      const esPreReserva = res.data.estado === "pre_reservada";
+      toast.success(
+        esPreReserva
+          ? "¡Pre-reserva registrada! Validaremos tu comprobante en breve."
+          : "¡Fecha de rodaje agendada con éxito!"
+      );
 
       // Disparar notificación por email vía Resend en segundo plano (non-blocking)
       try {
@@ -69,7 +79,9 @@ export default function ProductionBookingPage() {
             anio: res.data.ciclo?.anio,
             fechaProduccion: res.data.fecha_produccion,
             locacion: res.data.locacion,
-            notasBrief: res.data.notas_brief
+            notasBrief: res.data.notas_brief,
+            esPreReserva,
+            comprobanteUrl: formData.comprobante_url || comprobanteSubidoUrl || null
           })
         }).catch((err) => console.warn("Notice: Booking notification dispatch:", err));
       } catch (err) {
@@ -80,7 +92,10 @@ export default function ProductionBookingPage() {
     }
   };
 
-  const isLocked = Boolean(produccion && !produccion.estaDesbloqueada);
+  // La sesión está desbloqueada si tiene pago acreditado, es propuesta de agencia, ya subió comprobante o ya está pre-reservada
+  const isLocked = Boolean(
+    produccion && !produccion.estaDesbloqueada && !comprobanteSubidoUrl
+  );
 
   return (
     <div className="relative min-h-screen bg-[#f4f4f4] text-gray-900 font-inter antialiased overflow-x-hidden selection:bg-[#ef18d6]/20 selection:text-[#ef18d6]">
@@ -142,6 +157,8 @@ export default function ProductionBookingPage() {
                 ciclo={produccion.ciclo}
                 numeroSesion={produccion.numero_sesion || 1}
                 motivoBloqueo={produccion.motivoBloqueo || "pago_pendiente"}
+                tokenReserva={token}
+                onReceiptUploaded={(url) => setComprobanteSubidoUrl(url)}
               />
             ) : (
               <div>
@@ -162,15 +179,19 @@ export default function ProductionBookingPage() {
                   <BookingSuccessCard
                     produccion={produccion}
                     onReschedule={() => setShowSuccess(false)}
+                    onProduccionUpdated={(updated) => setProduccion(updated)}
                   />
                 ) : (
                   <BookingFormCard
                     initialData={produccion}
                     cliente={produccion.cliente}
+                    ciclo={produccion.ciclo}
                     onSubmit={handleBookingSubmit}
                     isSubmitting={isSubmitting}
                     tipo={produccion.tipo || produccion.cliente?.tipo_sesion_default || "organica"}
                     duracionHoras={produccion.duracion_horas}
+                    comprobanteSubidoUrl={comprobanteSubidoUrl}
+                    onComprobanteUploaded={(url) => setComprobanteSubidoUrl(url)}
                   />
                 )}
               </div>

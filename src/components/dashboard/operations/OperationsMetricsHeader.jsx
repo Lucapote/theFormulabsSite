@@ -24,6 +24,8 @@ export default function OperationsMetricsHeader({ ciclos = [] }) {
 
       if (c.estado_pago === "pagado") {
         facturacionCobrada += cobrado;
+      } else if (c.estado_pago === "primer_pago") {
+        facturacionCobrada += Math.round(cobrado / 2);
       }
 
       if (c.calendario_id || c.calendario) {
@@ -35,7 +37,7 @@ export default function OperationsMetricsHeader({ ciclos = [] }) {
       prods.forEach((p) => {
         if (["rodaje_completado", "en_edicion", "finalizada"].includes(p.estado)) {
           sesionesRealizadas += 1;
-        } else if (p.estado === "agendada") {
+        } else if (["agendada", "pre_reservada", "fecha_propuesta"].includes(p.estado)) {
           sesionesAgendadas += 1;
         } else {
           sesionesPendientes += 1;

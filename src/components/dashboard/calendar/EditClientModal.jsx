@@ -6,7 +6,8 @@ import {
   MapPin,
   ExternalLink,
   Clapperboard,
-  Download
+  Download,
+  LockKeyhole
 } from "lucide-react";
 import BaseFormModal from "@/components/common/BaseFormModal";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { updateCliente } from "@/services/calendarService";
+import { getPaymentSplitOptions, getDefaultFirstPaymentSessions } from "@/utils/bookingHelpers";
 
 /**
  * EditClientModal
@@ -47,6 +49,7 @@ export default function EditClientModal({ isOpen = false, onClose, cliente, onCl
     dia_corte_pago: 1,
     dia_corte_pago_2: 15,
     producciones_por_mes: 1,
+    sesiones_primer_pago: 1,
     tipo_sesion_default: "organica",
     permite_descarga: false
   });
@@ -54,6 +57,7 @@ export default function EditClientModal({ isOpen = false, onClose, cliente, onCl
   useEffect(() => {
     if (cliente && isOpen) {
       setActiveTab("info");
+      const totalProds = Number(cliente.producciones_por_mes) || 1;
       setFormData({
         nombre: cliente.nombre || "",
         empresa: cliente.empresa || "",
@@ -72,7 +76,9 @@ export default function EditClientModal({ isOpen = false, onClose, cliente, onCl
             : "mensual",
         dia_corte_pago: Number(cliente.dia_corte_pago) || 1,
         dia_corte_pago_2: Number(cliente.dia_corte_pago_2) || 15,
-        producciones_por_mes: Number(cliente.producciones_por_mes) || 1,
+        producciones_por_mes: totalProds,
+        sesiones_primer_pago:
+          Number(cliente.sesiones_primer_pago) || getDefaultFirstPaymentSessions(totalProds),
         tipo_sesion_default: cliente.tipo_sesion_default || "organica",
         permite_descarga: Boolean(cliente.permite_descarga)
       });
@@ -106,6 +112,10 @@ export default function EditClientModal({ isOpen = false, onClose, cliente, onCl
       dia_corte_pago_2:
         formData.esquema_pago === "quincenal" ? Number(formData.dia_corte_pago_2) || 15 : null,
       producciones_por_mes: Number(formData.producciones_por_mes) || 1,
+      sesiones_primer_pago:
+        formData.esquema_pago === "quincenal" && Number(formData.producciones_por_mes) >= 2
+          ? Number(formData.sesiones_primer_pago) || getDefaultFirstPaymentSessions(formData.producciones_por_mes)
+          : null,
       tipo_sesion_default: formData.tipo_sesion_default,
       permite_descarga: formData.permite_descarga,
       // Datos de Meta transferidos de forma silenciosa a Supabase
@@ -389,7 +399,13 @@ export default function EditClientModal({ isOpen = false, onClose, cliente, onCl
                     <button
                       key={num}
                       type="button"
-                      onClick={() => setFormData({ ...formData, producciones_por_mes: num })}
+                      onClick={() =>
+                        setFormData({
+                          ...formData,
+                          producciones_por_mes: num,
+                          sesiones_primer_pago: getDefaultFirstPaymentSessions(num)
+                        })
+                      }
                       className={`flex-1 h-8 rounded-full text-xs font-sora font-bold transition-all cursor-pointer ${
                         formData.producciones_por_mes === num
                           ? "bg-brand-blue text-white shadow-xs"
@@ -432,6 +448,42 @@ export default function EditClientModal({ isOpen = false, onClose, cliente, onCl
                 </div>
               </div>
             </div>
+
+            {formData.esquema_pago === "quincenal" && formData.producciones_por_mes >= 2 && (
+              <div className="p-3 bg-white border border-blue-100 rounded-xl space-y-2">
+                <span className="text-[11px] font-sora font-bold text-gray-800 flex items-center gap-1.5">
+                  <LockKeyhole className="w-3.5 h-3.5 text-brand-blue" />
+                  Desbloqueo de Sesiones por Pago (2 Pagos)
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  {getPaymentSplitOptions(formData.producciones_por_mes).map((opt) => {
+                    const isSelected =
+                      (Number(formData.sesiones_primer_pago) ||
+                        getDefaultFirstPaymentSessions(formData.producciones_por_mes)) ===
+                      opt.firstPaymentSessions;
+                    return (
+                      <button
+                        key={opt.firstPaymentSessions}
+                        type="button"
+                        onClick={() =>
+                          setFormData({
+                            ...formData,
+                            sesiones_primer_pago: opt.firstPaymentSessions
+                          })
+                        }
+                        className={`py-2 px-3 rounded-full text-[11px] font-sora font-semibold transition-all cursor-pointer border text-center ${
+                          isSelected
+                            ? "bg-gray-900 text-white border-gray-900 shadow-xs"
+                            : "bg-gray-50 text-gray-700 border-gray-200 hover:border-brand-blue"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-xl">
               <div className="space-y-0.5">

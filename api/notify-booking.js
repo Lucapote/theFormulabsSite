@@ -46,7 +46,9 @@ export default async function handler(req, res) {
       anio = null,
       fechaProduccion = null,
       locacion = "Sin especificar",
-      notasBrief = "Sin notas adicionales"
+      notasBrief = "Sin notas adicionales",
+      esPreReserva = false,
+      comprobanteUrl = null
     } = req.body || {};
 
     let fechaFormateada = "Por definir";
@@ -71,14 +73,35 @@ export default async function handler(req, res) {
 
     const fromEmail = process.env.LEAD_NOTIFICATION_FROM_EMAIL || "onboarding@resend.dev";
     const toEmail = process.env.LEAD_NOTIFICATION_TO_EMAIL || "theformulab.io@gmail.com";
-    const subject = `🎬 ¡Rodaje Confirmado! ${clienteNombre} agendó la Sesión #${numeroSesion}`;
+    const subject = esPreReserva
+      ? `🧾 Pre-Reserva + Comprobante: ${clienteNombre} solicitó la Sesión #${numeroSesion}`
+      : `🎬 ¡Rodaje Confirmado! ${clienteNombre} agendó la Sesión #${numeroSesion}`;
+
+    const headerTitle = esPreReserva
+      ? "¡Pre-Reserva y Comprobante Recibidos!"
+      : "¡Sesión de Rodaje Confirmada!";
+
+    const introParagraph = esPreReserva
+      ? `El cliente <strong style="color: #ffffff;">${clienteNombre}</strong> ha subido un comprobante de pago y solicitó una <strong style="color: #38bdf8;">Pre-Reserva Temporal</strong> sujeta a tu validación.`
+      : `El cliente <strong style="color: #ffffff;">${clienteNombre}</strong> ha completado la confirmación para su sesión de grabación mensual.`;
+
+    const comprobanteButtonHtml = comprobanteUrl
+      ? `
+                <tr>
+                  <td align="center" style="padding-bottom: 12px;">
+                    <a href="${comprobanteUrl}" target="_blank" style="display: inline-block; background-color: #10b981; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 12px 28px; border-radius: 9999px;">
+                      📄 Ver Comprobante Subido &rarr;
+                    </a>
+                  </td>
+                </tr>`
+      : "";
 
     const htmlContent = `
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Rodaje Confirmado</title>
+  <title>${headerTitle}</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #0b0f17; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #e2e8f0;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0b0f17; padding: 32px 16px;">
@@ -92,7 +115,7 @@ export default async function handler(req, res) {
                 THE FORMULAB &bull; OPERATIONS PROTOCOL
               </div>
               <h1 style="margin: 0; font-size: 22px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">
-                ¡Sesión de Rodaje Confirmada!
+                ${headerTitle}
               </h1>
             </td>
           </tr>
@@ -101,7 +124,7 @@ export default async function handler(req, res) {
           <tr>
             <td style="padding: 32px;">
               <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 22px; color: #94a3b8;">
-                El cliente <strong style="color: #ffffff;">${clienteNombre}</strong> ha completado la auto-reserva para su sesión de grabación mensual.
+                ${introParagraph}
               </p>
 
               <!-- Tabla de Parámetros de la Sesión -->
@@ -118,7 +141,7 @@ export default async function handler(req, res) {
                   <td style="padding: 14px 18px; border-bottom: 1px solid #1e293b;">
                     <div style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600;">Sesión Asignada</div>
                     <div style="font-size: 14px; color: #ef18d6; font-weight: 700; margin-top: 2px;">
-                      Sesión de Rodaje #${numeroSesion}
+                      Sesión de Rodaje #${numeroSesion} ${esPreReserva ? "(Pre-Reserva Pendiente de Validar)" : ""}
                     </div>
                   </td>
                 </tr>
@@ -150,6 +173,7 @@ export default async function handler(req, res) {
 
               <!-- Botón CTA a Dashboard -->
               <table width="100%" cellpadding="0" cellspacing="0">
+                ${comprobanteButtonHtml}
                 <tr>
                   <td align="center">
                     <a href="https://www.theformulab.io/dashboard" target="_blank" style="display: inline-block; background-color: #188ff0; color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 14px 32px; border-radius: 9999px; box-shadow: 0 4px 14px rgba(24, 143, 240, 0.4);">
