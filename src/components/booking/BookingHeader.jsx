@@ -1,9 +1,10 @@
-import { Clapperboard, Sparkles, Clock } from "lucide-react";
+import { Clapperboard, Sparkles, Clock, DollarSign } from "lucide-react";
 import { getSessionTypeInfo } from "@/utils/bookingHelpers";
 
 /**
- * Encabezado de la sesión de reserva
- * Muestra el badge de sesión, tipo de rodaje (4h vs 6h) y cliente.
+ * Encabezado de la sesión de reserva (Tarjeta Clínica Unificada)
+ * Renderiza la sección superior distintiva en celeste de laboratorio (#188ff0)
+ * con soporte para sesiones regulares y extras con precio.
  */
 export default function BookingHeader({
   sessionTitle = "",
@@ -11,33 +12,49 @@ export default function BookingHeader({
   clienteNombre = "",
   empresa = "",
   tipo = "organica",
-  duracionHoras = null
+  duracionHoras = null,
+  isExtraSession = false,
+  precioExtra = null
 }) {
   const displayClient = empresa ? `${clienteNombre} (${empresa})` : clienteNombre;
   const typeInfo = getSessionTypeInfo(tipo, duracionHoras);
   const displaySession = sessionTitle || `Sesión #${numeroSesion}`;
 
   return (
-    <div className="w-full max-w-xl mx-auto mb-6 text-center">
-      <div className="flex items-center justify-center gap-2 flex-wrap mb-2.5">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-brand-blue text-xs font-sora font-semibold">
-          <Clapperboard className="w-3.5 h-3.5" />
-          <span>{displaySession}</span>
-        </div>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-100 text-purple-700 text-xs font-sora font-semibold">
-          <Clock className="w-3.5 h-3.5" />
+    <div className="w-full bg-gradient-to-r from-blue-50/90 via-sky-50/50 to-blue-50/90 border-b border-blue-100/80 p-5 sm:p-6 text-center select-none">
+      <div className="flex items-center justify-center gap-1.5 flex-wrap mb-2">
+        {isExtraSession ? (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100/90 border border-amber-300 text-amber-900 text-[11px] font-sora font-bold shadow-2xs">
+            <span>{displaySession}</span>
+          </div>
+        ) : (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100/80 border border-blue-200 text-brand-blue text-[11px] font-sora font-bold shadow-2xs">
+            <Clapperboard className="w-3 h-3" />
+            <span>{displaySession}</span>
+          </div>
+        )}
+
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-[11px] font-sora font-semibold">
           <span>{typeInfo.badge}</span>
         </div>
       </div>
 
-      <h1 className="text-xl sm:text-2xl font-sora font-bold text-gray-900 tracking-tight">
-        Reserva tu Fecha de Grabación
+      <h1 className="text-xl sm:text-2xl font-sora font-extrabold text-gray-900 tracking-tight">
+        {isExtraSession ? "Reserva de Sesión Extra" : "Reserva tu Fecha de Grabación"}
       </h1>
 
+      {Boolean(precioExtra) && (
+        <p className="text-xl sm:text-2xl font-sora font-extrabold text-gray-900 tracking-tight mt-1">
+          Valor: ${Number(precioExtra).toLocaleString()}
+        </p>
+      )}
+
       {displayClient && (
-        <p className="text-xs sm:text-sm font-inter text-gray-500 mt-1 flex items-center justify-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-pink-500" />
-          <span>Producción de Contenido para <strong className="text-gray-800">{displayClient}</strong></span>
+        <p className="text-xs font-inter text-gray-600 mt-1 flex items-center justify-center gap-1.5">
+          <Clapperboard className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+          <span>
+            Producción de Contenido para <strong className="text-gray-900 font-semibold">{displayClient}</strong>
+          </span>
         </p>
       )}
     </div>

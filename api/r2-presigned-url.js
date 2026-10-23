@@ -178,6 +178,47 @@ export default async function handler(req, res) {
       });
     }
 
+    // Manejar subida autenticada de comprobantes administrativos para ciclos mensuales
+    if (action === "put_comprobante_admin") {
+      const auth = await verifySupabaseAuth(req);
+      if (!auth.authenticated) {
+        return res.status(401).json({ error: auth.error || "No autorizado para subir comprobantes." });
+      }
+
+      const rawCicloId = params.cicloId;
+      const cicloId = sanitizeStorageKey(rawCicloId ? String(rawCicloId).replace(/[^a-zA-Z0-9_-]/g, "") : null);
+      if (!cicloId || !fileName) {
+        return res.status(400).json({ error: "Parámetros requeridos: cicloId y fileName." });
+      }
+
+      const allowedTypes = ["image/webp", "image/jpeg", "image/png", "image/jpg", "application/pdf"];
+      const normalizedType = (fileType || "application/pdf").toLowerCase();
+      if (!allowedTypes.includes(normalizedType)) {
+        return res.status(400).json({ error: "Formato no permitido. Sube una imagen (JPG, PNG, WebP) o PDF." });
+      }
+
+      const cleanFileName = decodeURIComponent(fileName)
+        .replace(/\s+/g, "_")
+        .replace(/[^a-zA-Z0-9_.-]/g, "");
+      const storageKey = `comprobantes/${cicloId}/${Date.now()}-${cleanFileName}`;
+
+      const command = new PutObjectCommand({
+        Bucket: R2_BUCKET_NAME,
+        Key: storageKey,
+        ContentType: normalizedType
+      });
+
+      const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 900 });
+      const publicUrl = `${R2_PUBLIC_DOMAIN}/${storageKey}`;
+
+      return res.status(200).json({
+        uploadUrl,
+        publicUrl,
+        key: storageKey,
+        expiresIn: 900
+      });
+    }
+
     // Validar autenticación antes de generar URL prefirmada de subida (PUT)
     const auth = await verifySupabaseAuth(req);
     if (!auth.authenticated) {

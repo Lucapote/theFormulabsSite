@@ -178,3 +178,71 @@ export async function uploadComprobantePublico({ file, tokenReserva }) {
     return { success: false, error: err.message || "Error inesperado al subir el comprobante." };
   }
 }
+
+/**
+ * Sube un comprobante de pago desde el panel de administración
+ * con autenticación Bearer token a Cloudflare R2.
+ *
+ * @param {object} params
+ * @param {File} params.file
+ * @param {string} params.cicloId
+ * @returns {Promise<{ success: boolean, publicUrl?: string, error?: string }>}
+ */
+export async function uploadComprobanteAdmin({ file, cicloId }) {
+  if (!file || !cicloId) {
+    return { success: false, error: "Archivo y cicloId son requeridos." };
+  }
+
+  try {
+    const compRes = await compressReceiptFile(file);
+    if (compRes.error) {
+      return { success: false, error: compRes.error };
+    }
+
+    const optimizedFile = compRes.file || file;
+    const fileType = optimizedFile.type || "application/pdf";
+
+    const headers = await getAuthHeaders();
+    const res = await fetch("/api/r2-presigned-url", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        action: "put_comprobante_admin",
+        cicloId,
+        fileName: optimizedFile.name,
+        fileType
+      })
+    });
+
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      return { success: false, error: errJson.error || "Error al obtener URL de subida." };
+    }
+
+    const { uploadUrl, publicUrl } = await res.json();
+    if (!uploadUrl || !publicUrl) {
+      return { success: false, error: "Respuesta de almacenamiento incompleta." };
+    }
+
+    const putRes = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": fileType },
+      body: optimizedFile
+    });
+
+    if (!putRes.ok) {
+      return { success: false, error: "Error al transferir el comprobante a R2." };
+    }
+
+    return {
+      success: true,
+      publicUrl,
+      fileName: optimizedFile.name,
+      savedPercentage: compRes.savedPercentage
+    };
+  } catch (err) {
+    console.error("uploadComprobanteAdmin error:", err);
+    return { success: false, error: err.message || "Error al subir el comprobante administrativo." };
+  }
+}
+

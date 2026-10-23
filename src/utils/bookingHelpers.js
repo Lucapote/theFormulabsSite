@@ -1,4 +1,4 @@
-/**
+  /**
  * Helper utilities for booking validations and scheduling rules.
  * Pure JS functions conforming to GEMINI.md standards.
  */
@@ -26,6 +26,35 @@ export function formatHour12(hour, minutes = 0) {
 }
 
 /**
+ * Formatea un rango de horario exacto (horas y minutos) calculando la hora final
+ * en base a la duración de la sesión.
+ * Ej: "09:30", 5 -> "09:30 AM - 02:30 PM (5 hrs)"
+ *
+ * @param {string} startHHMM - Hora de inicio en formato "HH:MM"
+ * @param {number} [durationHours=4] - Duración de la sesión en horas
+ * @returns {string}
+ */
+export function formatTimeRange(startHHMM, durationHours = 4) {
+  if (!startHHMM) return "";
+  const parts = String(startHHMM).split(":");
+  const startH = parseInt(parts[0], 10) || 0;
+  const startM = parseInt(parts[1], 10) || 0;
+  const duration = Number(durationHours) || 4;
+
+  const totalStartMinutes = startH * 60 + startM;
+  const totalEndMinutes = totalStartMinutes + Math.round(duration * 60);
+
+  const endH = Math.floor(totalEndMinutes / 60) % 24;
+  const endM = totalEndMinutes % 60;
+
+  const startFormatted = formatHour12(startH, startM);
+  const endFormatted = formatHour12(endH, endM);
+  const durLabel = duration === 1 ? "1 hr" : `${duration} hrs`;
+
+  return `${startFormatted} - ${endFormatted} (${durLabel})`;
+}
+
+/**
  * Genera la lista de turnos de grabación hora por hora de 9:00 AM a 2:00 PM (14:00),
  * calculando la hora de finalización sumando la cantidad de horas de sesión.
  *
@@ -38,7 +67,7 @@ export function getRecordingShifts(durationHours = 4) {
   return BOOKING_START_HOURS.map((startH) => {
     const endH = startH + duration;
     const value = `${String(startH).padStart(2, "0")}:00`;
-    const label = `${formatHour12(startH)} - ${formatHour12(endH)}`;
+    const label = formatTimeRange(value, duration);
     return {
       value,
       label,
@@ -210,8 +239,30 @@ export function getPaymentSplitOptions(totalSesiones = 2) {
  * @returns {{ pagoAcreditado: boolean, requiereSegundoPago: boolean, maxPrimerPago: number }}
  */
 export function isSessionPaymentSatisfied(produccion, ciclo, cliente = {}, totalCount = null) {
+  const cuotaPautada = Math.max(1, Number(cliente?.producciones_por_mes) || 1);
+  const numSesion = Number(produccion?.numero_sesion) || 1;
+  const esSesionExtra =
+    Boolean(produccion?.precio_extra) ||
+    numSesion > cuotaPautada ||
+    Boolean(produccion?.nombre && produccion.nombre.toLowerCase().includes("extra"));
+
+  // 1. Si es sesión extra, su cobro es independiente del ciclo mensual base
+  if (esSesionExtra) {
+    const estaAgendadaOFinal =
+      produccion?.estado === "agendada" ||
+      ["rodaje_completado", "en_edicion", "finalizada"].includes(produccion?.estado);
+
+    return {
+      pagoAcreditado: estaAgendadaOFinal,
+      esSesionExtra: true,
+      requiereSegundoPago: false,
+      maxPrimerPago: cuotaPautada
+    };
+  }
+
+  // 2. Sesiones regulares cubiertas por el retainer / cuota mensual
   const estadoPago = ciclo?.estado_pago || "pendiente";
-  const total = Math.max(1, Number(totalCount) || Number(cliente?.producciones_por_mes) || 1);
+  const total = cuotaPautada;
   const isDosPagos =
     (cliente?.esquema_pago === "quincenal" ||
       cliente?.esquema_pago === "dos_pagos" ||
@@ -225,17 +276,17 @@ export function isSessionPaymentSatisfied(produccion, ciclo, cliente = {}, total
       : getDefaultFirstPaymentSessions(total);
 
   if (estadoPago === "pagado") {
-    return { pagoAcreditado: true, requiereSegundoPago: false, maxPrimerPago };
+    return { pagoAcreditado: true, esSesionExtra: false, requiereSegundoPago: false, maxPrimerPago };
   }
 
   if (!isDosPagos) {
-    return { pagoAcreditado: false, requiereSegundoPago: false, maxPrimerPago: total };
+    return { pagoAcreditado: false, esSesionExtra: false, requiereSegundoPago: false, maxPrimerPago: total };
   }
 
-  const numSesion = Number(produccion?.numero_sesion) || 1;
   if (numSesion <= maxPrimerPago) {
     return {
       pagoAcreditado: estadoPago === "primer_pago",
+      esSesionExtra: false,
       requiereSegundoPago: false,
       maxPrimerPago
     };
@@ -243,6 +294,7 @@ export function isSessionPaymentSatisfied(produccion, ciclo, cliente = {}, total
 
   return {
     pagoAcreditado: false,
+    esSesionExtra: false,
     requiereSegundoPago: true,
     maxPrimerPago
   };

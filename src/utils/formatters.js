@@ -70,11 +70,6 @@ export const getSessionDisplayName = (produccion, mes = null, totalSesiones = 1)
     return produccion.nombre.trim();
   }
   const sessionNum = produccion?.numero_sesion || 1;
-  const count = Number(totalSesiones) || 1;
-
-  if (count > 1) {
-    return `Sesión ${sessionNum} de ${count}`;
-  }
 
   let mesIndex = null;
   if (mes !== null && mes !== undefined) {
@@ -86,7 +81,7 @@ export const getSessionDisplayName = (produccion, mes = null, totalSesiones = 1)
   }
 
   const mesNombre = MESES_ANIO[mesIndex] || "";
-  return mesNombre ? `Sesión ${mesNombre}` : `Sesión #${sessionNum}`;
+  return mesNombre ? `${mesNombre} ${sessionNum}` : `Sesión ${sessionNum}`;
 };
 
 /**

@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { getDefaultFirstPaymentSessions } from "@/utils/bookingHelpers";
+import { deleteR2Object } from "@/services/r2Service";
 
 /**
  * Service for Operaciones, Retainers y Producciones (Fase 1)
@@ -501,6 +502,21 @@ export function checkSesionDesbloqueada(produccion, ciclo, cliente = {}, totalCo
     };
   }
 
+  // Las sesiones extras tienen su propio flujo de reserva y comprobante
+  const cuotaPautada = Math.max(1, Number(cliente?.producciones_por_mes) || 1);
+  const esSesionExtra =
+    Boolean(produccion.precio_extra) ||
+    (Number(produccion.numero_sesion) || 1) > cuotaPautada ||
+    Boolean(produccion.nombre && produccion.nombre.toLowerCase().includes("extra"));
+
+  if (esSesionExtra) {
+    return {
+      estaDesbloqueada: true,
+      esSesionExtra: true,
+      motivoBloqueo: null
+    };
+  }
+
   const estadoPago = ciclo?.estado_pago || "pendiente";
 
   if (estadoPago === "pendiente" || estadoPago === "vencido") {
@@ -814,6 +830,23 @@ export async function rechazarComprobanteCiclo(cicloId, esSegundoPago = false) {
       return { success: false, error: "Supabase no está configurado." };
     }
 
+    // Obtener la URL del comprobante que se va a rechazar para purgarlo de R2
+    const { data: cicloPrevio } = await supabase
+      .from("ciclos_mensuales")
+      .select("comprobante_url, comprobante_2_url")
+      .eq("id", cicloId)
+      .single();
+
+    const urlToPurge = esSegundoPago ? cicloPrevio?.comprobante_2_url : cicloPrevio?.comprobante_url;
+    if (urlToPurge) {
+      try {
+        const storageKey = urlToPurge.replace(/^https?:\/\/[^\/]+\//, "");
+        if (storageKey) await deleteR2Object(storageKey);
+      } catch (r2Err) {
+        console.warn("Aviso al purgar comprobante rechazado de R2:", r2Err);
+      }
+    }
+
     const updateFields = {
       comprobante_en_revision: false
     };
@@ -834,6 +867,15 @@ export async function rechazarComprobanteCiclo(cicloId, esSegundoPago = false) {
       return { success: false, error: error.message };
     }
 
+    // Limpiar comprobante_url en producciones si apuntaban a este comprobante
+    if (urlToPurge) {
+      await supabase
+        .from("producciones")
+        .update({ comprobante_url: null })
+        .eq("ciclo_id", cicloId)
+        .eq("comprobante_url", urlToPurge);
+    }
+
     // Revertir sesiones que estaban en pre_reservada a pendiente_agendamiento
     await supabase
       .from("producciones")
@@ -850,5 +892,194 @@ export async function rechazarComprobanteCiclo(cicloId, esSegundoPago = false) {
     return { success: false, error: err.message };
   }
 }
+
+/**
+ * Crea una sesión de rodaje adicional o nueva para un ciclo.
+ */
+export async function createProduccionExtra({
+  ciclo_id,
+  cliente_id,
+  nombre,
+  tipo = "organica",
+  duracion_horas = 4,
+  locacion = null,
+  fecha_produccion = null,
+  notas_brief = "",
+  estado = "pendiente_agendamiento",
+  precio_extra = null
+}) {
+  try {
+    // 1. Obtener el número de sesión correlativo
+    const { data: existingProds, error: countErr } = await supabase
+      .from("producciones")
+      .select("numero_sesion")
+      .eq("ciclo_id", ciclo_id)
+      .order("numero_sesion", { ascending: false })
+      .limit(1);
+
+    if (countErr) throw countErr;
+
+    const nextNumero = (existingProds?.[0]?.numero_sesion || 0) + 1;
+    const tokenReserva = (typeof crypto !== "undefined" && crypto.randomUUID)
+      ? crypto.randomUUID().replace(/-/g, "").slice(0, 24)
+      : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
+    const extraPrice = Number(precio_extra) > 0 ? Number(precio_extra) : null;
+
+    // 2. Si se asignó un precio extra, sumarlo de inmediato al monto_cobrado del ciclo
+    if (extraPrice) {
+      const { data: currentCiclo } = await supabase
+        .from("ciclos_mensuales")
+        .select("id, monto_cobrado")
+        .eq("id", ciclo_id)
+        .single();
+
+      if (currentCiclo) {
+        const nuevoMonto = (Number(currentCiclo.monto_cobrado) || 0) + extraPrice;
+        await supabase
+          .from("ciclos_mensuales")
+          .update({ monto_cobrado: nuevoMonto })
+          .eq("id", ciclo_id);
+      }
+    }
+
+    const payload = {
+      ciclo_id,
+      cliente_id,
+      numero_sesion: nextNumero,
+      nombre: nombre?.trim() || null,
+      tipo: tipo || "organica",
+      duracion_horas: Number(duracion_horas) || 4,
+      locacion: locacion?.trim() || null,
+      fecha_produccion: fecha_produccion || null,
+      notas_brief: notas_brief?.trim() || "",
+      estado: estado || (fecha_produccion ? "fecha_propuesta" : "pendiente_agendamiento"),
+      token_reserva: tokenReserva,
+      precio_extra: extraPrice
+    };
+
+    const { data, error } = await supabase
+      .from("producciones")
+      .insert(payload)
+      .select(`
+        *,
+        cliente:clientes(*),
+        ciclo:ciclos_mensuales(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (err) {
+    console.error("createProduccionExtra error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Elimina definitivamente una sesión de producción de la base de datos.
+ * Aplica reglas estrictas de GEMINI.md (Zero Orphan Records):
+ * 1. Purga físicamente el comprobante asociado en Cloudflare R2 si existía.
+ * 2. Limpia las referencias en ciclos_mensuales.
+ * 3. Si era sesión extra con precio, descuenta automáticamente el valor de monto_cobrado.
+ */
+export async function deleteProduccion(id) {
+  try {
+    // 1. Obtener la sesión antes de suprimirla para verificar archivos y precio
+    const { data: prod, error: fetchErr } = await supabase
+      .from("producciones")
+      .select("*, ciclo:ciclos_mensuales(*)")
+      .eq("id", id)
+      .single();
+
+    if (fetchErr) throw fetchErr;
+
+    // 2. Si la producción tenía un comprobante asociado, purgar el archivo físico en Cloudflare R2
+    const comprobanteUrl = prod?.comprobante_url;
+    if (comprobanteUrl) {
+      try {
+        const storageKey = comprobanteUrl.replace(/^https?:\/\/[^\/]+\//, "");
+        if (storageKey) {
+          await deleteR2Object(storageKey);
+        }
+      } catch (r2Err) {
+        console.warn("Aviso al purgar comprobante de R2:", r2Err);
+      }
+
+      // Limpiar referencias en el ciclo si apuntaban a este archivo
+      const ciclo = prod.ciclo;
+      if (ciclo) {
+        const updateCiclo = {};
+        if (ciclo.comprobante_url === comprobanteUrl) {
+          updateCiclo.comprobante_url = null;
+          updateCiclo.comprobante_en_revision = false;
+        }
+        if (ciclo.comprobante_2_url === comprobanteUrl) {
+          updateCiclo.comprobante_2_url = null;
+          updateCiclo.comprobante_en_revision = false;
+        }
+        if (Object.keys(updateCiclo).length > 0) {
+          await supabase
+            .from("ciclos_mensuales")
+            .update(updateCiclo)
+            .eq("id", ciclo.id);
+        }
+      }
+    }
+
+    // 3. Si la producción tenía precio_extra, revertirlo/descontarlo de monto_cobrado del ciclo
+    if (prod?.precio_extra && Number(prod.precio_extra) > 0 && prod.ciclo_id) {
+      const { data: currentCiclo } = await supabase
+        .from("ciclos_mensuales")
+        .select("id, monto_cobrado")
+        .eq("id", prod.ciclo_id)
+        .single();
+
+      if (currentCiclo) {
+        const montoRevertido = Math.max(0, (Number(currentCiclo.monto_cobrado) || 0) - Number(prod.precio_extra));
+        await supabase
+          .from("ciclos_mensuales")
+          .update({ monto_cobrado: montoRevertido })
+          .eq("id", prod.ciclo_id);
+      }
+    }
+
+    // 4. Proceder a eliminar la fila en producciones
+    const { error: deleteErr } = await supabase
+      .from("producciones")
+      .delete()
+      .eq("id", id);
+
+    if (deleteErr) throw deleteErr;
+    return { success: true };
+  } catch (err) {
+    console.error("deleteProduccion error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Cancela y libera la fecha asignada a una producción, regresándola a pendiente_agendamiento.
+ */
+export async function cancelarFechaProduccion(id) {
+  try {
+    const { data, error } = await supabase
+      .from("producciones")
+      .update({
+        fecha_produccion: null,
+        estado: "pendiente_agendamiento"
+      })
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (err) {
+    console.error("cancelarFechaProduccion error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
 
 

@@ -251,6 +251,7 @@ export default function OperationsTabSection() {
           setActiveProductionModal({ isOpen: false, produccion: null, clienteNombre: "", ciclo: null })
         }
         onUpdated={loadData}
+        onDeleted={loadData}
       />
 
       <FinanceCostModal

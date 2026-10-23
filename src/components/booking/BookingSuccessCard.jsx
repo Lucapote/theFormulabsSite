@@ -7,32 +7,39 @@ import {
   Sparkles,
   RefreshCw,
   Clock,
-  Upload,
   Loader2,
   FileCheck2,
-  AlertTriangle
+  ExternalLink
 } from "lucide-react";
 import { isSessionPaymentSatisfied } from "@/utils/bookingHelpers";
 import { uploadComprobantePublico } from "@/services/r2Service";
 import { confirmarReservaProduccion } from "@/services/operationsService";
-import { formatBytes } from "@/utils/mediaCompressor";
 
 export default function BookingSuccessCard({
   produccion = {},
   onReschedule,
   onProduccionUpdated
 }) {
-  const fileInputRef = useRef(null);
-  const [uploadingReceipt, setUploadingReceipt] = useState(false);
-  const [uploadedInfo, setUploadedInfo] = useState(null);
+  const replacementInputRef = useRef(null);
+  const [uploadingReplacement, setUploadingReplacement] = useState(false);
 
-  const isPreReserva = produccion.estado === "pre_reservada" || Boolean(produccion.ciclo?.comprobante_en_revision);
   const { pagoAcreditado } = isSessionPaymentSatisfied(
     produccion,
     produccion.ciclo,
     produccion.cliente
   );
-  const faltaPago24h = !pagoAcreditado && !isPreReserva;
+
+  const receiptUrl =
+    produccion.ciclo?.comprobante_url ||
+    produccion.ciclo?.comprobante_2_url ||
+    produccion.comprobante_url ||
+    null;
+
+  const isPreReserva =
+    !pagoAcreditado &&
+    (produccion.estado === "pre_reservada" ||
+      Boolean(produccion.ciclo?.comprobante_en_revision) ||
+      Boolean(receiptUrl));
 
   const formatDateTime = (isoStr) => {
     if (!isoStr) return "Fecha confirmada";
@@ -51,19 +58,30 @@ export default function BookingSuccessCard({
     }
   };
 
-  const handleUploadReceiptAfterConfirm = async (e) => {
+  const handleReplaceReceipt = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !produccion.token_reserva) return;
 
-    setUploadingReceipt(true);
+    // Validación de tipo de archivo
+    const validTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Formato no soportado. Por favor sube una imagen (PNG, JPG, WebP) o PDF.");
+      if (replacementInputRef.current) replacementInputRef.current.value = "";
+      return;
+    }
+
+    setUploadingReplacement(true);
+    const loadingToast = toast.loading("Actualizando comprobante en el servidor...");
+
     const uploadRes = await uploadComprobantePublico({
       file,
       tokenReserva: produccion.token_reserva
     });
 
     if (!uploadRes.success) {
-      setUploadingReceipt(false);
-      toast.error(uploadRes.error || "No se pudo subir el comprobante.");
+      toast.dismiss(loadingToast);
+      setUploadingReplacement(false);
+      toast.error(uploadRes.error || "No se pudo actualizar el comprobante.");
       return;
     }
 
@@ -73,129 +91,130 @@ export default function BookingSuccessCard({
       notas_brief: produccion.notas_brief,
       comprobante_url: uploadRes.publicUrl
     });
-    setUploadingReceipt(false);
+
+    toast.dismiss(loadingToast);
+    setUploadingReplacement(false);
 
     if (confirmRes.success) {
-      setUploadedInfo({
-        compressedSize: uploadRes.compressedSize,
-        savedPercentage: uploadRes.savedPercentage
-      });
-      toast.success("Comprobante comprimido y enviado para validación de la agencia.");
+      toast.success("Comprobante actualizado y enviado para revisión.");
       if (onProduccionUpdated) onProduccionUpdated(confirmRes.data);
     } else {
-      toast.error(confirmRes.error || "Error al vincular el comprobante.");
+      toast.error(confirmRes.error || "Error al actualizar el comprobante.");
     }
   };
 
   return (
-    <div className="bg-white border border-gray-100 shadow-xl rounded-2xl p-6 sm:p-8 max-w-xl mx-auto text-center space-y-5 font-inter">
-      {/* Icono de Éxito / Pre-Reserva */}
-      <div className="relative w-16 h-16 mx-auto flex items-center justify-center">
+    <div className="bg-white border border-gray-100 shadow-xl rounded-2xl p-5 sm:p-7 max-w-xl mx-auto text-center space-y-4 font-inter">
+      {/* Icono de Estado Clínico (Azul Eléctrico / Índigo para Pre-Aprobado vs Esmeralda para Confirmado) */}
+      <div className="relative w-14 h-14 mx-auto flex items-center justify-center">
         <div
           className={`absolute inset-0 rounded-full blur-md ${
-            isPreReserva ? "bg-blue-400/20" : "bg-emerald-400/20"
+            isPreReserva ? "bg-blue-400/25" : "bg-emerald-400/25"
           }`}
         />
         <div
-          className={`relative w-14 h-14 rounded-full text-white flex items-center justify-center shadow-lg ${
+          className={`relative w-12 h-12 rounded-full text-white flex items-center justify-center shadow-lg ${
             isPreReserva
-              ? "bg-gradient-to-tr from-[#188ff0] to-indigo-500 shadow-blue-200"
+              ? "bg-gradient-to-tr from-[#188ff0] to-indigo-600 shadow-blue-200"
               : "bg-gradient-to-tr from-emerald-500 to-teal-400 shadow-emerald-200"
           }`}
         >
-          {isPreReserva ? <Clock className="w-7 h-7" /> : <CheckCircle2 className="w-8 h-8" />}
+          {isPreReserva ? <Clock className="w-6 h-6" /> : <CheckCircle2 className="w-7 h-7" />}
         </div>
       </div>
 
-      <div>
+      <div className="space-y-1">
+        {/* Badge de Estado */}
         <div
-          className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-mono font-medium border mb-2 ${
+          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium border mb-1.5 ${
             isPreReserva
               ? "bg-blue-50 text-brand-blue border-blue-200"
               : "bg-emerald-50 text-emerald-700 border-emerald-100"
           }`}
         >
-          <Sparkles className="w-3 h-3" />
+          {isPreReserva ? <Clock className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
           <span>
             {isPreReserva
-              ? "Pre-Reserva Temporal • Validando Comprobante"
-              : pagoAcreditado
-              ? "Estado: Agendada y Confirmada"
-              : "Fecha Confirmada • Pago hasta 24h antes"}
+              ? "Pre-Aprobado • Comprobante en Revisión"
+              : "Estado: Agendada y Confirmada"}
           </span>
         </div>
 
-        <h2 className="text-xl sm:text-2xl font-sora font-bold text-gray-900 tracking-tight mb-2">
+        {/* Título de Pantalla */}
+        <h2 className="text-lg sm:text-xl font-sora font-bold text-gray-900 tracking-tight">
           {isPreReserva
-            ? "¡Pre-Reserva Registrada!"
+            ? "¡Sesión Pre-Aprobada!"
             : "¡Fecha de Rodaje Agendada!"}
         </h2>
 
-        <p className="text-xs sm:text-sm font-inter text-gray-500 max-w-md mx-auto">
+        {/* Mensaje descriptivo */}
+        <p className="text-xs font-inter text-gray-500 max-w-md mx-auto leading-relaxed">
           {isPreReserva
-            ? "Recibimos tu comprobante de pago y hemos bloqueado temporalmente tu horario. Una vez validado por administración, tu sesión quedará 100% confirmada."
+            ? "Recibimos tu comprobante de pago y tu horario se encuentra apartado en agenda. Nuestro equipo de administración está validando la transferencia para confirmar 100% tu fecha."
             : "El equipo de producción de The Formulab ya tiene tu fecha en calendario. Nos vemos pronto para crear contenido increíble."}
         </p>
       </div>
 
-      {/* Aviso de límite de pago 24h antes si la fecha fue propuesta por la agencia y aún no sube comprobante */}
-      {faltaPago24h && !uploadedInfo && (
-        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-left space-y-3">
-          <div className="flex items-start gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <div className="text-xs text-amber-950 space-y-1">
-              <span className="font-sora font-bold block">
-                Recordatorio: Pago límite hasta 24 horas antes
+      {/* Input oculto para cambiar comprobante si el cliente se equivocó de archivo */}
+      <input
+        ref={replacementInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,application/pdf"
+        onChange={handleReplaceReceipt}
+        className="hidden"
+      />
+
+      {/* Tarjeta de Comprobante Recibido (Modo Pre-Aprobado en Revisión) */}
+      {isPreReserva && (
+        <div className="p-3 bg-blue-50/60 border border-blue-200/80 rounded-xl text-left flex items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-blue-100 text-brand-blue flex items-center justify-center shrink-0">
+              <FileCheck2 className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-xs font-sora font-bold text-gray-900 block truncate">
+                Comprobante Recibido
               </span>
-              <p className="text-[11px] text-amber-800 leading-relaxed">
-                Para mantener tu equipo de grabación asignado sin contratiempos, recuerda subir aquí tu comprobante de pago a más tardar el día anterior a la sesión.
-              </p>
+              <span className="text-[11px] font-inter text-gray-500 block truncate">
+                En proceso de validación por administración
+              </span>
             </div>
           </div>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,application/pdf"
-            onChange={handleUploadReceiptAfterConfirm}
-            className="hidden"
-          />
-
-          <button
-            type="button"
-            disabled={uploadingReceipt}
-            onClick={() => fileInputRef.current?.click()}
-            className="w-full h-10 px-4 rounded-full bg-amber-600 hover:bg-amber-700 text-white text-xs font-sora font-bold uppercase tracking-wider inline-flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
-          >
-            {uploadingReceipt ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Comprimiendo y subiendo...</span>
-              </>
-            ) : (
-              <>
-                <Upload className="w-4 h-4" />
-                <span>Subir Comprobante de Pago Ahora</span>
-              </>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {receiptUrl && (
+              <a
+                href={receiptUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-7 px-2.5 rounded-md bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 text-[11px] font-sora font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <ExternalLink className="w-3 h-3" />
+                <span>Ver</span>
+              </a>
             )}
-          </button>
+            <button
+              type="button"
+              disabled={uploadingReplacement}
+              onClick={() => replacementInputRef.current?.click()}
+              className="h-7 px-2.5 rounded-md bg-white hover:bg-gray-50 text-brand-blue border border-blue-200 text-[11px] font-sora font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
+              title="Cambiar comprobante solo si subiste el archivo equivocado"
+            >
+              {uploadingReplacement ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <RefreshCw className="w-3 h-3" />
+              )}
+              <span>Cambiar</span>
+            </button>
+          </div>
         </div>
       )}
 
-      {uploadedInfo && (
-        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center gap-2 text-xs text-emerald-800 font-sora font-semibold">
-          <FileCheck2 className="w-4 h-4 text-emerald-600" />
-          <span>
-            Comprobante enviado ({formatBytes(uploadedInfo.compressedSize)}) • En revisión
-          </span>
-        </div>
-      )}
-
-      {/* Tarjeta Resumen */}
-      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-left space-y-3">
-        <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center shrink-0 mt-0.5">
-            <Calendar className="w-4 h-4" />
+      {/* Tarjeta Resumen de Fecha y Locación */}
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 sm:p-3.5 text-left space-y-2.5">
+        <div className="flex items-start gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center shrink-0 mt-0.5">
+            <Calendar className="w-3.5 h-3.5" />
           </div>
           <div>
             <span className="text-[10px] font-sora font-semibold text-gray-400 uppercase tracking-wider block">
@@ -207,30 +226,33 @@ export default function BookingSuccessCard({
           </div>
         </div>
 
-        <div className="flex items-start gap-3 pt-2 border-t border-gray-200/60">
-          <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-            <MapPin className="w-4 h-4" />
+        <div className="flex items-start gap-2.5 pt-2 border-t border-gray-200/60">
+          <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+            <MapPin className="w-3.5 h-3.5" />
           </div>
           <div>
             <span className="text-[10px] font-sora font-semibold text-gray-400 uppercase tracking-wider block">
               Locación Confirmada
             </span>
             <span className="text-xs sm:text-sm font-inter text-gray-800">
-              {produccion.locacion || "Locación a convenir con el equipo"}
+              {produccion.locacion || "Locación fijada por la agencia"}
             </span>
           </div>
         </div>
       </div>
 
+      {/* Opción para reprogramar fecha o locación */}
       {onReschedule && (
-        <button
-          type="button"
-          onClick={onReschedule}
-          className="inline-flex items-center gap-1.5 text-xs font-sora font-semibold text-gray-500 hover:text-gray-800 transition-colors cursor-pointer"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>¿Necesitas modificar la fecha o locación?</span>
-        </button>
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={onReschedule}
+            className="inline-flex items-center gap-1.5 text-xs font-sora font-semibold text-gray-500 hover:text-gray-800 transition-colors cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>¿Necesitas modificar la fecha o locación?</span>
+          </button>
+        </div>
       )}
     </div>
   );

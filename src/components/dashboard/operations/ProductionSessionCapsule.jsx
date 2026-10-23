@@ -51,21 +51,21 @@ export default function ProductionSessionCapsule({
   };
 
   const capsuleTitle = enRiesgoPago
-    ? `${sessionTitle} • [⚠️ EN RIESGO: Menos de 24h sin pago acreditado]`
+    ? `${sessionTitle} • [EN RIESGO: Menos de 24h sin pago acreditado]`
     : isPreReserved
     ? `${sessionTitle} • [Pre-Reserva Temporal: Revisar comprobante de pago]`
     : isProposedByAgency
-    ? `${sessionTitle} • [Fecha propuesta por agencia: Pago permitido hasta 24h antes]`
+    ? `${sessionTitle} • [Fecha propuesta por agencia: Requiere comprobante para confirmar]`
     : isEsperandoSegundoPago
-    ? `${sessionTitle} • [🔒 Bloqueada: Esperando 2do Pago]`
+    ? `${sessionTitle} • [Bloqueada: Esperando 2do Pago]`
     : !estaDesbloqueada
-    ? `${sessionTitle} • [🔒 Bloqueada: Pago Inicial Pendiente]`
+    ? `${sessionTitle} • [Bloqueada: Pago Inicial Pendiente]`
     : `${sessionTitle} • Clic para gestionar detalles`;
 
   return (
     <div
       onClick={() => onOpenModal && onOpenModal(prod, clienteNombre, ciclo)}
-      className={`group relative flex items-center gap-1.5 pl-2.5 pr-1.5 py-1.5 rounded-full border text-xs cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] ${
+      className={`group relative flex items-center gap-1.5 pl-2.5 pr-2 py-1.5 rounded-full border text-xs cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99] ${
         enRiesgoPago
           ? "bg-rose-50 text-rose-700 border-rose-300 hover:bg-rose-100 shadow-2xs"
           : isCompleted
@@ -131,23 +131,32 @@ export default function ProductionSessionCapsule({
         </span>
       )}
 
+      {Boolean(prod.precio_extra) && (
+        <span className="font-mono text-[9px] font-bold text-emerald-700 bg-emerald-100/90 px-1.5 py-0.5 rounded-full border border-emerald-200 shrink-0">
+          +${Number(prod.precio_extra).toLocaleString()}
+        </span>
+      )}
+
       {prod.token_reserva && (
-        <div className="flex items-center gap-0.5 ml-0.5" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex items-center gap-0.5 ml-0.5 opacity-60 group-hover:opacity-100 transition-opacity"
+          onClick={(e) => e.stopPropagation()}
+        >
           <button
             type="button"
             onClick={handleCopyLink}
             title="Copiar link de reserva"
-            className="p-1 rounded-full hover:bg-white/80 text-gray-500 hover:text-brand-blue transition-colors cursor-pointer"
+            className="w-5 h-5 rounded-full hover:bg-white/80 text-gray-500 hover:text-brand-blue flex items-center justify-center transition-colors cursor-pointer"
           >
-            <Link2 className="w-3 h-3" />
+            <Link2 className="w-2.5 h-2.5" />
           </button>
           <button
             type="button"
             onClick={handleOpenLink}
             title="Abrir auto-reserva en nueva pestaña"
-            className="p-1 rounded-full hover:bg-white/80 text-gray-500 hover:text-brand-blue transition-colors cursor-pointer"
+            className="w-5 h-5 rounded-full hover:bg-white/80 text-gray-500 hover:text-brand-blue flex items-center justify-center transition-colors cursor-pointer"
           >
-            <ExternalLink className="w-3 h-3" />
+            <ExternalLink className="w-2.5 h-2.5" />
           </button>
         </div>
       )}

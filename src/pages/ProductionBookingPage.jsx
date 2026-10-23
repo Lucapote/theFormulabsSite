@@ -4,8 +4,6 @@ import { toast } from "sonner";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getProduccionByToken, confirmarReservaProduccion } from "@/services/operationsService";
-import { getSessionDisplayName } from "@/utils/formatters";
-import BookingHeader from "@/components/booking/BookingHeader";
 import BookingFormCard from "@/components/booking/BookingFormCard";
 import BookingSuccessCard from "@/components/booking/BookingSuccessCard";
 import BookingLockedCard from "@/components/booking/BookingLockedCard";
@@ -35,10 +33,38 @@ export default function ProductionBookingPage() {
 
       if (res.success && res.data) {
         setProduccion(res.data);
-        const isAlreadyScheduled =
-          (res.data.estado === "agendada" || res.data.estado === "pre_reservada") &&
-          Boolean(res.data.fecha_produccion);
-        if (isAlreadyScheduled) {
+        const cliente = res.data.cliente || {};
+        const ciclo = res.data.ciclo || {};
+        const totalSesiones = Math.max(1, cliente.producciones_por_mes || 1);
+        const sesionesPrimerPago =
+          cliente.sesiones_primer_pago || Math.max(1, Math.floor(totalSesiones / 2));
+        const esSegundoTramo =
+          cliente.esquema_pago === "dos_pagos" &&
+          totalSesiones >= 2 &&
+          res.data.numero_sesion > sesionesPrimerPago;
+
+        // Comprobante exclusivo de este tramo operativo
+        const receiptParaEsteTramo = esSegundoTramo
+          ? ciclo.comprobante_2_url || null
+          : ciclo.comprobante_url || null;
+
+        if (receiptParaEsteTramo) {
+          setComprobanteSubidoUrl(receiptParaEsteTramo);
+        }
+
+        const pagoAcreditado = esSegundoTramo
+          ? ciclo.estado_pago === "pagado"
+          : ["primer_pago", "pagado"].includes(ciclo.estado_pago);
+
+        const isEnRevision =
+          !pagoAcreditado &&
+          (res.data.estado === "pre_reservada" ||
+            (Boolean(ciclo.comprobante_en_revision) && Boolean(receiptParaEsteTramo)));
+
+        const isAgendada =
+          res.data.estado === "agendada" && Boolean(res.data.fecha_produccion);
+
+        if (isEnRevision || (isAgendada && pagoAcreditado)) {
           setShowSuccess(true);
         }
       } else {
@@ -114,7 +140,7 @@ export default function ProductionBookingPage() {
       {/* Gradiente Ambiental de Laboratorio */}
       <div className="absolute top-16 right-0 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#ef18d6]/10 via-transparent to-transparent pointer-events-none" />
 
-      <main className="relative max-w-xl mx-auto px-4 py-8 sm:py-12 z-10">
+      <main className="relative max-w-xl mx-auto px-4 py-4 sm:py-6 z-10">
         {/* Estado: Cargando con Skeletons */}
         {loading && (
           <div className="space-y-4 max-w-xl mx-auto">
@@ -160,41 +186,24 @@ export default function ProductionBookingPage() {
                 tokenReserva={token}
                 onReceiptUploaded={(url) => setComprobanteSubidoUrl(url)}
               />
+            ) : showSuccess ? (
+              <BookingSuccessCard
+                produccion={produccion}
+                onReschedule={() => setShowSuccess(false)}
+                onProduccionUpdated={(updated) => setProduccion(updated)}
+              />
             ) : (
-              <div>
-                <BookingHeader
-                  sessionTitle={getSessionDisplayName(
-                    produccion,
-                    produccion.ciclo?.mes,
-                    produccion.cliente?.producciones_por_mes || 1
-                  )}
-                  numeroSesion={produccion.numero_sesion || 1}
-                  clienteNombre={produccion.cliente?.nombre || ""}
-                  empresa={produccion.cliente?.empresa || ""}
-                  tipo={produccion.tipo || produccion.cliente?.tipo_sesion_default || "organica"}
-                  duracionHoras={produccion.duracion_horas}
-                />
-
-                {showSuccess ? (
-                  <BookingSuccessCard
-                    produccion={produccion}
-                    onReschedule={() => setShowSuccess(false)}
-                    onProduccionUpdated={(updated) => setProduccion(updated)}
-                  />
-                ) : (
-                  <BookingFormCard
-                    initialData={produccion}
-                    cliente={produccion.cliente}
-                    ciclo={produccion.ciclo}
-                    onSubmit={handleBookingSubmit}
-                    isSubmitting={isSubmitting}
-                    tipo={produccion.tipo || produccion.cliente?.tipo_sesion_default || "organica"}
-                    duracionHoras={produccion.duracion_horas}
-                    comprobanteSubidoUrl={comprobanteSubidoUrl}
-                    onComprobanteUploaded={(url) => setComprobanteSubidoUrl(url)}
-                  />
-                )}
-              </div>
+              <BookingFormCard
+                initialData={produccion}
+                cliente={produccion.cliente}
+                ciclo={produccion.ciclo}
+                onSubmit={handleBookingSubmit}
+                isSubmitting={isSubmitting}
+                tipo={produccion.tipo || produccion.cliente?.tipo_sesion_default || "organica"}
+                duracionHoras={produccion.duracion_horas}
+                comprobanteSubidoUrl={comprobanteSubidoUrl}
+                onComprobanteUploaded={(url) => setComprobanteSubidoUrl(url)}
+              />
             )}
           </div>
         )}

@@ -7,10 +7,14 @@ import {
   Link as LinkIcon,
   CheckCircle2,
   Trash2,
-  ExternalLink
+  ExternalLink,
+  Upload,
+  Loader2,
+  X
 } from "lucide-react";
 import BaseFormModal from "@/components/common/BaseFormModal";
 import { updateCicloFinanzas } from "@/services/operationsService";
+import { uploadComprobanteAdmin } from "@/services/r2Service";
 import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
 
 export default function FinanceCostModal({
@@ -31,6 +35,30 @@ export default function FinanceCostModal({
     comprobante_url: "",
     comprobante_2_url: ""
   });
+  const [uploadingReceipt1, setUploadingReceipt1] = useState(false);
+  const [uploadingReceipt2, setUploadingReceipt2] = useState(false);
+
+  const handleFileUpload = async (file, targetField) => {
+    if (!file || !ciclo?.id) return;
+    const isFirst = targetField === "comprobante_url";
+    if (isFirst) setUploadingReceipt1(true);
+    else setUploadingReceipt2(true);
+
+    try {
+      const res = await uploadComprobanteAdmin({ file, cicloId: ciclo.id });
+      if (res.success && res.publicUrl) {
+        setFormData((prev) => ({ ...prev, [targetField]: res.publicUrl }));
+        toast.success(`Comprobante subido a Cloudflare R2 con éxito`);
+      } else {
+        toast.error(res.error || "No se pudo subir el comprobante");
+      }
+    } catch (err) {
+      toast.error(err.message || "Error al subir archivo");
+    } finally {
+      if (isFirst) setUploadingReceipt1(false);
+      else setUploadingReceipt2(false);
+    }
+  };
 
   useEffect(() => {
     if (ciclo) {
@@ -220,59 +248,146 @@ export default function FinanceCostModal({
           </div>
 
           {/* Comprobante 1er Pago / Único */}
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-sora font-bold text-gray-700 uppercase tracking-wide flex items-center gap-1">
+          <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-sora font-bold text-gray-700 uppercase tracking-wide flex items-center gap-1.5">
                 <LinkIcon className="w-3.5 h-3.5 text-brand-blue" />
-                {isDosPagos ? "Comprobante 1er Pago" : "URL Comprobante / Factura"}
+                {isDosPagos ? "Comprobante 1er Pago" : "Comprobante de Pago"}
               </label>
-              {formData.comprobante_url && (
-                <a
-                  href={formData.comprobante_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] font-sora font-bold text-brand-blue hover:underline"
-                >
-                  <span>Abrir comprobante</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              )}
+              <div className="flex items-center gap-2">
+                {formData.comprobante_url && (
+                  <>
+                    <a
+                      href={formData.comprobante_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] font-sora font-bold text-brand-blue hover:underline bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100"
+                    >
+                      <span>Ver archivo</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, comprobante_url: "" }))}
+                      className="p-1 text-gray-400 hover:text-red-500 rounded hover:bg-red-50 transition-colors"
+                      title="Quitar comprobante"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-            <input
-              type="url"
-              placeholder="https://..."
-              value={formData.comprobante_url}
-              onChange={(e) => setFormData({ ...formData, comprobante_url: e.target.value })}
-              className="w-full text-sm font-inter bg-white border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all"
-            />
+
+            <div className="flex gap-2">
+              <input
+                type="url"
+                placeholder="https://... o sube un archivo"
+                value={formData.comprobante_url}
+                onChange={(e) => setFormData({ ...formData, comprobante_url: e.target.value })}
+                className="flex-1 text-xs font-inter bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
+              />
+              <label className={`px-3 py-2 rounded-lg text-xs font-sora font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all ${
+                uploadingReceipt1 
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+                  : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-brand-blue shadow-sm"
+              }`}>
+                {uploadingReceipt1 ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-blue" />
+                    <span>Subiendo...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-3.5 h-3.5 text-brand-blue" />
+                    <span>Subir</span>
+                  </>
+                )}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
+                  disabled={uploadingReceipt1}
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleFileUpload(f, "comprobante_url");
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
           </div>
 
           {/* Comprobante 2do Pago (solo si el cliente tiene esquema de 2 pagos) */}
           {isDosPagos && (
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-sora font-bold text-gray-700 uppercase tracking-wide flex items-center gap-1">
-                  <LinkIcon className="w-3.5 h-3.5 text-brand-magenta" /> Comprobante 2do Pago
+            <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-sora font-bold text-gray-700 uppercase tracking-wide flex items-center gap-1.5">
+                  <LinkIcon className="w-3.5 h-3.5 text-brand-magenta" />
+                  <span>Comprobante 2do Pago</span>
                 </label>
-                {formData.comprobante_2_url && (
-                  <a
-                    href={formData.comprobante_2_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[11px] font-sora font-bold text-brand-blue hover:underline"
-                  >
-                    <span>Abrir 2do comprobante</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                )}
+                <div className="flex items-center gap-2">
+                  {formData.comprobante_2_url && (
+                    <>
+                      <a
+                        href={formData.comprobante_2_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] font-sora font-bold text-brand-magenta hover:underline bg-magenta-50 px-2 py-0.5 rounded-md border border-magenta-100"
+                      >
+                        <span>Ver archivo</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setFormData((prev) => ({ ...prev, comprobante_2_url: "" }))}
+                        className="p-1 text-gray-400 hover:text-red-500 rounded hover:bg-red-50 transition-colors"
+                        title="Quitar comprobante"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-              <input
-                type="url"
-                placeholder="https://..."
-                value={formData.comprobante_2_url}
-                onChange={(e) => setFormData({ ...formData, comprobante_2_url: e.target.value })}
-                className="w-full text-sm font-inter bg-white border border-gray-200 rounded-xl px-3 py-2 text-gray-900 focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all"
-              />
+
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  placeholder="https://... o sube un archivo"
+                  value={formData.comprobante_2_url}
+                  onChange={(e) => setFormData({ ...formData, comprobante_2_url: e.target.value })}
+                  className="flex-1 text-xs font-inter bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta transition-all"
+                />
+                <label className={`px-3 py-2 rounded-lg text-xs font-sora font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer transition-all ${
+                  uploadingReceipt2 
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+                    : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-brand-magenta shadow-sm"
+                }`}>
+                  {uploadingReceipt2 ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-brand-magenta" />
+                      <span>Subiendo...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-3.5 h-3.5 text-brand-magenta" />
+                      <span>Subir</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
+                    disabled={uploadingReceipt2}
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleFileUpload(f, "comprobante_2_url");
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              </div>
             </div>
           )}
         </div>

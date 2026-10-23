@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import {
   Calendar,
@@ -12,11 +12,13 @@ import {
   Sparkles,
   Upload,
   FileCheck2,
-  AlertTriangle
+  AlertTriangle,
+  X,
+  Lock
 } from "lucide-react";
 import {
   getRecordingShifts,
-  formatHour12,
+  formatTimeRange,
   getSessionTypeInfo,
   getMinBusinessBookingDate,
   formatLocalDateToYMD,
@@ -24,6 +26,8 @@ import {
 } from "@/utils/bookingHelpers";
 import { uploadComprobantePublico } from "@/services/r2Service";
 import { formatBytes } from "@/utils/mediaCompressor";
+import { MESES_ANIO } from "@/utils/formatters";
+import BookingHeader from "./BookingHeader";
 import ProductionSlaWarningDialog from "./ProductionSlaWarningDialog";
 
 export default function BookingFormCard({
@@ -40,9 +44,44 @@ export default function BookingFormCard({
   const minDateStr = useMemo(() => formatLocalDateToYMD(getMinBusinessBookingDate(new Date(), 3)), []);
   const [showSlaDialog, setShowSlaDialog] = useState(false);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
-  const [localReceiptUrl, setLocalReceiptUrl] = useState(comprobanteSubidoUrl || "");
-  const [receiptSizeInfo, setReceiptSizeInfo] = useState(null);
+  const [pendingReceiptFile, setPendingReceiptFile] = useState(null);
+  const esDosPagos =
+    cliente?.esquema_pago === "dos_pagos" ||
+    initialData?.cliente?.esquema_pago === "dos_pagos";
+  const totalSesiones = Math.max(
+    1,
+    cliente?.producciones_por_mes || initialData?.cliente?.producciones_por_mes || 1
+  );
+  const sesionesPrimerPago =
+    cliente?.sesiones_primer_pago ||
+    initialData?.cliente?.sesiones_primer_pago ||
+    Math.max(1, Math.floor(totalSesiones / 2));
+  const esSegundoTramo =
+    esDosPagos && totalSesiones >= 2 && (initialData?.numero_sesion || 1) > sesionesPrimerPago;
+
+  const esExtraSession =
+    Boolean(initialData?.precio_extra) ||
+    (initialData?.numero_sesion || 1) > totalSesiones ||
+    Boolean(initialData?.nombre && initialData.nombre.toLowerCase().includes("extra"));
+
+  const precioExtra = initialData?.precio_extra;
+  const mesCiclo = ciclo?.mes || initialData?.ciclo?.mes;
+  const mesNombre = mesCiclo && MESES_ANIO[mesCiclo - 1] ? MESES_ANIO[mesCiclo - 1] : "Sesión";
+
+  const existingReceipt =
+    comprobanteSubidoUrl ||
+    initialData?.comprobante_url ||
+    (esExtraSession
+      ? initialData?.comprobante_url || ""
+      : esSegundoTramo
+      ? ciclo?.comprobante_2_url || initialData?.ciclo?.comprobante_2_url || ""
+      : ciclo?.comprobante_url || initialData?.ciclo?.comprobante_url || "");
+  const [localReceiptUrl, setLocalReceiptUrl] = useState(existingReceipt);
   const receiptInputRef = useRef(null);
+
+  useEffect(() => {
+    setLocalReceiptUrl(existingReceipt);
+  }, [existingReceipt]);
 
   const isPropuestaAgencia = initialData?.estado === "fecha_propuesta";
   const paymentCheck = useMemo(
@@ -50,8 +89,8 @@ export default function BookingFormCard({
     [initialData, ciclo, cliente]
   );
   const pagoAcreditado = paymentCheck.pagoAcreditado;
-  const activeComprobanteUrl = comprobanteSubidoUrl || localReceiptUrl || "";
-  const isModoPreReserva = !pagoAcreditado && Boolean(activeComprobanteUrl);
+  const hasReceiptAttached = Boolean(pendingReceiptFile || localReceiptUrl);
+  const isModoPreReserva = !pagoAcreditado && hasReceiptAttached;
 
   const typeInfo = useMemo(() => getSessionTypeInfo(tipo, duracionHoras), [tipo, duracionHoras]);
   const sessionHours = typeInfo.hours;
@@ -62,17 +101,13 @@ export default function BookingFormCard({
       ? new Date(initialData.fecha_produccion).toTimeString().slice(0, 5)
       : null;
     if (initialHour && !list.some((s) => s.value === initialHour)) {
-      const hNum = parseInt(initialHour.split(":")[0], 10);
-      if (!isNaN(hNum)) {
-        const endH = hNum + sessionHours;
-        const customShift = {
-          value: initialHour,
-          label: `${formatHour12(hNum)} - ${formatHour12(endH)}`,
-          startHour: hNum,
-          endHour: endH
-        };
-        return [...list, customShift].sort((a, b) => a.value.localeCompare(b.value));
-      }
+      const customShift = {
+        value: initialHour,
+        label: formatTimeRange(initialHour, sessionHours),
+        startHour: parseInt(initialHour.split(":")[0], 10),
+        endHour: parseInt(initialHour.split(":")[0], 10) + sessionHours
+      };
+      return [customShift, ...list].sort((a, b) => a.value.localeCompare(b.value));
     }
     return list;
   }, [sessionHours, initialData.fecha_produccion]);
@@ -92,21 +127,19 @@ export default function BookingFormCard({
     return list.some((s) => s.value === h) ? h : h || "09:00";
   });
 
-  const [locacion, setLocacion] = useState(
-    () =>
-      initialData.locacion ||
-      cliente?.locacion_default ||
-      initialData?.cliente?.locacion_default ||
-      "En las instalaciones del cliente"
-  );
-  const [notasBrief, setNotasBrief] = useState(initialData.notas_brief || "");
+  const locacion =
+    initialData.locacion ||
+    cliente?.locacion_default ||
+    initialData?.cliente?.locacion_default ||
+    "En las instalaciones del cliente";
+  const notasBrief = initialData.notas_brief || "";
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleDateChange = (e) => {
     const val = e.target.value;
     if (!val) return setFecha("");
 
-    // Si es la misma fecha que propuso la agencia, permitirla aunque sea < 3 días hábiles
+    // Si es la misma fecha propuesta por la agencia, permitirla aunque sea < 3 días hábiles
     if (isPropuestaAgencia && val === proposedDateStr) {
       setFecha(val);
       setErrorMsg("");
@@ -133,29 +166,38 @@ export default function BookingFormCard({
     setErrorMsg("");
   };
 
-  const handleOptionalReceiptUpload = async (e) => {
+  // Selección local del comprobante en memoria (NO sube al bucket hasta confirmar)
+  const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
-    if (!file || !initialData?.token_reserva) return;
+    if (!file) return;
 
-    setUploadingReceipt(true);
-    const res = await uploadComprobantePublico({
-      file,
-      tokenReserva: initialData.token_reserva
-    });
-    setUploadingReceipt(false);
-
-    if (!res.success) {
-      toast.error(res.error || "No se pudo subir el comprobante.");
+    // Validación de tipo de archivo
+    const validTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Formato no soportado. Por favor sube una imagen (PNG, JPG, WebP) o PDF.");
+      if (receiptInputRef.current) receiptInputRef.current.value = "";
       return;
     }
 
-    setLocalReceiptUrl(res.publicUrl);
-    setReceiptSizeInfo({
-      compressedSize: res.compressedSize,
-      savedPercentage: res.savedPercentage
-    });
-    if (onComprobanteUploaded) onComprobanteUploaded(res.publicUrl);
-    toast.success("Comprobante comprimido y adjuntado a tu reserva.");
+    // Validación de tamaño (máximo 15MB)
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error("El archivo supera el límite de 15MB.");
+      if (receiptInputRef.current) receiptInputRef.current.value = "";
+      return;
+    }
+
+    // Guardar en memoria (reemplazando cualquier archivo previo)
+    setPendingReceiptFile(file);
+    setLocalReceiptUrl("");
+    setErrorMsg("");
+    toast.info("Comprobante seleccionado. Se adjuntará al confirmar tu reserva.");
+  };
+
+  const handleRemoveReceipt = () => {
+    setPendingReceiptFile(null);
+    setLocalReceiptUrl("");
+    if (receiptInputRef.current) receiptInputRef.current.value = "";
+    toast.info("Comprobante removido.");
   };
 
   const handleSubmit = (e) => {
@@ -164,110 +206,231 @@ export default function BookingFormCard({
 
     if (!fecha) return setErrorMsg("Por favor, selecciona una fecha hábil para el rodaje.");
     if (!hora) return setErrorMsg("Por favor, selecciona un turno para la sesión.");
-    if (!locacion.trim()) return setErrorMsg("Por favor, ingresa la dirección o locación de la grabación.");
+
+    if (!pagoAcreditado && !hasReceiptAttached) {
+      setErrorMsg(
+        esExtraSession
+          ? "Para confirmar esta fecha de rodaje es necesario adjuntar el comprobante de pago de tu sesión extra."
+          : "Para confirmar esta fecha de rodaje es necesario adjuntar el comprobante de pago de tu ciclo."
+      );
+      receiptInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
 
     setShowSlaDialog(true);
   };
 
-  const handleConfirmSla = () => {
+  const handleConfirmSla = async () => {
     setShowSlaDialog(false);
+    let finalComprobanteUrl = localReceiptUrl || null;
+
+    // Si hay un comprobante seleccionado en memoria, subirlo ahora a Cloudflare R2
+    if (pendingReceiptFile) {
+      setUploadingReceipt(true);
+      const loadingToast = toast.loading("Subiendo comprobante al almacenamiento seguro...");
+      const res = await uploadComprobantePublico({
+        file: pendingReceiptFile,
+        tokenReserva: initialData.token_reserva
+      });
+      toast.dismiss(loadingToast);
+      setUploadingReceipt(false);
+
+      if (!res.success) {
+        toast.error(res.error || "No se pudo subir el comprobante. Por favor intenta de nuevo.");
+        return;
+      }
+
+      finalComprobanteUrl = res.publicUrl;
+      setLocalReceiptUrl(res.publicUrl);
+      setPendingReceiptFile(null);
+      if (onComprobanteUploaded) onComprobanteUploaded(res.publicUrl);
+    }
+
     onSubmit({
       fecha_produccion: new Date(`${fecha}T${hora}:00`).toISOString(),
-      locacion: locacion.trim(),
-      notas_brief: notasBrief.trim(),
-      comprobante_url: activeComprobanteUrl || null
+      locacion: locacion,
+      notas_brief: notasBrief,
+      comprobante_url: finalComprobanteUrl
     });
   };
 
+  const isBusy = isSubmitting || uploadingReceipt;
+
   return (
-    <div className="bg-white border border-gray-100 shadow-xl rounded-2xl p-6 sm:p-8 max-w-xl mx-auto font-inter">
-      <form onSubmit={handleSubmit} className="space-y-5">
+    <div className="bg-white border border-gray-100 shadow-2xl rounded-3xl overflow-hidden max-w-xl mx-auto font-inter text-left">
+      <BookingHeader
+        sessionTitle={
+          initialData?.nombre ||
+          (esExtraSession
+            ? `${mesNombre} Extra`
+            : `Sesión #${initialData?.numero_sesion || 1}`)
+        }
+        numeroSesion={initialData?.numero_sesion || 1}
+        clienteNombre={cliente?.nombre || initialData?.cliente?.nombre || ""}
+        empresa={cliente?.empresa || initialData?.cliente?.empresa || ""}
+        tipo={tipo}
+        duracionHoras={duracionHoras}
+        isExtraSession={esExtraSession}
+        precioExtra={precioExtra}
+      />
+
+      <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
         {errorMsg && (
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-inter text-rose-700">
-            {errorMsg}
+          <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-inter text-rose-700 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
+            <span>{errorMsg}</span>
           </div>
         )}
 
-        {/* Banner cuando la Agencia propuso la fecha (Regla de pago hasta 24h antes) */}
-        {isPropuestaAgencia && !pagoAcreditado && (
-          <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl space-y-2 text-left">
+        {/* BANNER ÚNICO DE COMPROBANTE Y PRE-RESERVA (Exclusión mutua absoluta) */}
+        {!pagoAcreditado && (
+          <div
+            className={`p-3.5 rounded-2xl space-y-2 text-left border ${
+              isPropuestaAgencia && !esExtraSession
+                ? "bg-amber-50/80 border-amber-200"
+                : "bg-blue-50/80 border-blue-200"
+            }`}
+          >
             <div className="flex items-start gap-2.5">
-              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-              <div className="text-xs text-amber-950 space-y-1">
-                <span className="font-sora font-bold block">
-                  Fecha propuesta por The Formulab
+              {isPropuestaAgencia && !esExtraSession ? (
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              ) : (
+                <Info className="w-4 h-4 text-brand-blue shrink-0 mt-0.5" />
+              )}
+              <div
+                className={`text-xs space-y-0.5 ${
+                  isPropuestaAgencia && !esExtraSession ? "text-amber-950" : "text-blue-950"
+                }`}
+              >
+                <span className="font-sora font-bold block text-[11px] sm:text-xs">
+                  {esExtraSession
+                    ? isPropuestaAgencia
+                      ? "Fecha propuesta para Sesión Extra"
+                      : "Pre-Reserva de Sesión Extra con Comprobante"
+                    : isPropuestaAgencia
+                    ? "Fecha propuesta por The Formulab"
+                    : "Pre-Reserva con Comprobante"}
                 </span>
-                <p className="text-[11px] text-amber-800 leading-relaxed">
-                  Puedes confirmar esta propuesta ahora mismo. Recuerda que el pago correspondiente debe realizarse a más tardar <strong>el día anterior (24 horas antes)</strong> a la grabación para mantener el equipo asignado.
+                <p
+                  className={`text-[11px] leading-snug ${
+                    isPropuestaAgencia && !esExtraSession ? "text-amber-800" : "text-blue-800"
+                  }`}
+                >
+                  {esExtraSession
+                    ? isPropuestaAgencia
+                      ? `The Formulab ha propuesto esta fecha. Para confirmarla en agenda, adjunta el comprobante de transferencia por el valor de tu sesión extra ($${Number(
+                          precioExtra || 0
+                        ).toLocaleString()}).`
+                      : `Para apartar tu fecha en agenda, adjunta el comprobante de transferencia por el valor de tu sesión extra ($${Number(
+                          precioExtra || 0
+                        ).toLocaleString()}).`
+                    : isPropuestaAgencia
+                    ? "The Formulab ha propuesto esta fecha. Para confirmarla y asegurar al crew en agenda, adjunta tu comprobante de pago abajo."
+                    : esSegundoTramo
+                    ? "Para apartar tu fecha en agenda, adjunta el comprobante de pago de tu segundo abono del mes."
+                    : "Para apartar tu fecha en agenda, adjunta el comprobante de pago de tu ciclo."}
                 </p>
               </div>
             </div>
 
-            {/* Opción de adjuntar comprobante de una vez */}
-            <div className="pt-1.5 border-t border-amber-200/60 flex items-center justify-between gap-2 flex-wrap">
-              <input
-                ref={receiptInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp,application/pdf"
-                onChange={handleOptionalReceiptUpload}
-                className="hidden"
-              />
-              {activeComprobanteUrl ? (
-                <span className="inline-flex items-center gap-1.5 text-[11px] font-sora font-semibold text-emerald-700">
-                  <FileCheck2 className="w-3.5 h-3.5" />
-                  Comprobante adjunto
-                  {receiptSizeInfo?.compressedSize ? ` (${formatBytes(receiptSizeInfo.compressedSize)})` : ""}
-                </span>
+            {/* Input oculto único para adjuntar archivo */}
+            <input
+              ref={receiptInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+
+            {/* Visualización del archivo o botón para subirlo */}
+            <div
+              className={`pt-1.5 border-t ${
+                isPropuestaAgencia && !esExtraSession
+                  ? "border-amber-200/60"
+                  : "border-blue-200/60"
+              }`}
+            >
+              {pendingReceiptFile ? (
+                <div
+                  className={`flex items-center justify-between gap-2 bg-white/90 rounded-lg p-2 text-xs border ${
+                    isPropuestaAgencia && !esExtraSession ? "border-amber-300" : "border-blue-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileCheck2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-sora font-semibold text-gray-800 text-[11px] truncate max-w-[200px] sm:max-w-[260px]">
+                        {pendingReceiptFile.name}
+                      </p>
+                      <p className="text-[10px] text-gray-500 font-inter">
+                        {formatBytes(pendingReceiptFile.size)} • Listo para adjuntar
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveReceipt}
+                    className="h-6 px-2 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-sora font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                    <span>Quitar</span>
+                  </button>
+                </div>
+              ) : localReceiptUrl ? (
+                <div className="flex items-center justify-between gap-2 bg-white/90 border border-emerald-300 rounded-lg p-2 text-xs">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileCheck2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span className="font-sora font-semibold text-emerald-800 text-[11px]">
+                      Comprobante registrado • En revisión
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => receiptInputRef.current?.click()}
+                      className="h-6 px-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 text-[10px] font-sora font-semibold cursor-pointer transition-colors"
+                    >
+                      Cambiar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleRemoveReceipt}
+                      className="h-6 px-2 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-sora font-bold inline-flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                      <span>Quitar</span>
+                    </button>
+                  </div>
+                </div>
               ) : (
-                <span className="text-[11px] text-amber-800">
-                  ¿Ya realizaste el pago? Adjúntalo aquí (opcional hoy):
-                </span>
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span
+                    className={`text-[11px] font-sora font-semibold flex items-center gap-1 ${
+                      isPropuestaAgencia && !esExtraSession ? "text-amber-900" : "text-blue-900"
+                    }`}
+                  >
+                    <span className="text-rose-600">*</span>
+                    {esExtraSession ? "Comprobante de sesión extra:" : "Comprobante de pago requerido:"}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={isBusy}
+                    onClick={() => receiptInputRef.current?.click()}
+                    className="h-7 px-3 rounded-full text-[11px] font-sora font-bold inline-flex items-center gap-1.5 bg-[#188ff0] hover:bg-blue-600 text-white shadow-xs cursor-pointer transition-colors active:scale-[0.98]"
+                  >
+                    <Upload className="w-3 h-3" />
+                    <span>Subir Comprobante *</span>
+                  </button>
+                </div>
               )}
-              <button
-                type="button"
-                disabled={uploadingReceipt}
-                onClick={() => receiptInputRef.current?.click()}
-                className="h-7 px-3 rounded-full bg-white hover:bg-amber-100/50 text-amber-900 border border-amber-300 text-[10px] font-sora font-bold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
-              >
-                {uploadingReceipt ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : (
-                  <Upload className="w-3 h-3" />
-                )}
-                <span>{activeComprobanteUrl ? "Cambiar comprobante" : "Subir Comprobante"}</span>
-              </button>
             </div>
           </div>
         )}
-
-        {/* Banner cuando viene en Modo Pre-Reserva con comprobante recién subido */}
-        {isModoPreReserva && !isPropuestaAgencia && (
-          <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center justify-between gap-2 text-xs">
-            <div className="flex items-center gap-2 text-emerald-800 font-sora font-semibold">
-              <FileCheck2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Comprobante cargado • Modo Pre-Reserva habilitado</span>
-            </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-100 text-emerald-800 border border-emerald-200">
-              En validación
-            </span>
-          </div>
-        )}
-
-        {/* Banner de Tipo de Sesión y Horas de Cobertura */}
-        <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-xl flex items-center justify-between text-xs font-sora">
-          <div className="flex items-center gap-2 text-brand-blue font-semibold">
-            <Video className="w-4 h-4" />
-            <span>Tipo de Sesión</span>
-          </div>
-          <span className="font-bold text-gray-900">
-            {typeInfo.title} ({typeInfo.hours} horas)
-          </span>
-        </div>
 
         {/* 1. Fecha y Turno de Grabación */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="text-xs font-sora font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+            <label className="text-xs font-sora font-semibold text-gray-700 mb-1 flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-brand-blue" />
               <span>Fecha del Rodaje</span>
               <span className="text-pink-500">*</span>
@@ -278,17 +441,17 @@ export default function BookingFormCard({
               required
               value={fecha}
               onChange={handleDateChange}
-              className="w-full text-base sm:text-sm font-inter bg-gray-50/50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:bg-white transition-all cursor-pointer"
+              className="w-full text-xs sm:text-sm font-inter bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:bg-white transition-all cursor-pointer"
             />
-            <p className="text-[11px] text-gray-400 font-inter mt-1.5">
+            <p className="text-[10px] text-gray-400 font-inter mt-1">
               {isPropuestaAgencia
-                ? "Fecha propuesta por la agencia (o elige otra con 3 días hábiles)."
+                ? "Fecha propuesta por la agencia (o selecciona otra con 3 días hábiles)."
                 : "Lun a Vie con mín. 3 días hábiles de anticipación."}
             </p>
           </div>
 
           <div>
-            <label className="text-xs font-sora font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+            <label className="text-xs font-sora font-semibold text-gray-700 mb-1 flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-brand-blue" />
               <span>Turno de Grabación</span>
               <span className="text-pink-500">*</span>
@@ -297,7 +460,7 @@ export default function BookingFormCard({
               required
               value={hora}
               onChange={(e) => setHora(e.target.value)}
-              className="w-full text-base sm:text-sm font-inter bg-gray-50/50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:bg-white transition-all cursor-pointer font-medium"
+              className="w-full text-xs sm:text-sm font-inter bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:bg-white transition-all cursor-pointer font-medium"
             >
               {shifts.map((shift) => (
                 <option key={shift.value} value={shift.value}>
@@ -308,50 +471,61 @@ export default function BookingFormCard({
           </div>
         </div>
 
-        {/* 2. Locación */}
-        <div>
-          <label className="text-xs font-sora font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Locación / Dirección</span>
-            <span className="text-pink-500">*</span>
-          </label>
-          <input
-            type="text"
-            required
-            placeholder="Ej. En nuestro local (Av. Bonampak 123) / Estudio The Formulab"
-            value={locacion}
-            onChange={(e) => setLocacion(e.target.value)}
-            className="w-full text-base sm:text-sm font-inter bg-gray-50/50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:bg-white transition-all"
-          />
-          <p className="text-[11px] text-gray-500 font-inter mt-1.5 flex items-center gap-1">
-            <Info className="w-3.5 h-3.5 text-brand-blue shrink-0" />
-            <span>Sujeto a disponibilidad del espacio en el local de la marca.</span>
-          </p>
+        {/* 2. Locación (No editable por el cliente en esta etapa) */}
+        <div className="bg-gray-50/70 border border-gray-200/80 rounded-xl p-2.5 sm:p-3 flex items-start gap-2.5">
+          <MapPin className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] font-sora font-bold text-gray-500 uppercase tracking-wider">
+                Locación del Rodaje
+              </span>
+              <span className="text-[9px] font-mono text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                <Lock className="w-2.5 h-2.5" /> Fijada por agencia
+              </span>
+            </div>
+            <p className="text-xs font-inter font-medium text-gray-800 mt-0.5 leading-snug">
+              {locacion}
+            </p>
+          </div>
         </div>
 
-        {/* 3. Notas y Brief */}
-        <div>
-          <label className="text-xs font-sora font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
-            <FileText className="w-3.5 h-3.5 text-gray-500" />
-            <span>Notas o Requerimientos de Grabación</span>
-          </label>
-          <textarea
-            rows={3}
-            placeholder="Prendas a utilizar, platos o productos listos, personal disponible para hablar en cámara, ideas clave..."
-            value={notasBrief}
-            onChange={(e) => setNotasBrief(e.target.value)}
-            className="w-full text-base sm:text-sm font-inter bg-gray-50/50 border border-gray-200 rounded-xl p-3.5 text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:bg-white transition-all resize-none"
-          />
+        {/* 3. Notas y Brief de Grabación (No editable por el cliente en esta etapa) */}
+        <div className="bg-gray-50/70 border border-gray-200/80 rounded-xl p-2.5 sm:p-3 flex items-start gap-2.5">
+          <FileText className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] font-sora font-bold text-gray-500 uppercase tracking-wider">
+                Requerimientos & Brief de Grabación
+              </span>
+              <span className="text-[9px] font-mono text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                <Lock className="w-2.5 h-2.5" /> Fijado por agencia
+              </span>
+            </div>
+            <p className="text-xs font-inter text-gray-700 mt-0.5 leading-relaxed whitespace-pre-line">
+              {notasBrief ? (
+                notasBrief
+              ) : (
+                <span className="text-gray-400 italic">
+                  Sin requerimientos o notas adicionales registradas por la agencia.
+                </span>
+              )}
+            </p>
+          </div>
         </div>
 
-        {/* Botón CTA */}
-        <div className="pt-2">
+        {/* Botón CTA de Confirmación */}
+        <div className="pt-1.5">
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full py-3.5 px-6 rounded-full bg-[#188ff0] hover:bg-blue-600 text-white font-sora font-bold text-xs uppercase tracking-wider shadow-md shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+            disabled={isBusy}
+            className="w-full py-3 px-6 rounded-full bg-[#188ff0] hover:bg-blue-600 text-white font-sora font-bold text-xs uppercase tracking-wider shadow-md shadow-blue-200 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
           >
-            {isSubmitting ? (
+            {uploadingReceipt ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Subiendo Comprobante...</span>
+              </>
+            ) : isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span>Procesando Reserva...</span>
@@ -359,12 +533,24 @@ export default function BookingFormCard({
             ) : isModoPreReserva ? (
               <>
                 <Sparkles className="w-4 h-4" />
-                <span>Solicitar Pre-Reserva (Con Comprobante)</span>
+                <span>Solicitar Reserva con Comprobante</span>
               </>
             ) : isPropuestaAgencia ? (
+              pagoAcreditado ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Confirmar Fecha Propuesta</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  <span>Confirmar Fecha Propuesta con Comprobante</span>
+                </>
+              )
+            ) : !pagoAcreditado ? (
               <>
-                <Check className="w-4 h-4" />
-                <span>Confirmar Fecha Propuesta</span>
+                <Sparkles className="w-4 h-4" />
+                <span>Solicitar Reserva con Comprobante</span>
               </>
             ) : (
               <>
@@ -382,7 +568,7 @@ export default function BookingFormCard({
           onCancel={() => setShowSlaDialog(false)}
           tipoProduccion={tipo}
           fechaSeleccionada={fecha}
-          isSubmitting={isSubmitting}
+          isSubmitting={isBusy}
           duracionHoras={sessionHours}
         />
       </form>

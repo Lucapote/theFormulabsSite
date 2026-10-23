@@ -302,7 +302,7 @@ BEGIN
 
   -- Si el cliente adjuntó comprobante, registrarlo en el ciclo mensual
   IF v_tiene_comprobante THEN
-    IF v_cliente.esquema_pago = 'dos_pagos' AND v_ciclo.estado_pago = 'primer_pago' THEN
+    IF v_cliente.esquema_pago = 'dos_pagos' AND (v_prod.numero_sesion > v_max_primer_pago OR v_ciclo.estado_pago = 'primer_pago') THEN
       UPDATE public.ciclos_mensuales
       SET
         comprobante_2_url = TRIM(p_comprobante_url),
