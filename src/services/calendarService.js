@@ -263,6 +263,88 @@ export async function updateCliente(clienteId, payload = {}) {
 }
 
 /**
+ * Asigna una cuenta de Meta (Facebook Page + Instagram Business) a un cliente.
+ * Desvincula automáticamente cualquier cliente previo que tuviera asignada esa misma página.
+ */
+export async function assignMetaAccountToClient({ clientId, pageId, pageAccessToken, instagramId }) {
+  if (!clientId || !pageId) {
+    return { success: false, error: "Cliente y Page ID son obligatorios." };
+  }
+
+  try {
+    if (!supabase) return { success: false, error: "Supabase no configurado" };
+
+    // 1. Desvincular de cualquier otro cliente que tuviera este mismo fb_page_id
+    await supabase
+      .from("clientes")
+      .update({
+        fb_page_id: null,
+        fb_page_access_token: null,
+        ig_business_account_id: null,
+        auto_publish_enabled: false
+      })
+      .eq("fb_page_id", pageId)
+      .neq("id", clientId);
+
+    // 2. Asignar al cliente objetivo
+    const { data, error } = await supabase
+      .from("clientes")
+      .update({
+        fb_page_id: pageId,
+        fb_page_access_token: pageAccessToken || null,
+        ig_business_account_id: instagramId || null,
+        auto_publish_enabled: true
+      })
+      .eq("id", clientId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("assignMetaAccountToClient error:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    console.error("assignMetaAccountToClient catch:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Desvincula las credenciales de Meta de un cliente
+ */
+export async function unlinkMetaAccountFromClient(clientId) {
+  if (!clientId) return { success: false, error: "ID de cliente no provisto" };
+
+  try {
+    if (!supabase) return { success: false, error: "Supabase no configurado" };
+
+    const { data, error } = await supabase
+      .from("clientes")
+      .update({
+        fb_page_id: null,
+        fb_page_access_token: null,
+        ig_business_account_id: null,
+        auto_publish_enabled: false
+      })
+      .eq("id", clientId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("unlinkMetaAccountFromClient error:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    console.error("unlinkMetaAccountFromClient catch:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
  * Actualiza granularmente el permiso de descarga de archivos para un cliente específico
  */
 export async function updateClientDownloadPermission(clienteId, permiteDescarga) {

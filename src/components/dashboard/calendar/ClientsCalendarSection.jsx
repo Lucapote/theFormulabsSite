@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, RefreshCw, UserPlus, Calendar as CalendarIcon } from "lucide-react";
+import { Users, RefreshCw, UserPlus, Calendar as CalendarIcon, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   getClientes,
@@ -23,6 +23,7 @@ import ClientCalendarsGrid from "./ClientCalendarsGrid";
 import CreateClientModal from "./CreateClientModal";
 import EditClientModal from "./EditClientModal";
 import CreateCalendarModal from "./CreateCalendarModal";
+import ConnectedAccountsModal from "./ConnectedAccountsModal";
 import { useWindowFocusRefresh } from "@/hooks/useWindowFocusRefresh";
 import ActiveCalendarHeader from "./ActiveCalendarHeader";
 import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
@@ -78,6 +79,7 @@ export default function ClientsCalendarSection() {
   // Modals state
   const [showClientModal, setShowClientModal] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [showConnectedAccountsModal, setShowConnectedAccountsModal] = useState(false);
 
   // Form states - Client
   const DEFAULT_CLIENT_FORM = {
@@ -519,6 +521,15 @@ export default function ClientsCalendarSection() {
 
           <button
             type="button"
+            onClick={() => setShowConnectedAccountsModal(true)}
+            className="h-11 px-5 bg-white hover:bg-gray-100 text-gray-700 font-sora font-bold text-xs rounded-full border border-gray-200 shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+          >
+            <Link2 className="w-4 h-4 text-[#188ff0]" />
+            Cuentas Conectadas
+          </button>
+
+          <button
+            type="button"
             onClick={handleOpenClientModal}
             className="h-11 px-5 bg-gray-900 hover:bg-gray-800 text-white font-sora font-bold text-xs rounded-full shadow-md transition-all flex items-center gap-2 cursor-pointer"
           >
@@ -578,6 +589,7 @@ export default function ClientsCalendarSection() {
       <EditClientModal
         isOpen={Boolean(editingClient)}
         cliente={editingClient}
+        clients={clientes}
         onClose={() => setEditingClient(null)}
         onClientUpdated={async (updatedCliente) => {
           await loadClientes(updatedCliente.id);
@@ -601,6 +613,15 @@ export default function ClientsCalendarSection() {
         monthNames={MONTH_NAMES}
         tipoOptions={TIPO_CONTENIDO_OPTIONS}
         plataformaOptions={PLATAFORMAS_OPTIONS}
+      />
+
+      <ConnectedAccountsModal
+        isOpen={showConnectedAccountsModal}
+        onClose={() => setShowConnectedAccountsModal(false)}
+        clients={clientes}
+        onClientUpdated={async () => {
+          await loadClientes(selectedCliente?.id);
+        }}
       />
 
       <ConfirmDeleteModal

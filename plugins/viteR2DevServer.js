@@ -3,6 +3,7 @@ import path from "path";
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import notifyLeadHandler from "../api/notify-lead.js";
+import metaAccountsHandler from "../api/meta-accounts.js";
 
 function reloadLocalEnv() {
   try {
@@ -78,6 +79,39 @@ export function viteR2DevServer() {
           } catch (err) {
             console.error("Error en local dev /api/notify-lead:", err);
             res.status(500).json({ success: false, error: err.message });
+          }
+          return;
+        }
+
+        // Interceptar consulta de cuentas de Meta Graph API en desarrollo local
+        if (req.url && req.url.startsWith("/api/meta-accounts")) {
+          reloadLocalEnv();
+
+          res.setHeader("Access-Control-Allow-Origin", "*");
+          res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+          res.setHeader("Access-Control-Allow-Headers", "*");
+
+          if (req.method === "OPTIONS") {
+            res.statusCode = 200;
+            res.end();
+            return;
+          }
+
+          res.status = function (code) {
+            this.statusCode = code;
+            return this;
+          };
+          res.json = function (data) {
+            this.setHeader("Content-Type", "application/json");
+            this.end(JSON.stringify(data));
+            return this;
+          };
+
+          try {
+            await metaAccountsHandler(req, res);
+          } catch (err) {
+            console.error("Error en local dev /api/meta-accounts:", err);
+            res.status(500).json({ error: err.message });
           }
           return;
         }

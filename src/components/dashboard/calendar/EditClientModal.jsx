@@ -7,9 +7,15 @@ import {
   ExternalLink,
   Clapperboard,
   Download,
-  LockKeyhole
+  LockKeyhole,
+  Facebook,
+  Instagram,
+  Link2,
+  Unlink,
+  CheckCircle2
 } from "lucide-react";
 import BaseFormModal from "@/components/common/BaseFormModal";
+import MetaScannerDialog from "./MetaScannerDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -29,9 +35,16 @@ import { getPaymentSplitOptions, getDefaultFirstPaymentSessions } from "@/utils/
  * Arquitectura estática inspirada en ProposalModal: pestañas superiores ancladas, alto estático
  * y scroll interno sin saltos visuales ni emojis (Clinical High-Tech Lab).
  */
-export default function EditClientModal({ isOpen = false, onClose, cliente, onClientUpdated }) {
+export default function EditClientModal({
+  isOpen = false,
+  onClose,
+  cliente,
+  clients = [],
+  onClientUpdated
+}) {
   const [activeTab, setActiveTab] = useState("info");
   const [isSaving, setIsSaving] = useState(false);
+  const [showMetaScanner, setShowMetaScanner] = useState(false);
   const [formData, setFormData] = useState({
     // Tab 1: Info General
     nombre: "",
@@ -167,7 +180,8 @@ export default function EditClientModal({ isOpen = false, onClose, cliente, onCl
   );
 
   return (
-    <BaseFormModal
+    <>
+      <BaseFormModal
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={handleSubmit}
@@ -262,6 +276,109 @@ export default function EditClientModal({ isOpen = false, onClose, cliente, onCl
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Bloque 2: Conexión con Meta / Instagram */}
+          <div className="bg-gray-50/70 p-4 rounded-xl border border-gray-100 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-sora font-bold text-gray-500 uppercase tracking-wider block">
+                2. Conexión con Meta / Instagram
+              </span>
+              {formData.fb_page_id ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-inter font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Conectado / Auto-publicación lista</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200 text-[11px] font-inter font-medium">
+                  <span>Sin vincular</span>
+                </span>
+              )}
+            </div>
+
+            {formData.fb_page_id ? (
+              <div className="bg-white border border-gray-200 rounded-xl p-3.5 space-y-3 shadow-xs">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Facebook className="w-4 h-4 text-[#1877F2]" />
+                      <span className="font-sora font-semibold text-xs text-gray-900">
+                        Página de Facebook
+                      </span>
+                      <span className="font-mono text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                        ID: {formData.fb_page_id}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <Instagram className="w-4 h-4 text-pink-600" />
+                      <span className="font-sora font-semibold text-xs text-gray-900">
+                        Instagram Business
+                      </span>
+                      {formData.ig_business_account_id ? (
+                        <span className="font-mono text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+                          ID: {formData.ig_business_account_id}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-amber-600 font-inter">
+                          Sin cuenta de Instagram asociada
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData({
+                        ...formData,
+                        fb_page_id: "",
+                        fb_page_access_token: "",
+                        ig_business_account_id: "",
+                        auto_publish_enabled: false
+                      });
+                      toast.info("Cuenta desvinculada del formulario. Pulsa 'Guardar Cambios' para confirmar.");
+                    }}
+                    className="text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-3 py-1.5 rounded-full border border-rose-200 font-sora font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                  >
+                    <Unlink className="w-3.5 h-3.5" />
+                    <span>Desvincular</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="auto-publish-switch" className="text-xs font-sora font-bold text-gray-700 block">
+                      Auto-publicación programada
+                    </Label>
+                    <p className="text-[11px] font-inter text-gray-400">
+                      Habilita el cron job para publicar automáticamente en fecha y hora.
+                    </p>
+                  </div>
+                  <Switch
+                    id="auto-publish-switch"
+                    checked={Boolean(formData.auto_publish_enabled)}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, auto_publish_enabled: checked })
+                    }
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white border border-dashed border-gray-200 rounded-xl p-4 text-center space-y-2">
+                <p className="text-xs font-inter text-gray-500 max-w-sm mx-auto">
+                  Este cliente aún no tiene una página de Facebook ni Instagram asociadas. Vincula una cuenta para habilitar la publicación automatizada desde el calendario.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowMetaScanner(true)}
+                  className="inline-flex items-center gap-2 h-9 px-4 rounded-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-sora font-bold transition-all shadow-sm cursor-pointer"
+                >
+                  <Link2 className="w-3.5 h-3.5 text-pink-400" />
+                  <span>Vincular Cuenta de Meta</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -507,5 +624,22 @@ export default function EditClientModal({ isOpen = false, onClose, cliente, onCl
         </div>
       )}
     </BaseFormModal>
+
+    <MetaScannerDialog
+      isOpen={showMetaScanner}
+      onClose={() => setShowMetaScanner(false)}
+      currentClientId={cliente?.id}
+      clients={clients}
+      onSelectAccount={(account) => {
+        setFormData({
+          ...formData,
+          fb_page_id: account.pageId,
+          fb_page_access_token: account.pageAccessToken,
+          ig_business_account_id: account.instagramId,
+          auto_publish_enabled: true
+        });
+      }}
+    />
+    </>
   );
 }
