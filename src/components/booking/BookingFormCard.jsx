@@ -65,6 +65,12 @@ export default function BookingFormCard({
     Boolean(initialData?.nombre && initialData.nombre.toLowerCase().includes("extra"));
 
   const precioExtra = initialData?.precio_extra;
+  const cantidadPagos = esDosPagos ? 2 : 1;
+  const montoRetainer =
+    Number(cliente?.monto_retainer || initialData?.cliente?.monto_retainer || ciclo?.monto_cobrado || initialData?.ciclo?.monto_cobrado) || 0;
+  const valorAbonoRegular = Math.round(montoRetainer / cantidadPagos);
+  const valorSesion = esExtraSession ? (precioExtra || 0) : valorAbonoRegular;
+
   const mesCiclo = ciclo?.mes || initialData?.ciclo?.mes;
   const mesNombre = mesCiclo && MESES_ANIO[mesCiclo - 1] ? MESES_ANIO[mesCiclo - 1] : "Sesión";
 
@@ -272,6 +278,8 @@ export default function BookingFormCard({
         duracionHoras={duracionHoras}
         isExtraSession={esExtraSession}
         precioExtra={precioExtra}
+        valorMostrar={valorSesion}
+        pagoAcreditado={pagoAcreditado}
       />
 
       <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
@@ -325,10 +333,16 @@ export default function BookingFormCard({
                           precioExtra || 0
                         ).toLocaleString()}).`
                     : isPropuestaAgencia
-                    ? "The Formulab ha propuesto esta fecha. Para confirmarla y asegurar al crew en agenda, adjunta tu comprobante de pago abajo."
+                    ? (valorAbonoRegular > 0
+                        ? `The Formulab ha propuesto esta fecha. Para confirmarla y asegurar al crew en agenda, adjunta tu comprobante de pago por $${Number(valorAbonoRegular).toLocaleString()} abajo.`
+                        : "The Formulab ha propuesto esta fecha. Para confirmarla y asegurar al crew en agenda, adjunta tu comprobante de pago abajo.")
                     : esSegundoTramo
-                    ? "Para apartar tu fecha en agenda, adjunta el comprobante de pago de tu segundo abono del mes."
-                    : "Para apartar tu fecha en agenda, adjunta el comprobante de pago de tu ciclo."}
+                    ? (valorAbonoRegular > 0
+                        ? `Para apartar tu fecha en agenda, adjunta el comprobante de pago de tu segundo abono del mes ($${Number(valorAbonoRegular).toLocaleString()}).`
+                        : "Para apartar tu fecha en agenda, adjunta el comprobante de pago de tu segundo abono del mes.")
+                    : (valorAbonoRegular > 0
+                        ? `Para apartar tu fecha en agenda, adjunta el comprobante de pago de tu ${esDosPagos ? "primer abono del mes" : "ciclo"} ($${Number(valorAbonoRegular).toLocaleString()}).`
+                        : "Para apartar tu fecha en agenda, adjunta el comprobante de pago de tu ciclo.")}
                 </p>
               </div>
             </div>
@@ -381,7 +395,7 @@ export default function BookingFormCard({
                   <div className="flex items-center gap-2 min-w-0">
                     <FileCheck2 className="w-4 h-4 text-emerald-600 shrink-0" />
                     <span className="font-sora font-semibold text-emerald-800 text-[11px]">
-                      Comprobante registrado • En revisión
+                      Comprobante registrado • En revisión  
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5">

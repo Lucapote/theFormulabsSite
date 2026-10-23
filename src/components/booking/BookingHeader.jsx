@@ -14,9 +14,12 @@ export default function BookingHeader({
   tipo = "organica",
   duracionHoras = null,
   isExtraSession = false,
-  precioExtra = null
+  precioExtra = null,
+  valorMostrar = null,
+  pagoAcreditado = false
 }) {
-  const displayClient = empresa ? `${clienteNombre} (${empresa})` : clienteNombre;
+  const finalPrice = valorMostrar !== null && valorMostrar !== undefined ? valorMostrar : precioExtra;
+  const displayClient = clienteNombre;
   const typeInfo = getSessionTypeInfo(tipo, duracionHoras);
   const displaySession = sessionTitle || `Sesión #${numeroSesion}`;
 
@@ -43,9 +46,9 @@ export default function BookingHeader({
         {isExtraSession ? "Reserva de Sesión Extra" : "Reserva tu Fecha de Grabación"}
       </h1>
 
-      {Boolean(precioExtra) && (
+      {Boolean(finalPrice) && !pagoAcreditado && (
         <p className="text-xl sm:text-2xl font-sora font-extrabold text-gray-900 tracking-tight mt-1">
-          Valor: ${Number(precioExtra).toLocaleString()}
+          Valor: ${Number(finalPrice).toLocaleString()}
         </p>
       )}
 
