@@ -7,7 +7,11 @@ import {
   Check,
   Edit2,
   Trash2,
-  Play
+  Play,
+  AlertTriangle,
+  Loader2,
+  Send,
+  ExternalLink
 } from "lucide-react";
 import { formatTimeHHMM } from "@/components/calendar/CalendarGridView";
 
@@ -21,7 +25,9 @@ export default function PostCardItem({
   onSelectPreview,
   onEditPost,
   onDeletePost,
-  onCopyCaption
+  onCopyCaption,
+  onPublishNow = null,
+  isPublishing = false
 }) {
   const firstFile = post.archivos && post.archivos.length > 0 ? post.archivos[0] : null;
   const isEmptyBox = !firstFile || post.estado === "borrador";
@@ -38,6 +44,10 @@ export default function PostCardItem({
       className={`bg-white rounded-[2rem] p-5 border shadow-md hover:shadow-xl transition-all flex flex-col justify-between gap-4 group cursor-pointer ${
         isEmptyBox
           ? "border-pink-200/80 hover:border-pink-300 bg-gradient-to-br from-pink-50/30 via-white to-white"
+          : post.estado === "error"
+          ? "border-rose-200 hover:border-rose-300 bg-rose-50/10"
+          : post.estado === "procesando"
+          ? "border-sky-200 hover:border-sky-300 bg-sky-50/10"
           : "border-gray-100 hover:border-blue-200 hover:border-blue-300"
       }`}
       title={isEmptyBox ? "Completar información de la caja" : "Ver vista previa de la publicación"}
@@ -125,31 +135,41 @@ export default function PostCardItem({
               </span>
             )}
 
-            <span
-              className={`inline-flex items-center gap-1 font-sora font-bold text-[10px] px-2.5 py-0.5 rounded-full ${
-                post.estado === "publicado"
-                  ? "bg-purple-100 text-purple-700"
-                  : post.estado === "borrador"
-                  ? "bg-amber-100 text-amber-800"
-                  : "bg-emerald-100 text-emerald-800"
-              }`}
-            >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  post.estado === "publicado"
-                    ? "bg-purple-500"
-                    : post.estado === "borrador"
-                    ? "bg-amber-500"
-                    : "bg-emerald-500"
-                }`}
-              />
-              {post.estado === "publicado"
-                ? "Publicado"
-                : post.estado === "borrador"
-                ? "Borrador"
-                : "Programado"}
-            </span>
+            {/* STATUS BADGE */}
+            {post.estado === "publicado" ? (
+              <span className="inline-flex items-center gap-1 font-sora font-bold text-[10px] px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                Publicado
+              </span>
+            ) : post.estado === "procesando" ? (
+              <span className="inline-flex items-center gap-1 font-sora font-bold text-[10px] px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200 animate-pulse">
+                <Loader2 className="w-3 h-3 animate-spin text-sky-600" />
+                Procesando en Meta...
+              </span>
+            ) : post.estado === "error" ? (
+              <span className="inline-flex items-center gap-1 font-sora font-bold text-[10px] px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200">
+                <AlertTriangle className="w-3 h-3 text-rose-600" />
+                Error en Meta
+              </span>
+            ) : post.estado === "borrador" ? (
+              <span className="inline-flex items-center gap-1 font-sora font-bold text-[10px] px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                Borrador
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 font-sora font-bold text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Programado
+              </span>
+            )}
           </div>
+
+          {/* Error Message Snippet if failed */}
+          {post.estado === "error" && post.error_mensaje && (
+            <div className="bg-rose-50 border border-rose-100 rounded-lg p-2 text-[11px] text-rose-700 font-inter leading-tight">
+              <span className="font-bold">Fallo en Meta:</span> {post.error_mensaje}
+            </div>
+          )}
 
           {/* Caption Snippet */}
           <p className="text-xs text-gray-700 font-medium line-clamp-2 leading-relaxed">
@@ -169,6 +189,46 @@ export default function PostCardItem({
         </div>
 
         <div className="flex items-center gap-1.5">
+          {/* External Link to Published Post */}
+          {post.estado === "publicado" && post.meta_permalink && (
+            <a
+              href={post.meta_permalink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="h-8 px-2.5 rounded-full bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-sora font-bold text-xs flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
+              title="Abrir publicación en vivo"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Ver en Meta</span>
+            </a>
+          )}
+
+          {/* Retry or Manual Publish Now Button */}
+          {onPublishNow && !isEmptyBox && (post.estado === "error" || post.estado === "programado") && (
+            <button
+              type="button"
+              disabled={isPublishing}
+              onClick={(e) => {
+                e.stopPropagation();
+                onPublishNow(post);
+              }}
+              className={`h-8 px-3 rounded-full font-sora font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-[0.98] ${
+                post.estado === "error"
+                  ? "bg-rose-600 hover:bg-rose-700 text-white"
+                  : "bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200"
+              }`}
+              title={post.estado === "error" ? "Reintentar publicación en Meta" : "Publicar ahora sin esperar al cron"}
+            >
+              {isPublishing ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Send className="w-3.5 h-3.5" />
+              )}
+              <span>{post.estado === "error" ? "Reintentar" : "Publicar Ahora"}</span>
+            </button>
+          )}
+
           {post.caption && (
             <button
               type="button"

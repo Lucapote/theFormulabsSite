@@ -19,8 +19,7 @@ export default function EditClientGeneralTab({
   onConnectOAuth,
   onSelectPage,
   onCancelPageSelection,
-  onUnlinkMeta,
-  onOpenAdvancedScanner
+  onUnlinkMeta
 }) {
   const handleOpenMaps = () => {
     const loc = formData.locacion_default.trim();
@@ -135,7 +134,6 @@ export default function EditClientGeneralTab({
         onSelectPage={onSelectPage}
         onCancelPageSelection={onCancelPageSelection}
         onUnlinkMeta={onUnlinkMeta}
-        onOpenAdvancedScanner={onOpenAdvancedScanner}
       />
     </div>
   );

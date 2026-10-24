@@ -4,7 +4,6 @@ import { FileText, DollarSign } from "lucide-react";
 import BaseFormModal from "@/components/common/BaseFormModal";
 import EditClientGeneralTab from "./EditClientGeneralTab";
 import EditClientRetainerTab from "./EditClientRetainerTab";
-import MetaScannerDialog from "./MetaScannerDialog";
 import { updateCliente } from "@/services/calendarService";
 import { getDefaultFirstPaymentSessions } from "@/utils/bookingHelpers";
 
@@ -23,7 +22,6 @@ export default function EditClientModal({
 }) {
   const [activeTab, setActiveTab] = useState("info");
   const [isSaving, setIsSaving] = useState(false);
-  const [showMetaScanner, setShowMetaScanner] = useState(false);
   const [availableMetaPages, setAvailableMetaPages] = useState([]);
   const [isAssigningPage, setIsAssigningPage] = useState(false);
 
@@ -293,57 +291,38 @@ export default function EditClientModal({
   );
 
   return (
-    <>
-      <BaseFormModal
-        isOpen={isOpen}
-        onClose={onClose}
-        onSubmit={handleSubmit}
-        eyebrow="CONFIGURACIÓN DE CLIENTE"
-        eyebrowColor="text-brand-magenta"
-        title="Configuración y Retainer"
-        description={cliente.nombre ? `Ajustes operativos de ${cliente.nombre}` : undefined}
-        maxWidth="max-w-xl"
-        className="h-[95vh] max-h-[95vh]"
-        cancelText="Cancelar"
-        submitText="Guardar Cambios"
-        loadingText="Guardando..."
-        isLoading={isSaving}
-        tabs={tabsContent}
-        bodyClassName="max-h-none flex-1"
-      >
-        {activeTab === "info" ? (
-          <EditClientGeneralTab
-            formData={formData}
-            setFormData={setFormData}
-            cliente={cliente}
-            availableMetaPages={availableMetaPages}
-            isAssigningPage={isAssigningPage}
-            onConnectOAuth={handleConnectMetaOAuth}
-            onSelectPage={handleSelectPageForClient}
-            onCancelPageSelection={handleCancelPageSelection}
-            onUnlinkMeta={handleUnlinkMeta}
-            onOpenAdvancedScanner={() => setShowMetaScanner(true)}
-          />
-        ) : (
-          <EditClientRetainerTab formData={formData} setFormData={setFormData} />
-        )}
-      </BaseFormModal>
-
-      <MetaScannerDialog
-        isOpen={showMetaScanner}
-        onClose={() => setShowMetaScanner(false)}
-        currentClientId={cliente?.id}
-        clients={clients}
-        onSelectAccount={(account) => {
-          setFormData({
-            ...formData,
-            fb_page_id: account.pageId,
-            fb_page_access_token: account.pageAccessToken,
-            ig_business_account_id: account.instagramId,
-            auto_publish_enabled: true
-          });
-        }}
-      />
-    </>
+    <BaseFormModal
+      isOpen={isOpen}
+      onClose={onClose}
+      onSubmit={handleSubmit}
+      eyebrow="CONFIGURACIÓN DE CLIENTE"
+      eyebrowColor="text-brand-magenta"
+      title="Configuración y Retainer"
+      description={cliente.nombre ? `Ajustes operativos de ${cliente.nombre}` : undefined}
+      maxWidth="max-w-xl"
+      className="h-[95vh] max-h-[95vh]"
+      cancelText="Cancelar"
+      submitText="Guardar Cambios"
+      loadingText="Guardando..."
+      isLoading={isSaving}
+      tabs={tabsContent}
+      bodyClassName="max-h-none flex-1"
+    >
+      {activeTab === "info" ? (
+        <EditClientGeneralTab
+          formData={formData}
+          setFormData={setFormData}
+          cliente={cliente}
+          availableMetaPages={availableMetaPages}
+          isAssigningPage={isAssigningPage}
+          onConnectOAuth={handleConnectMetaOAuth}
+          onSelectPage={handleSelectPageForClient}
+          onCancelPageSelection={handleCancelPageSelection}
+          onUnlinkMeta={handleUnlinkMeta}
+        />
+      ) : (
+        <EditClientRetainerTab formData={formData} setFormData={setFormData} />
+      )}
+    </BaseFormModal>
   );
 }

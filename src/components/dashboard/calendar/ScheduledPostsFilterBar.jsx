@@ -131,17 +131,6 @@ export default function ScheduledPostsFilterBar({
             </button>
             <button
               type="button"
-              onClick={() => setEstadoFilter("borrador")}
-              className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
-                estadoFilter === "borrador"
-                  ? "bg-amber-500 text-white shadow-xs"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Borradores
-            </button>
-            <button
-              type="button"
               onClick={() => setEstadoFilter("programado")}
               className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
                 estadoFilter === "programado"
@@ -153,6 +142,28 @@ export default function ScheduledPostsFilterBar({
             </button>
             <button
               type="button"
+              onClick={() => setEstadoFilter("procesando")}
+              className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
+                estadoFilter === "procesando"
+                  ? "bg-sky-600 text-white shadow-xs"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              En Proceso
+            </button>
+            <button
+              type="button"
+              onClick={() => setEstadoFilter("error")}
+              className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
+                estadoFilter === "error"
+                  ? "bg-rose-600 text-white shadow-xs"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Con Error
+            </button>
+            <button
+              type="button"
               onClick={() => setEstadoFilter("publicado")}
               className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
                 estadoFilter === "publicado"
@@ -161,6 +172,17 @@ export default function ScheduledPostsFilterBar({
               }`}
             >
               Publicados
+            </button>
+            <button
+              type="button"
+              onClick={() => setEstadoFilter("borrador")}
+              className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
+                estadoFilter === "borrador"
+                  ? "bg-amber-500 text-white shadow-xs"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Borradores
             </button>
           </div>
 

@@ -9,7 +9,8 @@ import {
   getPostsByCalendario,
   createPost,
   updatePost,
-  deletePost
+  deletePost,
+  publishPostNow
 } from "@/services/calendarService";
 import PostModal from "./PostModal";
 import ImportWordModal from "./ImportWordModal";
@@ -63,6 +64,7 @@ export default function ScheduledPostsList({
   const [deletingPost, setDeletingPost] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [copiedPostId, setCopiedPostId] = useState(null);
+  const [publishingPostId, setPublishingPostId] = useState(null);
 
   // Load posts
   const loadPosts = async () => {
@@ -90,6 +92,8 @@ export default function ScheduledPostsList({
 
     if (estadoFilter === "borrador" && !isEmptyBox) return false;
     if (estadoFilter === "programado" && (isEmptyBox || post.estado !== "programado")) return false;
+    if (estadoFilter === "procesando" && post.estado !== "procesando") return false;
+    if (estadoFilter === "error" && post.estado !== "error") return false;
     if (estadoFilter === "publicado" && post.estado !== "publicado") return false;
 
     if (formatoFilter === "reel" && post.tipo_post !== "reel") return false;
@@ -97,6 +101,23 @@ export default function ScheduledPostsList({
 
     return true;
   });
+
+  // Manual Publish Now Handler
+  const handlePublishNow = async (post) => {
+    if (!post?.id) return;
+    setPublishingPostId(post.id);
+    toast.loading("Enviando publicación a Meta (Instagram & Facebook)...", { id: "publish-now" });
+    const res = await publishPostNow(post.id);
+    if (res.success) {
+      toast.success(res.message || "Publicación procesada con éxito.", { id: "publish-now" });
+      loadPosts();
+      if (onPostUpdated) onPostUpdated();
+    } else {
+      toast.error(res.error || "No se pudo publicar en Meta.", { id: "publish-now" });
+      loadPosts();
+    }
+    setPublishingPostId(null);
+  };
 
   // Create / Edit Post Save Handler
   const handleSavePost = async (formData) => {
@@ -252,6 +273,8 @@ export default function ScheduledPostsList({
               }}
               onDeletePost={(p) => setDeletingPost(p)}
               onCopyCaption={copyCaption}
+              onPublishNow={handlePublishNow}
+              isPublishing={publishingPostId === post.id}
             />
           ))}
         </div>

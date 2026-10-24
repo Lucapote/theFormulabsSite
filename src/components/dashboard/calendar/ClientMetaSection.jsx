@@ -2,8 +2,7 @@ import {
   Facebook,
   Instagram,
   CheckCircle2,
-  Unlink,
-  Link2
+  Unlink
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -22,8 +21,7 @@ export default function ClientMetaSection({
   onConnectOAuth,
   onSelectPage,
   onCancelPageSelection,
-  onUnlinkMeta,
-  onOpenAdvancedScanner
+  onUnlinkMeta
 }) {
   return (
     <div className="bg-gray-50/70 p-4 rounded-xl border border-gray-100 space-y-3 font-inter">
@@ -185,23 +183,14 @@ export default function ClientMetaSection({
               Inicia sesión con la cuenta de Facebook que administra las páginas e Instagram de este cliente para otorgar los permisos de publicación automática.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-1">
+          <div className="flex items-center justify-center pt-1">
             <button
               type="button"
               onClick={onConnectOAuth}
-              className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-sora font-bold tracking-wide transition-all shadow-sm shadow-blue-200 active:scale-[0.98] cursor-pointer w-full sm:w-auto"
+              className="inline-flex items-center justify-center gap-2 h-10 px-6 rounded-full bg-[#1877F2] hover:bg-[#166fe5] text-white text-xs font-sora font-bold tracking-wide transition-all shadow-sm shadow-blue-200 active:scale-[0.98] cursor-pointer w-full sm:w-auto"
             >
               <Facebook className="w-4 h-4 fill-white" />
               <span>Conectar Páginas con Facebook</span>
-            </button>
-            <button
-              type="button"
-              onClick={onOpenAdvancedScanner}
-              title="Escanear cuentas con token manual o ya existente"
-              className="inline-flex items-center justify-center gap-1.5 h-10 px-3 rounded-full border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-sora font-medium transition-all cursor-pointer"
-            >
-              <Link2 className="w-3.5 h-3.5 text-gray-400" />
-              <span>Avanzado</span>
             </button>
           </div>
         </div>

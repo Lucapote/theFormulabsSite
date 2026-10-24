@@ -3,8 +3,9 @@ import path from "path";
 import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import notifyLeadHandler from "../api/notify-lead.js";
-import metaAccountsHandler from "../api/meta-accounts.js";
 import metaCallbackHandler from "../api/meta-callback.js";
+import cronPublishHandler from "../api/cron-publish.js";
+import publishNowHandler from "../api/publish-now.js";
 
 function reloadLocalEnv() {
   const envFiles = [".env", ".env.local"];
@@ -87,38 +88,7 @@ export function viteR2DevServer() {
           return;
         }
 
-        // Interceptar consulta de cuentas de Meta Graph API en desarrollo local
-        if (req.url && req.url.startsWith("/api/meta-accounts")) {
-          reloadLocalEnv();
 
-          res.setHeader("Access-Control-Allow-Origin", "*");
-          res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-          res.setHeader("Access-Control-Allow-Headers", "*");
-
-          if (req.method === "OPTIONS") {
-            res.statusCode = 200;
-            res.end();
-            return;
-          }
-
-          res.status = function (code) {
-            this.statusCode = code;
-            return this;
-          };
-          res.json = function (data) {
-            this.setHeader("Content-Type", "application/json");
-            this.end(JSON.stringify(data));
-            return this;
-          };
-
-          try {
-            await metaAccountsHandler(req, res);
-          } catch (err) {
-            console.error("Error en local dev /api/meta-accounts:", err);
-            res.status(500).json({ error: err.message });
-          }
-          return;
-        }
 
         // Interceptar callback OAuth de Meta en desarrollo local
         if (req.url && req.url.startsWith("/api/meta-callback")) {
@@ -153,6 +123,85 @@ export function viteR2DevServer() {
           } catch (err) {
             console.error("Error en local dev /api/meta-callback:", err);
             res.status(500).send(`Error en /api/meta-callback: ${err.message}`);
+          }
+          return;
+        }
+
+        // Interceptar /api/cron-publish en desarrollo local
+        if (req.url && req.url.startsWith("/api/cron-publish")) {
+          reloadLocalEnv();
+
+          res.setHeader("Access-Control-Allow-Origin", "*");
+          res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+          res.setHeader("Access-Control-Allow-Headers", "*");
+
+          if (req.method === "OPTIONS") {
+            res.statusCode = 200;
+            res.end();
+            return;
+          }
+
+          res.status = function (code) {
+            this.statusCode = code;
+            return this;
+          };
+          res.json = function (data) {
+            this.setHeader("Content-Type", "application/json");
+            this.end(JSON.stringify(data));
+            return this;
+          };
+
+          try {
+            await cronPublishHandler(req, res);
+          } catch (err) {
+            console.error("Error en local dev /api/cron-publish:", err);
+            res.status(500).json({ success: false, error: err.message });
+          }
+          return;
+        }
+
+        // Interceptar /api/publish-now en desarrollo local
+        if (req.url && req.url.startsWith("/api/publish-now")) {
+          reloadLocalEnv();
+
+          res.setHeader("Access-Control-Allow-Origin", "*");
+          res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+          res.setHeader("Access-Control-Allow-Headers", "*");
+
+          if (req.method === "OPTIONS") {
+            res.statusCode = 200;
+            res.end();
+            return;
+          }
+
+          res.status = function (code) {
+            this.statusCode = code;
+            return this;
+          };
+          res.json = function (data) {
+            this.setHeader("Content-Type", "application/json");
+            this.end(JSON.stringify(data));
+            return this;
+          };
+
+          const chunks = [];
+          for await (const chunk of req) {
+            chunks.push(chunk);
+          }
+          const rawBody = Buffer.concat(chunks).toString();
+          if (rawBody) {
+            try {
+              req.body = JSON.parse(rawBody);
+            } catch {
+              req.body = {};
+            }
+          }
+
+          try {
+            await publishNowHandler(req, res);
+          } catch (err) {
+            console.error("Error en local dev /api/publish-now:", err);
+            res.status(500).json({ success: false, error: err.message });
           }
           return;
         }
