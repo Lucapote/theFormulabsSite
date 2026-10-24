@@ -4,26 +4,30 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } fro
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import notifyLeadHandler from "../api/notify-lead.js";
 import metaAccountsHandler from "../api/meta-accounts.js";
+import metaCallbackHandler from "../api/meta-callback.js";
 
 function reloadLocalEnv() {
-  try {
-    const envPath = path.resolve(process.cwd(), ".env");
-    if (fs.existsSync(envPath)) {
-      const content = fs.readFileSync(envPath, "utf-8");
-      for (const line of content.split("\n")) {
-        const trimmed = line.trim();
-        if (trimmed && !trimmed.startsWith("#") && trimmed.includes("=")) {
-          const idx = trimmed.indexOf("=");
-          const key = trimmed.slice(0, idx).trim();
-          const val = trimmed.slice(idx + 1).trim().replace(/^["']|["']$/g, "");
-          if (key && val && val !== "tu_resend_api_key_aqui") {
-            process.env[key] = val;
+  const envFiles = [".env", ".env.local"];
+  for (const file of envFiles) {
+    try {
+      const envPath = path.resolve(process.cwd(), file);
+      if (fs.existsSync(envPath)) {
+        const content = fs.readFileSync(envPath, "utf-8");
+        for (const line of content.split("\n")) {
+          const trimmed = line.trim();
+          if (trimmed && !trimmed.startsWith("#") && trimmed.includes("=")) {
+            const idx = trimmed.indexOf("=");
+            const key = trimmed.slice(0, idx).trim();
+            const val = trimmed.slice(idx + 1).trim().replace(/^["']|["']$/g, "");
+            if (key && val && val !== "tu_resend_api_key_aqui") {
+              process.env[key] = val;
+            }
           }
         }
       }
+    } catch (e) {
+      console.warn(`No se pudo recargar ${file}:`, e);
     }
-  } catch (e) {
-    console.warn("No se pudo recargar .env:", e);
   }
 }
 
@@ -112,6 +116,43 @@ export function viteR2DevServer() {
           } catch (err) {
             console.error("Error en local dev /api/meta-accounts:", err);
             res.status(500).json({ error: err.message });
+          }
+          return;
+        }
+
+        // Interceptar callback OAuth de Meta en desarrollo local
+        if (req.url && req.url.startsWith("/api/meta-callback")) {
+          reloadLocalEnv();
+
+          res.setHeader("Access-Control-Allow-Origin", "*");
+          res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+          res.setHeader("Access-Control-Allow-Headers", "*");
+
+          if (req.method === "OPTIONS") {
+            res.statusCode = 200;
+            res.end();
+            return;
+          }
+
+          res.status = function (code) {
+            this.statusCode = code;
+            return this;
+          };
+          res.send = function (data) {
+            this.end(data);
+            return this;
+          };
+          res.json = function (data) {
+            this.setHeader("Content-Type", "application/json");
+            this.end(JSON.stringify(data));
+            return this;
+          };
+
+          try {
+            await metaCallbackHandler(req, res);
+          } catch (err) {
+            console.error("Error en local dev /api/meta-callback:", err);
+            res.status(500).send(`Error en /api/meta-callback: ${err.message}`);
           }
           return;
         }
