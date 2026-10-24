@@ -29,6 +29,7 @@ import { formatBytes } from "@/utils/mediaCompressor";
 import { MESES_ANIO } from "@/utils/formatters";
 import BookingHeader from "./BookingHeader";
 import ProductionSlaWarningDialog from "./ProductionSlaWarningDialog";
+import AutoLinkedText from "@/components/common/AutoLinkedText";
 
 export default function BookingFormCard({
   initialData = {},
@@ -515,15 +516,15 @@ export default function BookingFormCard({
                 <Lock className="w-2.5 h-2.5" /> Fijado por agencia
               </span>
             </div>
-            <p className="text-xs font-inter text-gray-700 mt-0.5 leading-relaxed whitespace-pre-line">
+            <div className="text-xs font-inter text-gray-700 mt-0.5 leading-relaxed whitespace-pre-line">
               {notasBrief ? (
-                notasBrief
+                <AutoLinkedText text={notasBrief} />
               ) : (
                 <span className="text-gray-400 italic">
                   Sin requerimientos o notas adicionales registradas por la agencia.
                 </span>
               )}
-            </p>
+            </div>
           </div>
         </div>
 

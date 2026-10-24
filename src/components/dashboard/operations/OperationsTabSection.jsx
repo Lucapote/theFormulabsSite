@@ -25,7 +25,7 @@ const MESES = [
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
 ];
 
-export default function OperationsTabSection() {
+export default function OperationsTabSection({ setActiveTab = null }) {
   const now = new Date();
   const [mes, setMes] = useState(now.getMonth() + 1);
   const [anio, setAnio] = useState(now.getFullYear());
@@ -99,7 +99,7 @@ export default function OperationsTabSection() {
           <button
             type="button"
             onClick={handlePrevMonth}
-            className="w-9 h-9 rounded-full border border-gray-200 hover:bg-gray-100 flex items-center justify-center text-gray-700 transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-full border border-gray-200 hover:bg-gray-100 flex items-center justify-center text-gray-700 transition-all cursor-pointer active:scale-[0.98]"
             title="Mes anterior"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -114,7 +114,7 @@ export default function OperationsTabSection() {
           <button
             type="button"
             onClick={handleNextMonth}
-            className="w-9 h-9 rounded-full border border-gray-200 hover:bg-gray-100 flex items-center justify-center text-gray-700 transition-colors cursor-pointer"
+            className="w-9 h-9 rounded-full border border-gray-200 hover:bg-gray-100 flex items-center justify-center text-gray-700 transition-all cursor-pointer active:scale-[0.98]"
             title="Mes siguiente"
           >
             <ChevronRight className="w-4 h-4" />
@@ -142,7 +142,7 @@ export default function OperationsTabSection() {
               type="button"
               disabled={generating}
               onClick={handleEnsureAllCycles}
-              className="h-9 px-4 rounded-full bg-[#188ff0] hover:bg-blue-600 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-blue-200 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="h-9 px-4 rounded-full bg-[#188ff0] hover:bg-blue-600 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-blue-200 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-[0.98]"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>
@@ -154,7 +154,7 @@ export default function OperationsTabSection() {
           <button
             type="button"
             onClick={loadData}
-            className="h-9 px-3.5 rounded-full border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-sora font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="h-9 px-3.5 rounded-full border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-sora font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98]"
             title="Recargar datos"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
@@ -200,7 +200,16 @@ export default function OperationsTabSection() {
               }
               onStatusUpdated={loadData}
               onOpenCreateCalendar={() => {
-                toast.info("Dirígete a la pestaña de Calendarios para crear uno nuevo.");
+                if (setActiveTab) {
+                  setActiveTab("calendars");
+                } else {
+                  toast.info("Dirígete a la pestaña de Calendarios para crear uno nuevo.");
+                }
+              }}
+              onGoToCalendar={() => {
+                if (setActiveTab) {
+                  setActiveTab("calendars");
+                }
               }}
               onEditClient={(c) => setEditingClient(c)}
               onOpenReviewReceipt={(c) => {
@@ -212,7 +221,7 @@ export default function OperationsTabSection() {
         </div>
       )}
 
-      {/* Empty State */}
+      {/* Empty State Actionable (Zero Dead-Ends) */}
       {!loading && ciclos.length === 0 && (
         <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center max-w-lg mx-auto shadow-xs my-8">
           <div className="w-12 h-12 rounded-full bg-blue-50 text-brand-blue flex items-center justify-center mx-auto mb-3">
@@ -227,15 +236,28 @@ export default function OperationsTabSection() {
               : "No se encontraron clientes activos configurados en la plataforma."}
           </p>
 
-          {activeClientesWithoutCycle.length > 0 && (
+          {activeClientesWithoutCycle.length > 0 ? (
             <button
               type="button"
               disabled={generating}
               onClick={handleEnsureAllCycles}
-              className="h-10 px-6 rounded-full bg-brand-blue hover:bg-blue-600 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-blue-200 transition-all inline-flex items-center gap-2 cursor-pointer"
+              className="h-10 px-6 rounded-full bg-brand-blue hover:bg-blue-600 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-blue-200 transition-all inline-flex items-center gap-2 cursor-pointer active:scale-[0.98]"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Generar Ciclos Mensuales Automáticamente</span>
+              <span>
+                {generating ? "Generando Ciclos..." : "Generar Ciclos Mensuales Automáticamente"}
+              </span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                if (setActiveTab) setActiveTab("calendars");
+              }}
+              className="h-10 px-6 rounded-full bg-brand-blue hover:bg-blue-600 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-blue-200 transition-all inline-flex items-center gap-2 cursor-pointer active:scale-[0.98]"
+            >
+              <Users className="w-4 h-4" />
+              <span>Gestionar Clientes en Calendarios</span>
             </button>
           )}
         </div>

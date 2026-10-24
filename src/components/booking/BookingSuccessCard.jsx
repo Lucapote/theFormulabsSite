@@ -9,8 +9,10 @@ import {
   Clock,
   Loader2,
   FileCheck2,
-  ExternalLink
+  ExternalLink,
+  FileText
 } from "lucide-react";
+import AutoLinkedText from "@/components/common/AutoLinkedText";
 import { isSessionPaymentSatisfied } from "@/utils/bookingHelpers";
 import { uploadComprobantePublico } from "@/services/r2Service";
 import { confirmarReservaProduccion } from "@/services/operationsService";
@@ -239,6 +241,22 @@ export default function BookingSuccessCard({
             </span>
           </div>
         </div>
+
+        {produccion.notas_brief && (
+          <div className="flex items-start gap-2.5 pt-2 border-t border-gray-200/60">
+            <div className="w-7 h-7 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center shrink-0 mt-0.5">
+              <FileText className="w-3.5 h-3.5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] font-sora font-semibold text-gray-400 uppercase tracking-wider block">
+                Requerimientos & Brief de Grabación
+              </span>
+              <div className="text-xs font-inter text-gray-800 mt-0.5 leading-relaxed whitespace-pre-line">
+                <AutoLinkedText text={produccion.notas_brief} />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Opción para reprogramar fecha o locación */}

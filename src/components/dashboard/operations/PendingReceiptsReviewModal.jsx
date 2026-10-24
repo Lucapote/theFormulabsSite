@@ -137,7 +137,7 @@ export default function PendingReceiptsReviewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl w-full h-[90vh] max-h-[90vh] p-0 flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-2xl">
+      <DialogContent className="max-w-5xl w-full h-[95vh] max-h-[95vh] p-0 flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-200 shadow-2xl">
         {/* Cabecera Clínica Oscura */}
         <DialogHeader className="bg-slate-950 text-white px-6 py-4 flex flex-row items-center justify-between border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-3">
@@ -346,25 +346,25 @@ export default function PendingReceiptsReviewModal({
                 )}
               </div>
 
-              {/* Barra de Acciones Inferior */}
-              <div className="p-4 border-t border-gray-200 bg-white flex items-center justify-between gap-3">
+              {/* Barra de Acciones Inferior (Thumb Zone Ergonomics) */}
+              <div className="p-3 sm:p-4 border-t border-gray-200 bg-white flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 shrink-0">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleReject}
                   disabled={isProcessing}
-                  className="h-10 px-4 rounded-full border-rose-200 hover:bg-rose-50 text-rose-700 text-xs font-sora font-bold uppercase tracking-wider inline-flex items-center gap-1.5 cursor-pointer"
+                  className="h-11 sm:h-10 px-4 rounded-full border-rose-200 hover:bg-rose-50 text-rose-700 text-xs font-sora font-bold uppercase tracking-wider inline-flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-all"
                 >
                   <XCircle className="w-4 h-4 text-rose-600" />
                   <span>Rechazar Comprobante</span>
                 </Button>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-stretch sm:items-center gap-2">
                   <Button
                     type="button"
                     onClick={handleApprove}
                     disabled={isProcessing}
-                    className="h-10 px-6 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-emerald-200 inline-flex items-center gap-2 cursor-pointer active:scale-[0.98] transition-all"
+                    className="w-full sm:w-auto h-11 sm:h-10 px-6 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-emerald-200 inline-flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] transition-all"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span>{isProcessing ? "Validando..." : labelAprobacion}</span>

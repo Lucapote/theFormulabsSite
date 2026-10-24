@@ -140,7 +140,7 @@ export default function FinanceCostModal({
         type="button"
         onClick={() => setShowDeleteConfirm(true)}
         disabled={loading || isDeleting}
-        className="h-11 px-4 rounded-full border border-red-200 hover:bg-red-50 text-red-600 font-sora font-bold text-xs uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+        className="h-11 px-4 rounded-full border border-red-200 hover:bg-red-50 text-red-600 font-sora font-bold text-xs uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50 active:scale-[0.98]"
         title="Eliminar costos registrados y comprobantes"
       >
         <Trash2 className="w-3.5 h-3.5" />
@@ -154,6 +154,8 @@ export default function FinanceCostModal({
         isOpen={isOpen}
         onClose={onClose}
         onSubmit={handleSubmit}
+        className="h-[95vh] max-h-[95vh]"
+        bodyClassName="max-h-none flex-1 overflow-y-auto min-h-0"
         eyebrow="FINANZAS Y CONTROL"
         eyebrowColor="text-brand-magenta"
         icon={DollarSign}
@@ -164,6 +166,7 @@ export default function FinanceCostModal({
         submitText="Guardar Finanzas"
         loadingText="Guardando..."
         isLoading={loading}
+        submitButtonClass="bg-[#188ff0] hover:bg-blue-600 text-white shadow-md shadow-blue-200 active:scale-[0.98] transition-all"
         footerExtra={resetCostsButton}
       >
         <div className="space-y-4">

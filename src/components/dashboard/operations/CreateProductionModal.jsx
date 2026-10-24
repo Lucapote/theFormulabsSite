@@ -13,6 +13,7 @@ import {
 import BaseFormModal from "@/components/common/BaseFormModal";
 import { createProduccionExtra } from "@/services/operationsService";
 import { getSessionDisplayName, MESES_ANIO } from "@/utils/formatters";
+import AutoLinkedText from "@/components/common/AutoLinkedText";
 
 /**
  * CreateProductionModal
@@ -141,6 +142,8 @@ export default function CreateProductionModal({
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={handleSubmit}
+      className="h-[95vh] max-h-[95vh]"
+      bodyClassName="max-h-none flex-1 overflow-y-auto min-h-0"
       maxWidth="max-w-lg"
       badge={headerBadge}
       title={isExtra ? "Agregar Sesión Extra" : "Agregar Sesión de Rodaje"}
@@ -149,7 +152,7 @@ export default function CreateProductionModal({
       submitText={isExtra ? "Crear Sesión Extra" : "Crear Sesión de Rodaje"}
       loadingText="Creando..."
       isLoading={loading}
-      submitButtonClass="bg-[#188ff0] hover:bg-blue-600 text-white shadow-md shadow-blue-200"
+      submitButtonClass="bg-[#188ff0] hover:bg-blue-600 text-white shadow-md shadow-blue-200 active:scale-[0.98] transition-all"
     >
       <div className="space-y-4 w-full min-w-0 max-w-full overflow-hidden font-inter">
         {/* BLOQUE A — Configuración Básica */}
@@ -320,6 +323,11 @@ export default function CreateProductionModal({
               onChange={(e) => setFormData({ ...formData, notas_brief: e.target.value })}
               className="w-full text-xs font-inter bg-white border border-gray-200 rounded-xl p-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#188ff0] resize-none"
             />
+            {Boolean(formData.notas_brief) && (
+              <div className="pt-1.5">
+                <AutoLinkedText text={formData.notas_brief} onlyLinks className="flex flex-wrap gap-1" />
+              </div>
+            )}
           </div>
         </div>
       </div>

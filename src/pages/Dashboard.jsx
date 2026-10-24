@@ -427,7 +427,7 @@ export default function Dashboard() {
 
         {/* TAB 4: OPERACIONES */}
         {activeTab === "operaciones" && (
-          <OperationsTabSection />
+          <OperationsTabSection setActiveTab={setActiveTab} />
         )}
       </main>
 

@@ -24,6 +24,7 @@ import {
 import { getSessionDisplayName, getBookingUrl } from "@/utils/formatters";
 import { checkProductionPaymentRisk } from "@/utils/bookingHelpers";
 import SlugPreviewField from "@/components/common/SlugPreviewField";
+import AutoLinkedText from "@/components/common/AutoLinkedText";
 
 const STATUS_CONFIG = {
   pendiente_agendamiento: { label: "Pendiente de agendamiento", color: "bg-amber-500" },
@@ -226,6 +227,8 @@ export default function ProductionDetailModal({
         isOpen={isOpen}
         onClose={onClose}
         onSubmit={handleSubmit}
+        className="h-[95vh] max-h-[95vh]"
+        bodyClassName="max-h-none flex-1 overflow-y-auto min-h-0"
         maxWidth="max-w-lg"
         badge={headerBadge}
         title={displayName}
@@ -234,7 +237,7 @@ export default function ProductionDetailModal({
         submitText="Guardar Cambios"
         loadingText="Guardando..."
         isLoading={loading}
-        submitButtonClass="bg-[#188ff0] hover:bg-blue-600 text-white shadow-md shadow-blue-200"
+        submitButtonClass="bg-[#188ff0] hover:bg-blue-600 text-white shadow-md shadow-blue-200 active:scale-[0.98] transition-all"
         footerExtra={
           <button
             type="button"
@@ -243,7 +246,7 @@ export default function ProductionDetailModal({
               if (typeof document !== "undefined") document.activeElement?.blur?.();
               setShowDeleteConfirm(true);
             }}
-            className="h-9 px-3.5 rounded-full text-rose-600 bg-rose-50/50 hover:bg-rose-100/70 border border-rose-200 text-xs font-sora font-bold inline-flex items-center gap-1.5 whitespace-nowrap transition-colors cursor-pointer"
+            className="h-9 px-3.5 rounded-full text-rose-600 bg-rose-50/50 hover:bg-rose-100/70 border border-rose-200 text-xs font-sora font-bold inline-flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer active:scale-[0.98]"
           >
             <Trash2 className="w-3.5 h-3.5 shrink-0" />
             <span className="whitespace-nowrap">Eliminar</span>
@@ -270,7 +273,7 @@ export default function ProductionDetailModal({
                   type="button"
                   disabled={loading}
                   onClick={handleCancelDate}
-                  className="flex-1 h-8 px-3 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-sora font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+                  className="flex-1 h-8 px-3 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-sora font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-[0.98]"
                 >
                   <XCircle className="w-3.5 h-3.5" />
                   <span>Cancelar y Liberar Fecha</span>
@@ -282,7 +285,7 @@ export default function ProductionDetailModal({
                     setFormData((prev) => ({ ...prev, estado: "agendada" }));
                     toast.info("Manteniendo fecha activa. Pulsa Guardar Cambios para confirmar.");
                   }}
-                  className="h-8 px-3 rounded-full bg-white border border-rose-200 hover:bg-rose-100/50 text-rose-800 text-[11px] font-sora font-semibold inline-flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                  className="h-8 px-3 rounded-full bg-white border border-rose-200 hover:bg-rose-100/50 text-rose-800 text-[11px] font-sora font-semibold inline-flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-[0.98]"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>Mantener</span>
@@ -309,7 +312,7 @@ export default function ProductionDetailModal({
                 href={associatedReceiptUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="h-7 px-2.5 rounded-md bg-white hover:bg-gray-50 text-brand-blue border border-blue-200 text-[11px] font-sora font-semibold inline-flex items-center gap-1 shrink-0 transition-colors"
+                className="h-7 px-2.5 rounded-md bg-white hover:bg-gray-50 text-brand-blue border border-blue-200 text-[11px] font-sora font-semibold inline-flex items-center gap-1 shrink-0 transition-all active:scale-[0.98]"
               >
                 <ExternalLink className="w-3 h-3" />
                 <span>Ver Comprobante</span>
@@ -328,7 +331,7 @@ export default function ProductionDetailModal({
                   type="button"
                   disabled={loading}
                   onClick={handleCancelDate}
-                  className="inline-flex items-center gap-1 text-[11px] font-sora font-semibold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
+                  className="inline-flex items-center gap-1 text-[11px] font-sora font-semibold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer transition-all active:scale-[0.98]"
                   title="Elimina la fecha asignada y deja la sesión en pendiente"
                 >
                   <XCircle className="w-3 h-3" />
@@ -475,6 +478,11 @@ export default function ProductionDetailModal({
                 onChange={(e) => setFormData({ ...formData, notas_brief: e.target.value })}
                 className="w-full text-xs font-inter bg-white border border-gray-200 rounded-xl p-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#188ff0] resize-none"
               />
+              {Boolean(formData.notas_brief) && (
+                <div className="pt-1.5">
+                  <AutoLinkedText text={formData.notas_brief} onlyLinks className="flex flex-wrap gap-1" />
+                </div>
+              )}
             </div>
           </div>
 
