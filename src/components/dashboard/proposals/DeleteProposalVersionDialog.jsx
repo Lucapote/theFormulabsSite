@@ -5,7 +5,7 @@ import {
   deleteProposalSingleVersion,
   deleteProposalTree
 } from "@/services/proposalCrudService";
-import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
+import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
 
 /**
  * DeleteProposalVersionDialog

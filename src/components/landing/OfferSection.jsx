@@ -6,8 +6,7 @@ const OfferSection = () => {
     <section id="oferta" className="py-24 md:py-32 relative">
       <div className="container max-w-3xl mx-auto px-6">
         <motion.div
-          className="rounded-3xl lab-card p-8 md:p-12 relative overflow-hidden bg-white/90 shadow-xl border-lab-border"
-          style={{ boxShadow: "0 12px 50px -15px rgba(24, 143, 240, 0.15), 0 4px 15px -4px rgba(239, 24, 214, 0.08)" }}
+          className="rounded-3xl lab-card p-8 md:p-12 relative overflow-hidden bg-white/90 border-lab-border shadow-[0_12px_50px_-15px_rgba(24,143,240,0.15),0_4px_15px_-4px_rgba(239,24,214,0.08)]"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}

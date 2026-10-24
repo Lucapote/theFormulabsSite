@@ -27,6 +27,7 @@ import {
   Unlink,
 } from "lucide-react";
 import { assignMetaAccountToClient, unlinkMetaAccountFromClient } from "@/services/calendarService";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 /**
@@ -47,7 +48,12 @@ export default function ConnectedAccountsModal({
   const fetchAccounts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/meta-accounts");
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers = session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : {};
+
+      const res = await fetch("/api/meta-accounts", { headers });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Error al consultar las cuentas de Meta");

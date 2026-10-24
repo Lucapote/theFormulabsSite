@@ -1,4 +1,24 @@
 import { Resend } from "resend";
+import { createClient } from "@supabase/supabase-js";
+
+async function verifySupabaseAuth(req) {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return { authenticated: false, error: "Token de autorización requerido." };
+  }
+  const token = authHeader.slice(7).trim();
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return { authenticated: false, error: "Servicio de autenticación no configurado." };
+  }
+  const client = createClient(supabaseUrl, supabaseAnonKey);
+  const { data: { user }, error } = await client.auth.getUser(token);
+  if (error || !user) {
+    return { authenticated: false, error: "Sesión inválida o expirada." };
+  }
+  return { authenticated: true, user };
+}
 
 const MESES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -16,7 +36,7 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
   res.setHeader(
     "Access-Control-Allow-Headers",
-    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+    "Authorization, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
   );
 
   if (req.method === "OPTIONS") {
@@ -27,6 +47,15 @@ export default async function handler(req, res) {
     return res.status(405).json({
       success: false,
       error: "Método no permitido. Solo se acepta POST."
+    });
+  }
+
+  // Control de Acceso: Validación obligatoria de sesión administrativa
+  const auth = await verifySupabaseAuth(req);
+  if (!auth.authenticated) {
+    return res.status(401).json({
+      success: false,
+      error: auth.error || "No autorizado para despachar notificaciones de pago."
     });
   }
 

@@ -8,7 +8,7 @@ import LeadMetricsHeader from "./LeadMetricsHeader";
 import LeadFilterBar from "./LeadFilterBar";
 import LeadCardItem from "./LeadCardItem";
 import LeadDetailModal from "./LeadDetailModal";
-import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
+import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
 
 export default function DiagnosticsTabSection() {
   const [leads, setLeads] = useState([]);

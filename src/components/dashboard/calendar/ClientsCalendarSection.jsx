@@ -26,7 +26,7 @@ import CreateCalendarModal from "./CreateCalendarModal";
 import ConnectedAccountsModal from "./ConnectedAccountsModal";
 import { useWindowFocusRefresh } from "@/hooks/useWindowFocusRefresh";
 import ActiveCalendarHeader from "./ActiveCalendarHeader";
-import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
+import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
 
 const MONTH_NAMES = [
   "Enero",

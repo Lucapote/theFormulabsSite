@@ -93,13 +93,7 @@ const HeroSection = () => {
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-24 pb-16 bg-background">
       {/* Subtle clean grid background */}
-      <div
-        className="absolute inset-0 opacity-40 pointer-events-none lab-grid-bg"
-        style={{
-          maskImage: "radial-gradient(ellipse at center, black 40%, transparent 80%)",
-          WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 80%)"
-        }}
-      />
+      <div className="absolute inset-0 opacity-40 pointer-events-none lab-grid-bg [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_80%)] [-webkit-mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_80%)]" />
 
       {/* Gentle ambient background accents (non-saturating) */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] rounded-full bg-brand-magenta/[0.03] blur-[140px] pointer-events-none" />

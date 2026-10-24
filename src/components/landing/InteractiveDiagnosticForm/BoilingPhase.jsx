@@ -24,26 +24,34 @@ export default function BoilingPhase({ answers, onComplete }) {
 
   return (
     <div className="w-full flex flex-col items-center justify-center relative font-inter">
-      <div style={{ position: "relative", zIndex: 1, textAlign: "center", animation: "labFadeUp .4s ease both" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 28 }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: color, animation: "labPulse 1.5s infinite" }} />
-          <span className="font-mono font-bold" style={{ fontSize: 11, color: "var(--brand-magenta)", letterSpacing: ".14em", textTransform: "uppercase" }}>
+      <div className="relative z-10 text-center animate-fade-in">
+        <div className="flex items-center gap-2 justify-center mb-7">
+          <div className="w-2 h-2 rounded-full bg-brand-magenta animate-pulse" />
+          <span className="font-mono font-bold text-[11px] text-brand-magenta tracking-[0.14em] uppercase">
             The Formulab™
           </span>
         </div>
-        <div style={{ display: "inline-block", marginBottom: 20 }}>
+
+        <div className="inline-block mb-5">
           <TestTube fillPct={85} bubbling={true} color={color} />
         </div>
-        <h2 className="text-foreground font-sora" style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-.02em", marginBottom: 8 }}>
-          Analizando muestra<span style={{ animation: "labBlink 1s step-end infinite", color }}>_</span>
+
+        <h2 className="text-foreground font-sora text-[22px] font-extrabold tracking-tight mb-2">
+          Analizando muestra<span className="text-brand-magenta animate-pulse">_</span>
         </h2>
-        <p className="font-mono font-semibold" style={{ fontSize: 12, color: "var(--lab-text-secondary)", letterSpacing: ".06em", marginBottom: 28 }}>
+
+        <p className="font-mono font-semibold text-xs text-lab-text-secondary tracking-wider mb-7">
           {PROCESSING[stageI]}
         </p>
-        <div className="bg-brand-neutral" style={{ width: 280, margin: "0 auto", height: 4, borderRadius: 2, overflow: "hidden" }}>
-          <div style={{ height: "100%", background: "linear-gradient(90deg, #ef18d6, #188ff0)", width: prog + "%", transition: "width .2s linear", borderRadius: 2 }} />
+
+        <div className="bg-brand-neutral w-[280px] mx-auto h-1 rounded-sm overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-brand-magenta to-brand-blue rounded-sm transition-all duration-200"
+            style={{ width: `${prog}%` }}
+          />
         </div>
-        <p className="font-mono font-bold" style={{ fontSize: 11, color: color, marginTop: 10 }}>
+
+        <p className="font-mono font-bold text-[11px] text-brand-magenta mt-2.5">
           {prog}%
         </p>
       </div>

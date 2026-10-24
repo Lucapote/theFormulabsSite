@@ -20,6 +20,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 /**
  * MetaScannerDialog
@@ -39,7 +40,12 @@ export default function MetaScannerDialog({
   const fetchAccounts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/meta-accounts");
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers = session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : {};
+
+      const res = await fetch("/api/meta-accounts", { headers });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Error al consultar las cuentas de Meta");

@@ -22,7 +22,7 @@ import GalleryItemCard from "./GalleryItemCard";
 import MediaGalleryUploader from "./MediaGalleryUploader";
 import MediaGalleryFilterBar from "./MediaGalleryFilterBar";
 import FloatingBatchToolbar from "@/components/dashboard/calendar/FloatingBatchToolbar";
-import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
+import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
 import { getLocalDateString } from "@/utils/formatters";
 
 /**

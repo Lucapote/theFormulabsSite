@@ -786,9 +786,17 @@ export async function validarPagoYDesbloquear({
 
     if (!alreadyHadSameStatus && cliente?.email && produccionPrincipal?.token_reserva) {
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const authHeaders = session?.access_token
+          ? { Authorization: `Bearer ${session.access_token}` }
+          : {};
+
         await fetch("/api/notify-payment-unlocked", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders
+          },
           body: JSON.stringify({
             clienteEmail: cliente.email,
             clienteNombre: cliente.nombre,

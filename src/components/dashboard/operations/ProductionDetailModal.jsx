@@ -15,7 +15,7 @@ import {
   FileCheck2
 } from "lucide-react";
 import BaseFormModal from "@/components/common/BaseFormModal";
-import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
+import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
 import {
   updateProduccion,
   deleteProduccion,

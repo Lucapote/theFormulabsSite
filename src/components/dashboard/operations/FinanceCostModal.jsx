@@ -15,7 +15,7 @@ import {
 import BaseFormModal from "@/components/common/BaseFormModal";
 import { updateCicloFinanzas } from "@/services/operationsService";
 import { uploadComprobanteAdmin } from "@/services/r2Service";
-import ConfirmDeleteModal from "@/components/dashboard/common/ConfirmDeleteModal";
+import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
 
 export default function FinanceCostModal({
   isOpen,

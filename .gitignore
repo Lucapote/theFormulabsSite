@@ -11,6 +11,7 @@ lerna-debug.log*
 .env
 .env.local
 .env.*.local
+.env*
 
 # Dependency & build directories
 node_modules
@@ -29,4 +30,7 @@ dist-ssr
 *.sw?
 
 .vercel
-.env*
+
+# Vite temporary & timestamp files
+*.timestamp-*.mjs
+vite.config.js.timestamp-*

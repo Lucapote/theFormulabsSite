@@ -14,7 +14,7 @@ export default function EmailPhase({ onComplete }) {
 
   return (
     <div className="w-full flex flex-col items-center justify-center relative font-inter">
-      <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 580, animation: "labFadeUp .4s ease both" }}>
+      <div className="relative z-10 w-full max-w-[580px] animate-fade-in">
         <div className="mb-8 text-center sm:text-left">
           <h2 className="text-[clamp(1.75rem,4vw,2.5rem)] font-sora font-extrabold leading-[1.1] tracking-tight text-foreground">
             Análisis listo.
