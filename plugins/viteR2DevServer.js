@@ -296,6 +296,38 @@ export function viteR2DevServer() {
               return;
             }
 
+            // Acción: PROXY DE IMÁGENES / MEDIOS (Cero Tainted Canvas / CORS seguro)
+            if (action === "proxy" || action === "proxy-image") {
+              const proxyKey = targetKey || (body.url && body.url.includes("calendarios/") ? body.url.substring(body.url.indexOf("calendarios/")).split("?")[0] : null);
+              if (!proxyKey) {
+                res.statusCode = 400;
+                res.setHeader("Content-Type", "application/json");
+                res.end(JSON.stringify({ error: "La clave (key) o URL es requerida para el proxy." }));
+                return;
+              }
+
+              try {
+                const getCmd = new GetObjectCommand({
+                  Bucket: bucketName,
+                  Key: proxyKey,
+                });
+                const s3Res = await s3Client.send(getCmd);
+                res.statusCode = 200;
+                res.setHeader("Content-Type", s3Res.ContentType || "image/png");
+                res.setHeader("Access-Control-Allow-Origin", "*");
+                res.setHeader("Cache-Control", "public, max-age=86400");
+                for await (const chunk of s3Res.Body) {
+                  res.write(chunk);
+                }
+                res.end();
+              } catch (proxyErr) {
+                console.error("[Vite R2 Dev] Error en proxy R2:", proxyErr);
+                res.statusCode = 500;
+                res.end(`Error al obtener objeto R2: ${proxyErr.message}`);
+              }
+              return;
+            }
+
             // Acción: GENERAR URL DE DESCARGA FORZADA (Content-Disposition: attachment)
             if (action === "download" || action === "get") {
               const downloadKey = targetKey || (body.url && body.url.includes("calendarios/") ? body.url.substring(body.url.indexOf("calendarios/")).split("?")[0] : null);

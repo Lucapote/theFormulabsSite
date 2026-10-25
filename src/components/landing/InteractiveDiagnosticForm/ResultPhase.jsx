@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Check, ArrowRight } from "lucide-react";
 import TestTube from "./TestTube";
 import ResultCard from "./ResultCard";
 import { buildDiagnostic } from "@/data/diagnosticData";
@@ -80,13 +81,23 @@ export default function ResultPhase({ answers, onReset, email }) {
           <button
             type="button"
             onClick={handleCta}
-            className={`font-sora text-[12px] font-bold rounded-xl px-7 py-3 cursor-pointer tracking-wide transition-all ${
+            className={`font-sora text-xs font-bold rounded-full px-7 py-3 cursor-pointer tracking-wide transition-all active:scale-[0.98] inline-flex items-center justify-center gap-2 shadow-md ${
               ctaSent
-                ? "bg-brand-blue text-white shadow-md"
-                : "bg-brand-magenta text-white hover:bg-brand-magenta/90 shadow-md hover:shadow-lg"
+                ? "bg-brand-blue text-white shadow-blue-200"
+                : "bg-brand-magenta text-white hover:bg-brand-magenta/90 hover:shadow-lg shadow-pink-200"
             }`}
           >
-            {ctaSent ? "✓ Redirigiendo al estratega..." : "Ver diagnóstico completo →"}
+            {ctaSent ? (
+              <>
+                <Check className="w-4 h-4 text-white" />
+                <span>Redirigiendo al estratega...</span>
+              </>
+            ) : (
+              <>
+                <span>Ver diagnóstico completo</span>
+                <ArrowRight className="w-4 h-4 text-white" />
+              </>
+            )}
           </button>
           {ctaSent && (
             <p className="font-mono font-semibold text-[11px] text-brand-blue mt-3">

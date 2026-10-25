@@ -97,6 +97,33 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, message: `Objeto ${targetKey} eliminado de Cloudflare R2.` });
     }
 
+    // Acción: PROXY DE IMÁGENES / MEDIOS (Cero Tainted Canvas / CORS seguro)
+    if (action === "proxy" || action === "proxy-image") {
+      const targetKey = key || params.key || (params.url && params.url.includes("calendarios/") ? params.url.substring(params.url.indexOf("calendarios/")).split("?")[0] : null);
+      if (!targetKey) {
+        return res.status(400).json({ error: "La clave (key) o URL es requerida para el proxy." });
+      }
+
+      try {
+        const getCmd = new GetObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: targetKey,
+        });
+        const s3Res = await s3Client.send(getCmd);
+        res.setHeader("Content-Type", s3Res.ContentType || "image/png");
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Cache-Control", "public, max-age=86400");
+        const stream = s3Res.Body;
+        for await (const chunk of stream) {
+          res.write(chunk);
+        }
+        return res.end();
+      } catch (proxyErr) {
+        console.error("Error en proxy R2:", proxyErr);
+        return res.status(500).send(`Error al obtener objeto R2: ${proxyErr.message}`);
+      }
+    }
+
     // Manejar generación de URL de descarga forzada con Content-Disposition: attachment
     if (action === "download" || action === "get") {
       const targetKey = key || params.key || (params.url && params.url.includes("calendarios/") ? params.url.substring(params.url.indexOf("calendarios/")).split("?")[0] : null);

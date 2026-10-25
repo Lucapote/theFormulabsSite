@@ -174,7 +174,7 @@ export default function ProposalLabPdfReport({
                       className={`border-b border-gray-200 ${plan.id === currentPlanObj?.id ? "bg-pink-50 font-bold" : ""}`}
                     >
                       <td className="p-1.5 text-left font-semibold">
-                        {plan.name} {plan.id === currentPlanObj?.id ? "✓ (SELECCIONADO)" : ""}
+                        {plan.name} {plan.id === currentPlanObj?.id ? "(SELECCIONADO)" : ""}
                       </td>
                       <td className="p-1.5">{plan.reels} Reels</td>
                       <td className="p-1.5">4 Carruseles</td>

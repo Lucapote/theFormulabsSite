@@ -11,7 +11,8 @@ import {
   AlertTriangle,
   Loader2,
   Send,
-  ExternalLink
+  ExternalLink,
+  Crop
 } from "lucide-react";
 import { formatTimeHHMM } from "@/components/calendar/CalendarGridView";
 
@@ -27,10 +28,12 @@ export default function PostCardItem({
   onDeletePost,
   onCopyCaption,
   onPublishNow = null,
-  isPublishing = false
+  isPublishing = false,
+  onFramingPost = null
 }) {
   const firstFile = post.archivos && post.archivos.length > 0 ? post.archivos[0] : null;
   const isEmptyBox = !firstFile || post.estado === "borrador";
+  const isRatioError = post.estado === "error" && post.error_mensaje?.toLowerCase().includes("aspect ratio");
 
   return (
     <div
@@ -166,8 +169,23 @@ export default function PostCardItem({
 
           {/* Error Message Snippet if failed */}
           {post.estado === "error" && post.error_mensaje && (
-            <div className="bg-rose-50 border border-rose-100 rounded-lg p-2 text-[11px] text-rose-700 font-inter leading-tight">
-              <span className="font-bold">Fallo en Meta:</span> {post.error_mensaje}
+            <div className="bg-rose-50 border border-rose-100 rounded-lg p-2.5 text-[11px] text-rose-700 font-inter leading-tight space-y-2">
+              <div>
+                <span className="font-bold">Fallo en Meta:</span> {post.error_mensaje}
+              </div>
+              {isRatioError && onFramingPost && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFramingPost(post);
+                  }}
+                  className="w-full py-1.5 px-3 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-sora font-bold text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-[0.98]"
+                >
+                  <Crop className="w-3.5 h-3.5" />
+                  <span>Encuadrar a 4:5 y Reintentar Ahora</span>
+                </button>
+              )}
             </div>
           )}
 

@@ -19,6 +19,7 @@ import InstagramPostPreviewModal from "@/components/common/InstagramPostPreviewM
 import PostCardItem from "./PostCardItem";
 import ScheduledPostsFilterBar from "./ScheduledPostsFilterBar";
 import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
+import MediaFramingModal from "./MediaFramingModal";
 
 /**
  * ScheduledPostsList
@@ -58,6 +59,7 @@ export default function ScheduledPostsList({
   const [showImportModal, setShowImportModal] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [selectedPreviewPost, setSelectedPreviewPost] = useState(null);
+  const [framingPost, setFramingPost] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
   // Delete modal state
@@ -275,6 +277,7 @@ export default function ScheduledPostsList({
               onCopyCaption={copyCaption}
               onPublishNow={handlePublishNow}
               isPublishing={publishingPostId === post.id}
+              onFramingPost={(p) => setFramingPost(p)}
             />
           ))}
         </div>
@@ -332,6 +335,25 @@ export default function ScheduledPostsList({
         onClose={() => setDeletingPost(null)}
         onConfirm={handleConfirmDelete}
       />
+
+      {/* QUICK ENCUADRE Y REINTENTO DIRECTO DESDE CARD */}
+      {framingPost && (
+        <MediaFramingModal
+          isOpen={Boolean(framingPost)}
+          onClose={() => setFramingPost(null)}
+          mediaItems={framingPost.archivos || []}
+          calendarioId={calendarioId}
+          postId={framingPost.id}
+          onFramingComplete={async (processedFiles) => {
+            const currentPost = framingPost;
+            setFramingPost(null);
+            await loadPosts();
+            if (onPostUpdated) onPostUpdated();
+            toast.info("Encuadre aplicado. Reintentando publicación en Meta automáticamente...");
+            handlePublishNow({ ...currentPost, archivos: processedFiles });
+          }}
+        />
+      )}
     </div>
   );
 }

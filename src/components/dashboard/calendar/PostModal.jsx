@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Video as VideoIcon,
   Calendar as CalendarIcon,
@@ -6,13 +6,16 @@ import {
   Film,
   RefreshCw,
   Sparkles,
-  Layers
+  Layers,
+  Crop,
+  AlertTriangle
 } from "lucide-react";
 import { toast } from "sonner";
 import BaseFormModal from "@/components/common/BaseFormModal";
 import { getArchivosByCalendario } from "@/services/calendarService";
 import MediaDetailModal from "@/components/common/MediaDetailModal";
 import GalleryFileItem from "@/components/dashboard/gallery/GalleryFileItem";
+import MediaFramingModal from "@/components/dashboard/calendar/MediaFramingModal";
 import { getLocalDateString } from "@/utils/formatters";
 
 /**
@@ -42,6 +45,41 @@ export default function PostModal({
   const [galleryFiles, setGalleryFiles] = useState([]);
   const [loadingGallery, setLoadingGallery] = useState(false);
   const [previewMedia, setPreviewMedia] = useState(null);
+  const [showFramingModal, setShowFramingModal] = useState(false);
+  const [mediaRatios, setMediaRatios] = useState({}); // { [fileId]: { width, height, ratio, isValid } }
+
+  // Detect and measure natural dimensions for assigned images (Instagram 4:5 [0.80] to 1.91:1)
+  useEffect(() => {
+    if (!archivos || archivos.length === 0) return;
+    archivos.forEach((file) => {
+      if (file.tipo === "video" || /\.(mp4|mov|webm)$/i.test(file.url || "")) return;
+      if (mediaRatios[file.id]) return;
+
+      const img = new Image();
+      img.onload = () => {
+        const w = img.naturalWidth;
+        const h = img.naturalHeight;
+        const ratio = w / h;
+        // Instagram allowed aspect ratios: between 4:5 (0.80) and 1.91:1 (1.91)
+        const isValid = ratio >= 0.79 && ratio <= 1.93;
+        setMediaRatios((prev) => ({
+          ...prev,
+          [file.id]: { width: w, height: h, ratio, isValid }
+        }));
+      };
+      img.src = file.url;
+    });
+  }, [archivos, mediaRatios]);
+
+  // Identify images with incompatible ratios for non-reels
+  const invalidFiles = useMemo(() => {
+    if (tipoPost === "reel") return [];
+    return archivos.filter((file) => {
+      if (file.tipo === "video" || /\.(mp4|mov|webm)$/i.test(file.url || "")) return false;
+      const meta = mediaRatios[file.id];
+      return meta && !meta.isValid;
+    });
+  }, [archivos, mediaRatios, tipoPost]);
 
   // Populate form on edit
   useEffect(() => {
@@ -158,6 +196,16 @@ export default function PostModal({
 
     if (tipoPost === "reel" && archivos[0]?.tipo !== "video") {
       toast.error("Para formato Reel el archivo asignado debe ser un Video.");
+      return;
+    }
+
+    // Interceptar si hay imágenes con ratios incompatibles con Instagram
+    if (tipoPost !== "reel" && invalidFiles.length > 0) {
+      toast.warning(
+        `Hay ${invalidFiles.length} imagen(es) con formato incompatible con Instagram. Por favor encuádralas antes de programar.`,
+        { duration: 4000 }
+      );
+      setShowFramingModal(true);
       return;
     }
 
@@ -299,17 +347,57 @@ export default function PostModal({
                 Medios de Galería ({archivos.length} asignados / {availableGalleryFiles.length} disponibles) *
               </label>
 
-              <button
-                type="button"
-                onClick={loadGalleryFiles}
-                disabled={loadingGallery}
-                className="text-[11px] font-sora font-bold text-[#188ff0] hover:text-blue-700 inline-flex items-center gap-1 cursor-pointer"
-                title="Recargar archivos de la galería"
-              >
-                <RefreshCw className={`w-3 h-3 ${loadingGallery ? "animate-spin" : ""}`} />
-                <span>Actualizar</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {archivos.some((a) => a.tipo !== "video") && (
+                  <button
+                    type="button"
+                    onClick={() => setShowFramingModal(true)}
+                    className={`h-8 px-3 rounded-full border font-sora font-bold text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-[0.98] transition-all ${
+                      invalidFiles.length > 0
+                        ? "bg-amber-500 hover:bg-amber-600 text-white border-amber-600 animate-pulse"
+                        : "bg-gradient-to-r from-pink-50 to-blue-50 border-blue-200 text-brand-blue hover:text-blue-700"
+                    }`}
+                    title="Ajustar y encuadrar imágenes para Instagram (1:1 o 4:5)"
+                  >
+                    <Crop className="w-3.5 h-3.5" />
+                    <span>{invalidFiles.length > 0 ? "Requiere Encuadre" : "Encuadre Instagram"}</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={loadGalleryFiles}
+                  disabled={loadingGallery}
+                  className="text-[11px] font-sora font-bold text-[#188ff0] hover:text-blue-700 inline-flex items-center gap-1 cursor-pointer"
+                  title="Recargar archivos de la galería"
+                >
+                  <RefreshCw className={`w-3 h-3 ${loadingGallery ? "animate-spin" : ""}`} />
+                  <span>Actualizar</span>
+                </button>
+              </div>
             </div>
+
+            {/* AVISO PREVENTIVO DE RATIOS INCOMPATIBLES CON INSTAGRAM */}
+            {invalidFiles.length > 0 && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="flex-1 text-xs">
+                  <p className="font-sora font-bold text-amber-900">
+                    Proporción no soportada por Meta ({invalidFiles.length} imagen{invalidFiles.length > 1 ? "es" : ""})
+                  </p>
+                  <p className="text-amber-700 font-inter text-[11px] mt-0.5 leading-snug">
+                    Instagram solo admite proporciones entre 4:5 (vertical) y 1.91:1 (horizontal). Encuadra a 4:5 o 1:1 para evitar rechazos de publicación.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowFramingModal(true)}
+                  className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-sora font-bold text-[11px] shrink-0 transition-colors cursor-pointer"
+                >
+                  Encuadrar ahora
+                </button>
+              </div>
+            )}
 
             {loadingGallery ? (
               <div className="p-8 text-center bg-gray-50/70 rounded-2xl border border-gray-100">
@@ -355,6 +443,22 @@ export default function PostModal({
           </div>
         </div>
       </BaseFormModal>
+
+      {/* Modal de Encuadre y Recorte Instagram */}
+      {showFramingModal && (
+        <MediaFramingModal
+          isOpen={showFramingModal}
+          onClose={() => setShowFramingModal(false)}
+          mediaItems={archivos}
+          calendarioId={calendarioId}
+          postId={initialData?.id}
+          onFramingComplete={(processedFiles) => {
+            const videoFiles = archivos.filter((a) => a.tipo === "video");
+            setArchivos([...videoFiles, ...processedFiles]);
+            loadGalleryFiles();
+          }}
+        />
+      )}
 
       {/* Lightbox details modal */}
       {previewMedia && (

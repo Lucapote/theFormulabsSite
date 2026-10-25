@@ -214,7 +214,7 @@ export default function ProposalRow({
           <button
             onClick={() => onCopyLink(versionActiva)}
             title="Copiar enlace privado"
-            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 inline-flex items-center justify-center transition-all cursor-pointer shrink-0"
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 inline-flex items-center justify-center transition-all duration-150 active:scale-[0.90] cursor-pointer shrink-0"
           >
             {copiedSlug === versionActiva.slug ? (
               <Check className="w-3.5 h-3.5 text-green-600" />
@@ -233,7 +233,7 @@ export default function ProposalRow({
             target="_blank"
             rel="noopener noreferrer"
             title="Ver propuesta en vivo"
-            className="w-8 h-8 rounded-full bg-blue-50 hover:bg-[#188ff0] text-[#188ff0] hover:text-white inline-flex items-center justify-center transition-all cursor-pointer shadow-xs shrink-0"
+            className="w-8 h-8 rounded-full bg-blue-50 hover:bg-[#188ff0] text-[#188ff0] hover:text-white inline-flex items-center justify-center transition-all duration-150 active:scale-[0.90] cursor-pointer shadow-xs shrink-0"
           >
             <ExternalLink className="w-3.5 h-3.5" />
           </Link>
@@ -242,7 +242,7 @@ export default function ProposalRow({
           <button
             onClick={() => onEditClick(versionActiva)}
             title="Editar propuesta"
-            className="w-8 h-8 rounded-full bg-gray-900 hover:bg-pink-500 text-white inline-flex items-center justify-center transition-all cursor-pointer shrink-0"
+            className="w-8 h-8 rounded-full bg-gray-900 hover:bg-pink-500 text-white inline-flex items-center justify-center transition-all duration-150 active:scale-[0.90] cursor-pointer shrink-0"
           >
             <Edit2 className="w-3.5 h-3.5" />
           </button>
@@ -251,7 +251,7 @@ export default function ProposalRow({
           <button
             onClick={() => onDeleteClick?.(versionActiva, group?.versiones?.length || 1)}
             title="Eliminar propuesta"
-            className="w-8 h-8 rounded-full bg-red-50 hover:bg-red-500 text-red-600 hover:text-white inline-flex items-center justify-center transition-all cursor-pointer shrink-0"
+            className="w-8 h-8 rounded-full bg-red-50 hover:bg-red-500 text-red-600 hover:text-white inline-flex items-center justify-center transition-all duration-150 active:scale-[0.90] cursor-pointer shrink-0"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>

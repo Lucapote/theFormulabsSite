@@ -80,6 +80,8 @@ export default function LeadToClientModal({ isOpen, onClose, lead, onClientCreat
       title="Convertir Lead a Cliente"
       description={`Prospecto: ${lead.nombre}${lead.ubicacion ? ` • ${lead.ubicacion}` : ""}`}
       maxWidth="max-w-lg"
+      className="h-[95vh] max-h-[95vh]"
+      bodyClassName="max-h-none flex-1 overflow-y-auto min-h-0"
       cancelText="Cancelar"
       submitText="Activar como Cliente"
       loadingText="Activando..."

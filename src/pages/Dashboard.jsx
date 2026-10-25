@@ -25,6 +25,7 @@ import ProposalsTabSection from "@/components/dashboard/proposals/ProposalsTabSe
 import DiagnosticsTabSection from "@/components/dashboard/diagnostics/DiagnosticsTabSection";
 import OperationsTabSection from "@/components/dashboard/operations/OperationsTabSection";
 import BankSettingsModal from "@/components/dashboard/common/BankSettingsModal";
+import NotificationCenterPopover from "@/components/dashboard/common/NotificationCenterPopover";
 import { useWindowFocusRefresh } from "@/hooks/useWindowFocusRefresh";
 
 export default function Dashboard() {
@@ -301,6 +302,7 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-2.5 sm:gap-3">
+            <NotificationCenterPopover onNavigateTab={(tab) => setActiveTab(tab)} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -344,7 +346,7 @@ export default function Dashboard() {
         <div className="flex flex-wrap gap-2 sm:gap-3 mb-6 sm:mb-8">
           <button
             onClick={() => setActiveTab("proposals")}
-            className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all duration-150 active:scale-[0.98] cursor-pointer flex items-center gap-2 ${
               activeTab === "proposals"
                 ? "bg-gray-900 text-white shadow-md"
                 : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
@@ -355,7 +357,7 @@ export default function Dashboard() {
           </button>
           <button
             onClick={() => setActiveTab("calendars")}
-            className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all duration-150 active:scale-[0.98] cursor-pointer flex items-center gap-2 ${
               activeTab === "calendars"
                 ? "bg-gray-900 text-white shadow-md"
                 : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
@@ -366,7 +368,7 @@ export default function Dashboard() {
           </button>
           <button
             onClick={() => setActiveTab("operaciones")}
-            className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all duration-150 active:scale-[0.98] cursor-pointer flex items-center gap-2 ${
               activeTab === "operaciones"
                 ? "bg-gray-900 text-white shadow-md"
                 : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
@@ -377,7 +379,7 @@ export default function Dashboard() {
           </button>
           <button
             onClick={() => setActiveTab("diagnostics")}
-            className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all duration-150 active:scale-[0.98] cursor-pointer flex items-center gap-1.5 ${
               activeTab === "diagnostics"
                 ? "bg-gray-900 text-white shadow-md"
                 : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"

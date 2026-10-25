@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { FlaskConical, ArrowDownWideNarrow, ArrowUpNarrowWide } from "lucide-react";
+import { FlaskConical, ArrowDownWideNarrow, ArrowUpNarrowWide, ExternalLink } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getLeads, getLeadStats, deleteLead, updateLeadStatus, sendLeadEmailNotification } from "@/services/leadService";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -247,17 +247,29 @@ export default function DiagnosticsTabSection() {
                   : "Cuando los visitantes completen el formulario en vivo, sus respuestas y cualificación aparecerán aquí."}
               </p>
             </div>
-            {(search || filterRoute !== "all") && (
+            {search || filterRoute !== "all" ? (
               <button
                 type="button"
                 onClick={() => {
                   setSearch("");
                   setFilterRoute("all");
                 }}
-                className="h-9 px-4 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-sora font-semibold transition-all cursor-pointer inline-flex items-center gap-1.5"
+                className="h-9 px-4 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-sora font-semibold transition-all duration-150 active:scale-[0.98] cursor-pointer inline-flex items-center gap-1.5"
               >
                 Limpiar filtros
               </button>
+            ) : (
+              <div className="pt-2">
+                <a
+                  href="/#diagnostico"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="h-10 px-5 rounded-full bg-[#188ff0] hover:bg-blue-600 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-blue-200 transition-all duration-150 active:scale-[0.98] cursor-pointer inline-flex items-center gap-2"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Probar Diagnóstico en Vivo
+                </a>
+              </div>
             )}
           </div>
         ) : (

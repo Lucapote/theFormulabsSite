@@ -155,7 +155,7 @@ const HeroSection = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="flex-1 h-12 px-4 rounded-xl bg-background border border-lab-border/60 text-foreground placeholder:text-lab-text-tertiary text-sm font-inter focus:outline-none focus:ring-2 focus:ring-brand-magenta/30 transition-all"
                 />
-                <Button type="submit" variant="lab" className="h-12 px-6 shrink-0 bg-brand-magenta hover:bg-brand-magenta/90 text-white font-sora font-bold text-sm rounded-xl shadow-sm hover:shadow-md">
+                <Button type="submit" variant="lab" className="h-12 px-6 shrink-0 bg-brand-magenta hover:bg-brand-magenta/90 text-white font-sora font-bold text-sm rounded-xl shadow-sm hover:shadow-md cursor-pointer active:scale-[0.98] transition-all">
                   Obtener Diagnóstico
                   <ArrowRight className="ml-1.5 w-4 h-4" />
                 </Button>

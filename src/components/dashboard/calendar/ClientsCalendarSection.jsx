@@ -139,10 +139,14 @@ export default function ClientsCalendarSection() {
   const [copiedSlug, setCopiedSlug] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
-  const openNewCalendarModal = () => {
-    if (!selectedCliente) {
+  const openNewCalendarModal = (clienteOverride = null) => {
+    const target = clienteOverride || selectedCliente;
+    if (!target) {
       toast.error("Por favor crea o selecciona un cliente primero.");
       return;
+    }
+    if (clienteOverride) {
+      setSelectedCliente(clienteOverride);
     }
     setCalendarForm({ ...DEFAULT_CALENDAR_FORM });
     setShowCalendarModal(true);
@@ -246,7 +250,12 @@ export default function ClientsCalendarSection() {
         clientForm.locacion_default?.trim() || null
       );
 
-      toast.success(`Cliente "${clientForm.nombre}" creado exitosamente.`);
+      toast.success(`Cliente "${clientForm.nombre}" creado exitosamente.`, {
+        action: {
+          label: "Crear Calendario",
+          onClick: () => openNewCalendarModal(nuevoCliente)
+        }
+      });
       handleCloseClientModal();
       await loadClientes(nuevoCliente?.id);
     } else {

@@ -3,7 +3,8 @@ import {
   Video as VideoIcon,
   Layers,
   Check,
-  Copy
+  Copy,
+  Sparkles
 } from "lucide-react";
 import MediaCarousel from "@/components/common/MediaCarousel";
 import { formatTimeHHMM } from "./CalendarGridView";
@@ -30,11 +31,19 @@ export default function PublicCalendarFeedView({
       </div>
 
       {postsList.length === 0 ? (
-        <div className="bg-white border border-gray-100 rounded-[2rem] p-12 text-center text-gray-400 shadow-xl">
-          <CalendarIcon className="w-12 h-12 text-pink-300 mx-auto mb-3" />
-          <p className="font-sora font-bold text-gray-900 text-base">Sin publicaciones aún</p>
-          <p className="text-xs text-gray-500 mt-1">
-            Este calendario aún no contiene posts programados.
+        <div className="bg-white border border-gray-100 rounded-[2rem] p-12 text-center shadow-xl flex flex-col items-center">
+          <div className="w-14 h-14 rounded-2xl bg-pink-50 border border-pink-100 flex items-center justify-center mb-4 text-[#ef18d6]">
+            <CalendarIcon className="w-7 h-7" />
+          </div>
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-pink-600 bg-pink-50 border border-pink-200 px-3 py-1 rounded-full mb-3">
+            <Sparkles className="w-3 h-3" />
+            FASE DE PRE-PRODUCCIÓN & CURADURÍA
+          </span>
+          <h3 className="font-sora font-extrabold text-gray-900 text-lg mb-2">
+            Curando Estrategia de Contenido
+          </h3>
+          <p className="text-xs text-gray-500 max-w-md mx-auto leading-relaxed">
+            El equipo editorial y de dirección creativa está preparando y optimizando las próximas publicaciones de {clientName}. En breve aparecerán aquí para tu revisión y aprobación.
           </p>
         </div>
       ) : (

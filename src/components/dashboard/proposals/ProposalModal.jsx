@@ -164,6 +164,8 @@ export default function ProposalModal({
       eyebrowColor="text-brand-magenta"
       title={title}
       maxWidth="max-w-2xl"
+      className="h-[95vh] max-h-[95vh]"
+      bodyClassName="max-h-none flex-1 overflow-y-auto min-h-0"
       cancelText="Cancelar"
       submitText="Guardar Propuesta"
       loadingText="Guardando..."

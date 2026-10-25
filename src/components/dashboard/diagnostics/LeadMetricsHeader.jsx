@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, Target, Layers, Sparkles, CheckCircle2 } from "lucide-react";
+import { Users, Target, Layers, Sparkles, CheckCircle2, ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LeadMetricsHeader({ stats, loading = false }) {
@@ -141,7 +141,10 @@ export default function LeadMetricsHeader({ stats, loading = false }) {
                   <span className="hidden md:inline">Hover: Ver Guía de Precios</span>
                   <span className="md:hidden">Ver Guía de Precios</span>
                 </span>
-                <span className="text-brand-magenta font-bold">Guía Comercial ➔</span>
+                <span className="text-brand-magenta font-bold inline-flex items-center gap-1">
+                  <span>Guía Comercial</span>
+                  <ArrowRight className="w-3 h-3" />
+                </span>
               </div>
             )}
           </div>
@@ -280,7 +283,10 @@ export default function LeadMetricsHeader({ stats, loading = false }) {
                   <span className="hidden md:inline">Hover: Ver Perfil de Cliente</span>
                   <span className="md:hidden">Ver Perfil de Cliente</span>
                 </span>
-                <span className="text-brand-blue font-bold">Perfiles ➔</span>
+                <span className="text-brand-blue font-bold inline-flex items-center gap-1">
+                  <span>Perfiles</span>
+                  <ArrowRight className="w-3 h-3" />
+                </span>
               </div>
             )}
           </div>
