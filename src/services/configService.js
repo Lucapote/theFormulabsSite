@@ -1,11 +1,11 @@
 import { supabase } from "@/lib/supabase";
 
 const DEFAULT_BANK_DETAILS = {
-  banco: "BBVA México",
-  beneficiario: "The Formulabs",
-  clabe: "012345678901234567",
+  banco: "Nubank",
+  beneficiario: "Paulina Nuñez Banuet Sandoval",
+  clabe: "638180000134691855",
   concepto_default: "Servicio de Contenido",
-  telefono: "529981234567"
+  telefono: "529982148831"
 };
 
 /**

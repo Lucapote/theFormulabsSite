@@ -49,9 +49,8 @@ export function formatTimeRange(startHHMM, durationHours = 4) {
 
   const startFormatted = formatHour12(startH, startM);
   const endFormatted = formatHour12(endH, endM);
-  const durLabel = duration === 1 ? "1 hr" : `${duration} hrs`;
 
-  return `${startFormatted} - ${endFormatted} (${durLabel})`;
+  return `${startFormatted} - ${endFormatted}`;
 }
 
 /**

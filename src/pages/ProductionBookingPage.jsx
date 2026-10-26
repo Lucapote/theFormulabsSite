@@ -179,6 +179,7 @@ export default function ProductionBookingPage() {
           <div>
             {isLocked ? (
               <BookingLockedCard
+                produccion={produccion}
                 cliente={produccion.cliente}
                 ciclo={produccion.ciclo}
                 numeroSesion={produccion.numero_sesion || 1}

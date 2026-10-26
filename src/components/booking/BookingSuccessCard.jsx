@@ -106,7 +106,7 @@ export default function BookingSuccessCard({
   };
 
   return (
-    <div className="bg-white border border-gray-100 shadow-xl rounded-2xl p-5 sm:p-7 max-w-xl mx-auto text-center space-y-4 font-inter">
+    <div className="bg-white border border-gray-100 shadow-2xl rounded-3xl p-5 sm:p-7 max-w-xl mx-auto text-center space-y-4 font-inter">
       {/* Icono de Estado Clínico (Azul Eléctrico / Índigo para Pre-Aprobado vs Esmeralda para Confirmado) */}
       <div className="relative w-14 h-14 mx-auto flex items-center justify-center">
         <div
@@ -188,7 +188,7 @@ export default function BookingSuccessCard({
                 href={receiptUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="h-7 px-2.5 rounded-md bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 text-[11px] font-sora font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
+                className="h-7 px-3 rounded-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 text-[11px] font-sora font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer active:scale-[0.98]"
               >
                 <ExternalLink className="w-3 h-3" />
                 <span>Ver</span>
@@ -198,7 +198,7 @@ export default function BookingSuccessCard({
               type="button"
               disabled={uploadingReplacement}
               onClick={() => replacementInputRef.current?.click()}
-              className="h-7 px-2.5 rounded-md bg-white hover:bg-gray-50 text-brand-blue border border-blue-200 text-[11px] font-sora font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
+              className="h-7 px-3 rounded-full bg-white hover:bg-gray-50 text-brand-blue border border-blue-200 text-[11px] font-sora font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer active:scale-[0.98]"
               title="Cambiar comprobante solo si subiste el archivo equivocado"
             >
               {uploadingReplacement ? (
@@ -265,7 +265,7 @@ export default function BookingSuccessCard({
           <button
             type="button"
             onClick={onReschedule}
-            className="inline-flex items-center gap-1.5 text-xs font-sora font-semibold text-gray-500 hover:text-gray-800 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs font-sora font-semibold text-gray-500 hover:text-gray-800 transition-colors cursor-pointer active:scale-[0.98]"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>¿Necesitas modificar la fecha o locación?</span>

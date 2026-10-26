@@ -55,7 +55,7 @@ export default function ProductionSlaWarningDialog({
       submitText={submitLabel}
       loadingText="Confirmando..."
       isLoading={isSubmitting}
-      submitButtonClass="bg-[#188ff0] hover:bg-blue-600 text-white shadow-md shadow-blue-200"
+      submitButtonClass="rounded-full bg-[#188ff0] hover:bg-blue-600 text-white font-sora font-bold text-xs uppercase tracking-wider shadow-md shadow-blue-200 active:scale-[0.98] transition-all"
     >
       {/* Caja de Cláusulas Clínicas */}
       <div className="bg-amber-50/40 border border-amber-200/60 rounded-xl p-4 text-xs space-y-3 text-amber-950">

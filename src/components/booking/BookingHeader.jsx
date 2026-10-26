@@ -1,4 +1,4 @@
-import { Clapperboard, Sparkles, Clock, DollarSign } from "lucide-react";
+import { Clapperboard } from "lucide-react";
 import { getSessionTypeInfo } from "@/utils/bookingHelpers";
 
 /**
@@ -36,10 +36,6 @@ export default function BookingHeader({
             <span>{displaySession}</span>
           </div>
         )}
-
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-[11px] font-sora font-semibold">
-          <span>{typeInfo.badge}</span>
-        </div>
       </div>
 
       <h1 className="text-xl sm:text-2xl font-sora font-extrabold text-gray-900 tracking-tight">
@@ -54,7 +50,7 @@ export default function BookingHeader({
 
       {displayClient && (
         <p className="text-xs font-inter text-gray-600 mt-1 flex items-center justify-center gap-1.5">
-          <Clapperboard className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+          <Clapperboard className="w-3.5 h-3.5 text-[#ef18d6] shrink-0" />
           <span>
             Producción de Contenido para <strong className="text-gray-900 font-semibold">{displayClient}</strong>
           </span>
