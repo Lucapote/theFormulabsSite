@@ -12,9 +12,18 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Sora"', "system-ui", "sans-serif"],
+        sans: ['"Inter"', "system-ui", "sans-serif"],
+        inter: ['"Inter"', "system-ui", "sans-serif"],
         body: ['"Inter"', "system-ui", "sans-serif"],
+        sora: ['"Sora"', "system-ui", "sans-serif"],
+        display: ['"Sora"', "system-ui", "sans-serif"],
         mono: ['"JetBrains Mono"', "monospace"]
+      },
+      fontSize: {
+        display: ['3.5rem', { lineHeight: '1.05', letterSpacing: '-0.02em', fontWeight: '700' }],
+        h1: ['2.5rem', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '700' }],
+        h2: ['1.875rem', { lineHeight: '1.2', letterSpacing: '-0.01em', fontWeight: '600' }],
+        h3: ['1.25rem', { lineHeight: '1.3', letterSpacing: '-0.01em', fontWeight: '600' }],
       },
       colors: {
         border: "hsl(var(--border))",

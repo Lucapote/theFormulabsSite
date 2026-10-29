@@ -15,7 +15,7 @@ export default function ProposalLabPdfReport({
   contact = {}
 }) {
   return (
-    <div id="lab-result-pdf-report" className="print-only font-sans text-gray-800 bg-white p-6 max-w-4xl mx-auto">
+    <div id="lab-result-pdf-report" className="print-only font-inter text-gray-800 bg-white p-6 max-w-4xl mx-auto">
       {/* ENCABEZADO DE LABORATORIO */}
       <div className="flex justify-between items-start mb-3">
         <div>

@@ -262,8 +262,69 @@ export async function updateCliente(clienteId, payload = {}) {
   }
 }
 
+/**
+ * Aprueba una publicación desde la vista pública o administrativa del cliente.
+ * Transiciona directamente a 'programado' mediante función RPC segura.
+ */
+export async function aprobarPostPublico(postId) {
+  if (!postId) return { success: false, error: "postId es requerido" };
 
+  try {
+    if (!supabase) return { success: false, error: "Supabase no configurado" };
 
+    const { data, error } = await supabase.rpc("aprobar_post_publico", {
+      p_post_id: postId
+    });
+
+    if (error) {
+      console.error("Error al aprobar post:", error);
+      return { success: false, error: error.message };
+    }
+
+    if (data && data.success === false) {
+      return { success: false, error: data.error };
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    console.error("aprobarPostPublico catch error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Registra retroalimentación del cliente y pasa la publicación a 'en_edicion'.
+ * Guarda las observaciones en la columna notas_cambios y fecha_cambios.
+ */
+export async function solicitarCambiosPost(postId, notasCambios) {
+  if (!postId) return { success: false, error: "postId es requerido" };
+  if (!notasCambios || !notasCambios.trim()) {
+    return { success: false, error: "Debes detallar las observaciones o cambios solicitados." };
+  }
+
+  try {
+    if (!supabase) return { success: false, error: "Supabase no configurado" };
+
+    const { data, error } = await supabase.rpc("solicitar_cambios_post", {
+      p_post_id: postId,
+      p_notas: notasCambios.trim()
+    });
+
+    if (error) {
+      console.error("Error al solicitar cambios de post:", error);
+      return { success: false, error: error.message };
+    }
+
+    if (data && data.success === false) {
+      return { success: false, error: data.error };
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    console.error("solicitarCambiosPost catch error:", err);
+    return { success: false, error: err.message };
+  }
+}
 /**
  * Actualiza granularmente el permiso de descarga de archivos para un cliente específico
  */
@@ -983,7 +1044,8 @@ export async function updatePost(postId, postData, archivosAnteriores = []) {
       fecha_programada,
       hora_programada,
       archivos = [],
-      estado
+      estado,
+      limpiarObservaciones
     } = postData;
 
     const payload = {
@@ -994,6 +1056,13 @@ export async function updatePost(postId, postData, archivosAnteriores = []) {
       archivos,
       estado
     };
+
+    // Si el estado ya no es 'en_edicion' o se solicita limpiar observaciones expresamente,
+    // se limpian las notas de cambios para evitar alertas obsoletas
+    if (limpiarObservaciones || (estado && estado !== "en_edicion")) {
+      payload.notas_cambios = null;
+      payload.fecha_cambios = null;
+    }
 
     // 1. Update post in DB
     const { data, error } = await supabase

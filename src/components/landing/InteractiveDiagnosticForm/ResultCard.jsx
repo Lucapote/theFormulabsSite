@@ -21,8 +21,9 @@ export default function ResultCard({ r, i, email }) {
             {r.value}
           </p>
           <span
-            className="font-mono text-[9px] px-2 py-0.5 rounded"
-            style={{ backgroundColor: TAG_BG[i], color: TAG_TXT[i] }}
+            className={`font-mono text-[9px] px-2 py-0.5 rounded ${
+              i % 2 === 0 ? "bg-brand-magenta/15 text-brand-magenta" : "bg-brand-blue/15 text-brand-blue"
+            }`}
           >
             {r.tag}
           </span>
@@ -42,8 +43,9 @@ export default function ResultCard({ r, i, email }) {
 
   return (
     <div
-      className="bg-background border border-lab-border border-l-4 rounded-xl p-4 sm:p-4.5 mb-2 animate-fade-in"
-      style={{ borderLeftColor: TUBE_COLORS[i % TUBE_COLORS.length] }}
+      className={`bg-background border border-lab-border border-l-4 rounded-xl p-4 sm:p-4.5 mb-2 animate-fade-in ${
+        i % 2 === 0 ? "border-l-brand-magenta" : "border-l-brand-blue"
+      }`}
     >
       <div className="flex items-center gap-2 mb-1.5">
         <span className="text-sm">{r.icon}</span>
@@ -55,8 +57,9 @@ export default function ResultCard({ r, i, email }) {
         {r.value}
       </p>
       <span
-        className="font-mono text-[9px] px-2 py-0.5 rounded"
-        style={{ backgroundColor: TAG_BG[i], color: TAG_TXT[i] }}
+        className={`font-mono text-[9px] px-2 py-0.5 rounded ${
+          i % 2 === 0 ? "bg-brand-magenta/15 text-brand-magenta" : "bg-brand-blue/15 text-brand-blue"
+        }`}
       >
         {r.tag}
       </span>

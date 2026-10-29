@@ -10,7 +10,8 @@ import {
   Video as VideoIcon,
   ChevronRight,
   Loader2,
-  ArrowRight
+  ArrowRight,
+  MessageSquare
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -46,13 +47,14 @@ function humanizeMetaError(errorMsg) {
 /**
  * NotificationCenterPopover
  * Centro de Asuntos Pendientes consolidado en la barra superior (Navbar)
- * para monitorear y resolver fallos de publicación Meta y pre-reservas de rodaje.
+ * para monitorear y resolver fallos de publicación Meta, cambios de clientes y pre-reservas.
  */
-export default function NotificationCenterPopover({ onNavigateTab }) {
+export default function NotificationCenterPopover({ onNavigateTab, onNavigateToCalendar }) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [failedPosts, setFailedPosts] = useState([]);
   const [pendingPreReservas, setPendingPreReservas] = useState([]);
+  const [postsWithFeedback, setPostsWithFeedback] = useState([]);
   const [retryingPostId, setRetryingPostId] = useState(null);
 
   // Cargar asuntos pendientes desde Supabase
@@ -111,6 +113,36 @@ export default function NotificationCenterPopover({ onNavigateTab }) {
       if (!preErr && preReservas) {
         setPendingPreReservas(preReservas);
       }
+
+      // 3. Obtener posts con observaciones/cambios solicitados por el cliente
+      const { data: feedbackPosts, error: fbErr } = await supabase
+        .from("posts")
+        .select(`
+          id,
+          tipo_post,
+          caption,
+          fecha_programada,
+          hora_programada,
+          notas_cambios,
+          fecha_cambios,
+          calendario_id,
+          calendarios (
+            id,
+            nombre,
+            cliente_id,
+            clientes (
+              id,
+              nombre
+            )
+          )
+        `)
+        .not("notas_cambios", "is", null)
+        .eq("estado", "en_edicion")
+        .order("fecha_cambios", { ascending: false });
+
+      if (!fbErr && feedbackPosts) {
+        setPostsWithFeedback(feedbackPosts);
+      }
     } catch (err) {
       console.error("Error cargando centro de notificaciones:", err);
     } finally {
@@ -127,8 +159,8 @@ export default function NotificationCenterPopover({ onNavigateTab }) {
   }, [loadActionItems]);
 
   const totalPending = useMemo(() => {
-    return failedPosts.length + pendingPreReservas.length;
-  }, [failedPosts, pendingPreReservas]);
+    return failedPosts.length + pendingPreReservas.length + postsWithFeedback.length;
+  }, [failedPosts, pendingPreReservas, postsWithFeedback]);
 
   // Reintento manual de publicación desde la campanita
   const handleRetryPublish = async (post, e) => {
@@ -151,6 +183,15 @@ export default function NotificationCenterPopover({ onNavigateTab }) {
   const handleGoToCalendars = () => {
     setIsOpen(false);
     if (onNavigateTab) onNavigateTab("calendars");
+  };
+
+  const handleOpenSpecificCalendar = (clienteId, calendarioId) => {
+    setIsOpen(false);
+    if (onNavigateToCalendar && calendarioId) {
+      onNavigateToCalendar(clienteId, calendarioId);
+    } else if (onNavigateTab) {
+      onNavigateTab("calendars");
+    }
   };
 
   const handleGoToOperations = () => {
@@ -263,11 +304,13 @@ export default function NotificationCenterPopover({ onNavigateTab }) {
                     <div className="flex items-center justify-between pt-1 border-t border-gray-100">
                       <button
                         type="button"
-                        onClick={handleGoToCalendars}
+                        onClick={() => handleOpenSpecificCalendar(post.calendarios?.cliente_id, post.calendario_id)}
                         className="text-[11px] font-sora font-bold text-gray-600 hover:text-gray-900 flex items-center gap-1 cursor-pointer transition-colors"
                       >
-                        <span>Abrir Calendario</span>
-                        <ChevronRight className="w-3 h-3" />
+                        <span className="truncate max-w-[150px]">
+                          {post.calendarios?.nombre ? `Abrir ${post.calendarios.nombre}` : "Abrir Calendario"}
+                        </span>
+                        <ChevronRight className="w-3 h-3 shrink-0" />
                       </button>
 
                       <button
@@ -329,6 +372,57 @@ export default function NotificationCenterPopover({ onNavigateTab }) {
                       >
                         <span>Validar en Operaciones</span>
                         <ArrowRight className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* SECCIÓN 3: CAMBIOS SOLICITADOS POR EL CLIENTE EN POSTS */}
+              {postsWithFeedback.map((post) => {
+                const clienteNombre = post.calendarios?.clientes?.nombre || "Cliente";
+                const calendarioNombre = post.calendarios?.nombre;
+
+                return (
+                  <div
+                    key={`fb-${post.id}`}
+                    className="p-3.5 bg-white rounded-2xl border border-amber-200/90 shadow-xs space-y-2.5 transition-all hover:border-amber-300"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="p-1 rounded-md bg-amber-50 text-amber-600 border border-amber-200">
+                          <MessageSquare className="w-3.5 h-3.5" />
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 font-sora font-bold text-[9px] uppercase tracking-wider shrink-0">
+                          Cambios Pedidos
+                        </span>
+                      </div>
+
+                        <div>
+                          <span className="text-[10px] text-gray-400 flex items-center gap-1 font-mono mt-0.5">
+                            {post.tipo_post === "reel" ? <VideoIcon className="w-2.5 h-2.5 text-pink-500" /> : <Layers className="w-2.5 h-2.5 text-brand-blue" />}
+                            {post.fecha_programada} • {post.hora_programada?.slice(0, 5)} hrs
+                          </span>
+                        </div>
+                    </div>
+
+                    <div className="bg-amber-50/60 p-2 rounded-xl text-[11px] text-amber-900 leading-relaxed font-inter border border-amber-100/80">
+                      <strong className="block text-[10px] font-sora text-amber-950 uppercase tracking-wider mb-0.5">
+                        Observaciones del Cliente:
+                      </strong>
+                      <p className="line-clamp-2">"{post.notas_cambios}"</p>
+                    </div>
+
+                    <div className="flex items-center justify-end pt-1 border-t border-gray-100">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenSpecificCalendar(post.calendarios?.cliente_id, post.calendario_id)}
+                        className="h-7 px-3.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white font-sora font-bold text-[11px] flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-[0.98]"
+                      >
+                        <span className="truncate max-w-[200px]">
+                          {calendarioNombre ? `Abrir ${calendarioNombre}` : "Revisar en Calendario"}
+                        </span>
+                        <ArrowRight className="w-3 h-3 shrink-0" />
                       </button>
                     </div>
                   </div>

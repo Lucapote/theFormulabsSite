@@ -62,7 +62,11 @@ const PLATAFORMAS_OPTIONS = [
  * Main orchestrator container component for managing clients, their content calendars,
  * and navigating active calendar media galleries and scheduled posts.
  */
-export default function ClientsCalendarSection() {
+export default function ClientsCalendarSection({
+  initialClienteId = null,
+  initialCalendarId = null,
+  onClearInitial = null
+}) {
   const [clientes, setClientes] = useState([]);
   const [loadingClientes, setLoadingClientes] = useState(false);
   const [selectedCliente, setSelectedCliente] = useState(null);
@@ -210,8 +214,8 @@ export default function ClientsCalendarSection() {
   };
 
   useEffect(() => {
-    loadClientes();
-  }, []);
+    loadClientes(initialClienteId);
+  }, [initialClienteId]);
 
   useWindowFocusRefresh(() => {
     loadClientes(selectedCliente?.id);
@@ -224,6 +228,27 @@ export default function ClientsCalendarSection() {
       setCalendarios([]);
     }
   }, [selectedCliente]);
+
+  // Selección automática de cliente cuando viene target desde notificaciones
+  useEffect(() => {
+    if (initialClienteId && clientes.length > 0) {
+      const foundClient = clientes.find((c) => c.id === initialClienteId);
+      if (foundClient && foundClient.id !== selectedCliente?.id) {
+        setSelectedCliente(foundClient);
+      }
+    }
+  }, [initialClienteId, clientes]);
+
+  // Apertura automática del calendario específico solicitado
+  useEffect(() => {
+    if (initialCalendarId && calendarios.length > 0) {
+      const foundCal = calendarios.find((cal) => cal.id === initialCalendarId);
+      if (foundCal) {
+        setActiveCalendar(foundCal);
+        if (onClearInitial) onClearInitial();
+      }
+    }
+  }, [initialCalendarId, calendarios, onClearInitial]);
 
   // Create Client Submit
   const handleSaveClient = async (e) => {

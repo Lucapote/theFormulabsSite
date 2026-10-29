@@ -41,8 +41,9 @@ const ClientsSection = () => {
                     {client.name}
                   </h3>
                   <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{ backgroundColor: client.color }}
+                    className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                      client.color === "#ef18d6" ? "bg-brand-magenta" : "bg-brand-blue"
+                    }`}
                   />
                 </div>
 
@@ -51,8 +52,9 @@ const ClientsSection = () => {
                   <span>{client.niche}</span>
                   <span className="text-lab-text-tertiary font-bold mx-1.5">·</span>
                   <span
-                    className="font-sora font-bold"
-                    style={{ color: client.color }}
+                    className={`font-sora font-bold ${
+                      client.color === "#ef18d6" ? "text-brand-magenta" : "text-brand-blue"
+                    }`}
                   >
                     {client.authority}
                   </span>
@@ -61,8 +63,9 @@ const ClientsSection = () => {
 
               {/* Bottom decorative bar */}
               <div
-                className="w-8 h-[2px] mt-4 transition-all duration-300 group-hover:w-16"
-                style={{ backgroundColor: client.color }}
+                className={`w-8 h-[2px] mt-4 transition-all duration-300 group-hover:w-16 ${
+                  client.color === "#ef18d6" ? "bg-brand-magenta" : "bg-brand-blue"
+                }`}
               />
             </motion.div>
           ))}

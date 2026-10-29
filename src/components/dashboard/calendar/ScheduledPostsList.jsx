@@ -88,15 +88,17 @@ export default function ScheduledPostsList({
   // Compute filtered posts list
   const filteredPosts = posts.filter((post) => {
     const firstFile = post.archivos && post.archivos.length > 0 ? post.archivos[0] : null;
-    const isEmptyBox = !firstFile || post.estado === "borrador";
+    const isEmptyBox = !firstFile && !post.caption;
 
     if (showOnlyDrafts && !isEmptyBox) return false;
 
-    if (estadoFilter === "borrador" && !isEmptyBox) return false;
-    if (estadoFilter === "programado" && (isEmptyBox || post.estado !== "programado")) return false;
-    if (estadoFilter === "procesando" && post.estado !== "procesando") return false;
-    if (estadoFilter === "error" && post.estado !== "error") return false;
-    if (estadoFilter === "publicado" && post.estado !== "publicado") return false;
+    if (estadoFilter !== "all") {
+      if (estadoFilter === "sin_empezar") {
+        if (post.estado !== "sin_empezar" && post.estado !== "borrador") return false;
+      } else if (post.estado !== estadoFilter) {
+        return false;
+      }
+    }
 
     if (formatoFilter === "reel" && post.tipo_post !== "reel") return false;
     if (formatoFilter === "carrousel" && post.tipo_post !== "carrousel") return false;
@@ -312,6 +314,7 @@ export default function ScheduledPostsList({
         <InstagramPostPreviewModal
           isOpen={Boolean(selectedPreviewPost)}
           post={selectedPreviewPost}
+          isInternal={true}
           onClose={() => setSelectedPreviewPost(null)}
           onEditPost={(postToEdit) => {
             setSelectedPreviewPost(null);

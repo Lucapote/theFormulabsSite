@@ -17,6 +17,7 @@ import MediaDetailModal from "@/components/common/MediaDetailModal";
 import GalleryFileItem from "@/components/dashboard/gallery/GalleryFileItem";
 import MediaFramingModal from "@/components/dashboard/calendar/MediaFramingModal";
 import { getLocalDateString } from "@/utils/formatters";
+import { POST_STATUS_LIST, canSaveWithoutMedia, getPostStatusMeta } from "@/utils/postStatusHelpers";
 
 /**
  * PostModal
@@ -38,8 +39,9 @@ export default function PostModal({
   const [fechaProgramada, setFechaProgramada] = useState(today);
   const [horaProgramada, setHoraProgramada] = useState("18:00");
   const [caption, setCaption] = useState("");
-  const [estado, setEstado] = useState("programado");
+  const [estado, setEstado] = useState("sin_empezar");
   const [archivos, setArchivos] = useState([]); // selected objects [{ id, url, tipo, nombre_archivo }]
+  const [observacionesDescartadas, setObservacionesDescartadas] = useState(false);
 
   // Gallery files state
   const [galleryFiles, setGalleryFiles] = useState([]);
@@ -83,19 +85,20 @@ export default function PostModal({
 
   // Populate form on edit
   useEffect(() => {
+    setObservacionesDescartadas(false);
     if (initialData) {
       setTipoPost(initialData.tipo_post || "reel");
       setFechaProgramada(initialData.fecha_programada || "");
       setHoraProgramada(initialData.hora_programada || "18:00");
       setCaption(initialData.caption || "");
-      setEstado(initialData.estado || "programado");
+      setEstado(initialData.estado || "sin_empezar");
       setArchivos(initialData.archivos || []);
     } else {
       setTipoPost("reel");
       setFechaProgramada("");
       setHoraProgramada("18:00");
       setCaption("");
-      setEstado("programado");
+      setEstado("sin_empezar");
       setArchivos([]);
     }
   }, [initialData, isOpen]);
@@ -189,27 +192,29 @@ export default function PostModal({
       return;
     }
 
-    if (!archivos || archivos.length === 0) {
-      toast.error("Por favor asigna al menos 1 archivo del banco de medios (obligatorio).");
-      return;
-    }
+    const requiresMedia = !canSaveWithoutMedia(estado);
 
-    if (tipoPost === "reel" && archivos[0]?.tipo !== "video") {
-      toast.error("Para formato Reel el archivo asignado debe ser un Video.");
-      return;
-    }
+    if (requiresMedia) {
+      if (!archivos || archivos.length === 0) {
+        toast.error("Para el estado seleccionado ('" + (getPostStatusMeta(estado).label) + "') es obligatorio asignar al menos 1 archivo del banco de medios.");
+        return;
+      }
 
-    // Interceptar si hay imágenes con ratios incompatibles con Instagram
-    if (tipoPost !== "reel" && invalidFiles.length > 0) {
-      toast.warning(
-        `Hay ${invalidFiles.length} imagen(es) con formato incompatible con Instagram. Por favor encuádralas antes de programar.`,
-        { duration: 4000 }
-      );
-      setShowFramingModal(true);
-      return;
-    }
+      if (tipoPost === "reel" && archivos[0]?.tipo !== "video") {
+        toast.error("Para formato Reel el archivo asignado debe ser un Video.");
+        return;
+      }
 
-    const finalEstado = estado === "borrador" ? "programado" : estado;
+      // Interceptar si hay imágenes con ratios incompatibles con Instagram
+      if (tipoPost !== "reel" && invalidFiles.length > 0) {
+        toast.warning(
+          `Hay ${invalidFiles.length} imagen(es) con formato incompatible con Instagram. Por favor encuádralas antes de programar.`,
+          { duration: 4000 }
+        );
+        setShowFramingModal(true);
+        return;
+      }
+    }
 
     onSave({
       id: initialData?.id,
@@ -219,8 +224,9 @@ export default function PostModal({
       fecha_programada: fechaProgramada,
       hora_programada: horaProgramada,
       archivos,
-      estado: finalEstado,
-      archivosAnteriores: initialData?.archivos || []
+      estado,
+      archivosAnteriores: initialData?.archivos || [],
+      limpiarObservaciones: estado !== "en_edicion" || observacionesDescartadas
     });
   };
 
@@ -242,6 +248,37 @@ export default function PostModal({
         isLoading={isSaving}
       >
         <div className="space-y-5 sm:space-y-6">
+          {/* BANNER DE RETROALIMENTACIÓN / CAMBIOS DEL CLIENTE */}
+          {initialData?.notas_cambios && estado === "en_edicion" && !observacionesDescartadas && (
+            <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/90 text-xs text-amber-950 flex items-start gap-2.5 shadow-xs">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-1 min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-sora font-bold text-amber-900 uppercase text-[10px] tracking-wider block">
+                    Observaciones del Cliente (Cambios Solicitados)
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {initialData?.fecha_cambios && (
+                      <span className="text-[10px] font-mono text-amber-700">
+                        {new Date(initialData.fecha_cambios).toLocaleDateString()}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setObservacionesDescartadas(true)}
+                      className="text-[10px] font-sora font-semibold text-amber-800 hover:text-amber-950 underline decoration-amber-400 cursor-pointer"
+                    >
+                      Descartar
+                    </button>
+                  </div>
+                </div>
+                <p className="font-inter leading-relaxed text-amber-900 whitespace-pre-wrap">
+                  "{initialData.notas_cambios}"
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* TIPO DE FORMATO */}
           <div>
             <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-2">
@@ -305,17 +342,20 @@ export default function PostModal({
             </div>
 
             <div>
-              <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-1.5">
+              <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-1.5 flex items-center gap-1.5">
+                <span className={`w-2 h-2 rounded-full ${getPostStatusMeta(estado).dotClass}`} />
                 Estado Publicación
               </label>
               <select
                 value={estado}
                 onChange={(e) => setEstado(e.target.value)}
-                className="w-full h-11 px-3 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-xs font-sora font-semibold text-gray-900 bg-gray-50/50 cursor-pointer transition-all"
+                className="w-full h-11 px-3 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-xs font-sora font-bold text-gray-900 bg-gray-50/50 cursor-pointer transition-all"
               >
-                <option value="programado">Programado</option>
-                <option value="borrador">Borrador</option>
-                <option value="publicado">Publicado</option>
+                {POST_STATUS_LIST.map((st) => (
+                  <option key={st.key} value={st.key}>
+                    {st.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -344,7 +384,12 @@ export default function PostModal({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
               <label className="text-xs font-sora font-bold uppercase text-gray-700 tracking-wide flex items-center gap-1.5">
                 <Film className="w-4 h-4 text-brand-blue" />
-                Medios de Galería ({archivos.length} asignados / {availableGalleryFiles.length} disponibles) *
+                Medios de Galería ({archivos.length} asignados / {availableGalleryFiles.length} disponibles)
+                {!canSaveWithoutMedia(estado) ? (
+                  <span className="text-brand-magenta font-black">*</span>
+                ) : (
+                  <span className="text-gray-400 font-normal lowercase">(opcional en este estado)</span>
+                )}
               </label>
 
               <div className="flex items-center gap-2">

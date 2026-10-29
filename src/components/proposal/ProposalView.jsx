@@ -105,7 +105,7 @@ export default function ProposalView({ data = defaultData }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f4f4] text-gray-900 font-sans selection:bg-[#ef18d6]/20 selection:text-[#ef18d6] pb-24 md:pb-0 relative scroll-smooth">
+    <div className="min-h-screen bg-[#f4f4f4] text-gray-900 font-inter selection:bg-[#ef18d6]/20 selection:text-[#ef18d6] pb-24 md:pb-0 relative scroll-smooth">
       {/* VISTA WEB INTERACTIVA */}
       <div className="screen-only">
         <div className="fixed top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#ef18d6]/10 via-transparent to-transparent -z-10 pointer-events-none" />

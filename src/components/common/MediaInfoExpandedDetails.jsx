@@ -10,6 +10,7 @@ import {
   Layers,
   Plus
 } from "lucide-react";
+import { getPostStatusMeta } from "@/utils/postStatusHelpers";
 
 function formatTimeHHMM(timeStr) {
   if (!timeStr) return "18:00";
@@ -119,21 +120,17 @@ export default function MediaInfoExpandedDetails({
                   </span>
                 </div>
 
-                <span
-                  className={`inline-block text-[9px] font-sora font-bold px-2 py-0.5 rounded-full uppercase ${
-                    post.estado === "publicado"
-                      ? "bg-purple-900/80 text-purple-200 border border-purple-700/60"
-                      : post.estado === "borrador"
-                      ? "bg-amber-900/80 text-amber-200 border border-amber-700/60"
-                      : "bg-emerald-900/80 text-emerald-200 border border-emerald-700/60"
-                  }`}
-                >
-                  {post.estado === "publicado"
-                    ? "Publicado"
-                    : post.estado === "borrador"
-                    ? "Borrador"
-                    : "Programado"}
-                </span>
+                {(() => {
+                  const meta = getPostStatusMeta(post.estado);
+                  return (
+                    <span
+                      className={`inline-flex items-center gap-1 text-[9px] font-sora font-bold px-2 py-0.5 rounded-full uppercase ${meta.badgeClass}`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${meta.dotClass}`} />
+                      {meta.label}
+                    </span>
+                  );
+                })()}
               </div>
 
               {onEditPost && (

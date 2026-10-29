@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Film } from "lucide-react";
 import PostMediaPreview from "./PostMediaPreview";
 import PostCopyBottomSheet from "./PostCopyBottomSheet";
 
@@ -11,14 +11,17 @@ export default function InstagramPostPreviewModal({
   post,
   onClose,
   onEdit = null,
+  onEditPost = null,
   isInternal = false,
   hasPrevPost = false,
   hasNextPost = false,
   onPrevPost = null,
   onNextPost = null,
-  permiteDescarga = false
+  permiteDescarga = false,
+  onPostUpdated = null
 }) {
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+  const handleEdit = onEdit || onEditPost;
 
   useEffect(() => {
     setActiveMediaIndex(0);
@@ -113,36 +116,54 @@ export default function InstagramPostPreviewModal({
 
         {/* Media Preview Background Area */}
         <div className="flex-1 w-full min-h-0 flex items-center justify-center relative overflow-hidden bg-black">
-          <PostMediaPreview
-            archivos={files}
-            tipo={post.tipo_post}
-            posterUrl={files?.[0]?.thumbnail_url}
-            containerClassName="w-full h-full"
-            imageClassName="w-full h-full object-contain"
-            initialIndex={activeMediaIndex}
-            onIndexChange={setActiveMediaIndex}
-            showDots={false}
-          />
+          {files.length > 0 ? (
+            <>
+              <PostMediaPreview
+                archivos={files}
+                tipo={post.tipo_post}
+                posterUrl={files?.[0]?.thumbnail_url}
+                containerClassName="w-full h-full"
+                imageClassName="w-full h-full object-contain"
+                initialIndex={activeMediaIndex}
+                onIndexChange={setActiveMediaIndex}
+                showDots={false}
+              />
 
-          {/* Instagram-style Carousel Visual Indicator Pill Tool (From Photo 1) */}
-          {hasMultiple && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 bg-black/75 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/20 shadow-2xl pointer-events-auto">
-              {files.map((_, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveMediaIndex(idx);
-                  }}
-                  className={`rounded-full transition-all duration-200 cursor-pointer ${
-                    idx === activeMediaIndex
-                      ? "bg-pink-500 w-6 h-2 shadow-sm shadow-pink-500/50"
-                      : "bg-white/40 hover:bg-white/80 w-2 h-2"
-                  }`}
-                  aria-label={`Ir a diapositiva ${idx + 1}`}
-                />
-              ))}
+              {/* Instagram-style Carousel Visual Indicator Pill Tool */}
+              {hasMultiple && (
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 bg-black/75 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/20 shadow-2xl pointer-events-auto">
+                  {files.map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveMediaIndex(idx);
+                      }}
+                      className={`rounded-full transition-all duration-200 cursor-pointer ${
+                        idx === activeMediaIndex
+                          ? "bg-pink-500 w-6 h-2 shadow-sm shadow-pink-500/50"
+                          : "bg-white/40 hover:bg-white/80 w-2 h-2"
+                      }`}
+                      aria-label={`Ir a diapositiva ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 text-center text-slate-400 space-y-3">
+              <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-pink-500 shadow-inner">
+                <Film className="w-8 h-8" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-sora font-bold text-slate-100">
+                  Material Visual en Producción
+                </p>
+                <p className="text-xs font-inter text-slate-400 max-w-xs leading-relaxed">
+                  The Formulab está diseñando los archivos para este post. El contenido multimedia estará visible aquí al pasar a aprobación.
+                </p>
+              </div>
             </div>
           )}
         </div>
@@ -151,9 +172,10 @@ export default function InstagramPostPreviewModal({
         <PostCopyBottomSheet
           post={post}
           isInternal={isInternal}
-          onEdit={onEdit}
+          onEdit={handleEdit}
           permiteDescarga={permiteDescarga}
           activeMediaIndex={activeMediaIndex}
+          onPostUpdated={onPostUpdated}
         />
       </div>
     </div>

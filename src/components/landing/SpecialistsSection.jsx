@@ -22,44 +22,51 @@ const SpecialistsSection = () => {
         </motion.div>
 
         <ul className="grid md:grid-cols-2 gap-8">
-          {specialistsData.map((specialist, index) => (
-            <motion.li
-              key={index}
-              className="group flex flex-col p-7 md:p-8 rounded-2xl lab-card lab-card-hover transition-all duration-500 bg-white/80"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.5, delay: index * 0.15 }}
-            >
-              {/* Imagen placeholder */}
-              <div className="w-full aspect-video md:aspect-square rounded-xl bg-brand-neutral/80 mb-6 flex items-center justify-center overflow-hidden relative border border-lab-border">
-                <span className="text-lab-text-tertiary font-mono text-[10px] uppercase tracking-widest text-center px-4 font-bold">
-                  [Imagen: {specialist.name}]
-                </span>
-                <div
-                  className="absolute inset-0 border border-transparent rounded-xl transition-colors duration-500"
-                  style={{ borderColor: `${specialist.color}30` }}
-                />
-              </div>
+          {specialistsData.map((specialist, index) => {
+            const isMagenta = specialist.color === "#ef18d6";
+            return (
+              <motion.li
+                key={index}
+                className="group flex flex-col p-7 md:p-8 rounded-2xl lab-card lab-card-hover transition-all duration-500 bg-white/80"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, delay: index * 0.15 }}
+              >
+                {/* Imagen placeholder */}
+                <div className="w-full aspect-video md:aspect-square rounded-xl bg-brand-neutral/80 mb-6 flex items-center justify-center overflow-hidden relative border border-lab-border">
+                  <span className="text-lab-text-tertiary font-mono text-[10px] uppercase tracking-widest text-center px-4 font-bold">
+                    [Imagen: {specialist.name}]
+                  </span>
+                  <div
+                    className={`absolute inset-0 border rounded-xl transition-colors duration-500 ${
+                      isMagenta ? "border-brand-magenta/30" : "border-brand-blue/30"
+                    }`}
+                  />
+                </div>
 
-              {/* Contenido */}
-              <div className="flex-1 flex flex-col">
-                <h3 className="text-2xl font-sora font-bold text-foreground mb-1">
-                  {specialist.name}
-                </h3>
-                <p className="font-mono text-[10px] tracking-[0.15em] uppercase font-bold mb-4" style={{ color: specialist.color }}>
-                  {specialist.role}
-                </p>
-                <div
-                  className="w-10 h-[2.5px] mb-4 transition-all duration-500 group-hover:w-20"
-                  style={{ backgroundColor: specialist.color }}
-                />
-                <p className="text-lab-text-secondary text-sm leading-relaxed mb-4 flex-1 font-inter">
-                  {specialist.bio}
-                </p>
-              </div>
-            </motion.li>
-          ))}
+                {/* Contenido */}
+                <div className="flex-1 flex flex-col">
+                  <h3 className="text-2xl font-sora font-bold text-foreground mb-1">
+                    {specialist.name}
+                  </h3>
+                  <p className={`font-mono text-[10px] tracking-[0.15em] uppercase font-bold mb-4 ${
+                    isMagenta ? "text-brand-magenta" : "text-brand-blue"
+                  }`}>
+                    {specialist.role}
+                  </p>
+                  <div
+                    className={`w-10 h-[2.5px] mb-4 transition-all duration-500 group-hover:w-20 ${
+                      isMagenta ? "bg-brand-magenta" : "bg-brand-blue"
+                    }`}
+                  />
+                  <p className="text-lab-text-secondary text-sm leading-relaxed mb-4 flex-1 font-inter">
+                    {specialist.bio}
+                  </p>
+                </div>
+              </motion.li>
+            );
+          })}
         </ul>
       </div>
     </section>

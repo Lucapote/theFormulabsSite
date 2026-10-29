@@ -4,8 +4,32 @@ import {
   FileText,
   ListFilter,
   LayoutGrid,
-  RefreshCw
+  RefreshCw,
+  RotateCcw
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger
+} from "@/components/ui/select";
+
+const ESTADO_OPTIONS = [
+  { value: "all", label: "Todos los estados", dotClass: "bg-gray-400" },
+  { value: "sin_empezar", label: "Sin empezar", dotClass: "bg-rose-500" },
+  { value: "en_edicion", label: "En edición", dotClass: "bg-amber-500" },
+  { value: "en_aprobacion", label: "En aprobación", dotClass: "bg-purple-500" },
+  { value: "aprobado", label: "Aprobado", dotClass: "bg-emerald-500" },
+  { value: "programado", label: "Programado", dotClass: "bg-[#188ff0]" },
+  { value: "error", label: "Con Error en Meta", dotClass: "bg-rose-700" },
+  { value: "publicado", label: "Publicados", dotClass: "bg-pink-500" }
+];
+
+const FORMATO_OPTIONS = [
+  { value: "all", label: "Todos los formatos" },
+  { value: "reel", label: "Reels (1 Video)" },
+  { value: "carrousel", label: "Carruseles (Múltiple)" }
+];
 
 /**
  * ScheduledPostsFilterBar
@@ -27,6 +51,8 @@ export default function ScheduledPostsFilterBar({
   onImportClick,
   onRefreshClick
 }) {
+  const currentEstado = ESTADO_OPTIONS.find((o) => o.value === estadoFilter) || ESTADO_OPTIONS[0];
+  const currentFormato = FORMATO_OPTIONS.find((o) => o.value === formatoFilter) || FORMATO_OPTIONS[0];
   return (
     <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 shadow-xl border border-gray-100 space-y-3 sm:space-y-4 font-inter">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -113,116 +139,77 @@ export default function ScheduledPostsFilterBar({
 
       {/* Filter Controls Row */}
       {!showOnlyDrafts && (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-3 border-t border-gray-100 max-w-full overflow-hidden">
-          <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-full border border-gray-200 text-xs font-sora font-bold max-w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden shrink-0">
-            <span className="hidden sm:inline-block text-gray-400 pl-2 text-[10px] uppercase tracking-wider font-extrabold shrink-0">
-              Estado:
-            </span>
-            <button
-              type="button"
-              onClick={() => setEstadoFilter("all")}
-              className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
-                estadoFilter === "all"
-                  ? "bg-gray-900 text-white shadow-xs"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Todos
-            </button>
-            <button
-              type="button"
-              onClick={() => setEstadoFilter("programado")}
-              className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
-                estadoFilter === "programado"
-                  ? "bg-emerald-600 text-white shadow-xs"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Programados
-            </button>
-            <button
-              type="button"
-              onClick={() => setEstadoFilter("procesando")}
-              className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
-                estadoFilter === "procesando"
-                  ? "bg-sky-600 text-white shadow-xs"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              En Proceso
-            </button>
-            <button
-              type="button"
-              onClick={() => setEstadoFilter("error")}
-              className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
-                estadoFilter === "error"
-                  ? "bg-rose-600 text-white shadow-xs"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Con Error
-            </button>
-            <button
-              type="button"
-              onClick={() => setEstadoFilter("publicado")}
-              className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
-                estadoFilter === "publicado"
-                  ? "bg-purple-600 text-white shadow-xs"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Publicados
-            </button>
-            <button
-              type="button"
-              onClick={() => setEstadoFilter("borrador")}
-              className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
-                estadoFilter === "borrador"
-                  ? "bg-amber-500 text-white shadow-xs"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Borradores
-            </button>
-          </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Estado Dropdown */}
+            <div className="flex items-center gap-2 bg-gray-50/90 py-1 px-2.5 rounded-full border border-gray-200">
+              <span className="text-gray-400 text-[10px] uppercase tracking-wider font-extrabold font-sora shrink-0">
+                Estado:
+              </span>
+              <Select value={estadoFilter} onValueChange={setEstadoFilter}>
+                <SelectTrigger className="h-7 px-3 bg-white border border-gray-200 rounded-full text-xs font-sora font-bold text-gray-800 shadow-2xs hover:border-gray-300 transition-all flex items-center gap-2 min-w-[150px] cursor-pointer focus:ring-0 focus:ring-offset-0">
+                  <div className="flex items-center gap-1.5 truncate">
+                    {currentEstado?.dotClass && (
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${currentEstado.dotClass}`} />
+                    )}
+                    <span className="truncate">{currentEstado?.label || "Todos"}</span>
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="bg-white rounded-2xl border border-gray-100 shadow-xl p-1 z-50 min-w-[190px]">
+                  {ESTADO_OPTIONS.map((opt) => (
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                      className="text-xs font-sora font-semibold cursor-pointer rounded-xl py-2 pl-8 pr-3 hover:bg-gray-50 focus:bg-gray-100"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${opt.dotClass}`} />
+                        <span>{opt.label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-full border border-gray-200 text-xs font-sora font-bold max-w-full overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden shrink-0">
-            <span className="hidden sm:inline-block text-gray-400 pl-2 text-[10px] uppercase tracking-wider font-extrabold shrink-0">
-              Formato:
-            </span>
-            <button
-              type="button"
-              onClick={() => setFormatoFilter("all")}
-              className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
-                formatoFilter === "all"
-                  ? "bg-gray-900 text-white shadow-xs"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Todos
-            </button>
-            <button
-              type="button"
-              onClick={() => setFormatoFilter("reel")}
-              className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
-                formatoFilter === "reel"
-                  ? "bg-pink-600 text-white shadow-xs"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Reels
-            </button>
-            <button
-              type="button"
-              onClick={() => setFormatoFilter("carrousel")}
-              className={`px-2.5 sm:px-3 py-1 rounded-full transition-all cursor-pointer text-[11px] sm:text-xs shrink-0 ${
-                formatoFilter === "carrousel"
-                  ? "bg-[#188ff0] text-white shadow-xs"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              Carruseles
-            </button>
+            {/* Formato Dropdown */}
+            <div className="flex items-center gap-2 bg-gray-50/90 py-1 px-2.5 rounded-full border border-gray-200">
+              <span className="text-gray-400 text-[10px] uppercase tracking-wider font-extrabold font-sora shrink-0">
+                Formato:
+              </span>
+              <Select value={formatoFilter} onValueChange={setFormatoFilter}>
+                <SelectTrigger className="h-7 px-3 bg-white border border-gray-200 rounded-full text-xs font-sora font-bold text-gray-800 shadow-2xs hover:border-gray-300 transition-all flex items-center gap-2 min-w-[130px] cursor-pointer focus:ring-0 focus:ring-offset-0">
+                  <span className="truncate">{currentFormato?.label || "Todos"}</span>
+                </SelectTrigger>
+                <SelectContent className="bg-white rounded-2xl border border-gray-100 shadow-xl p-1 z-50 min-w-[170px]">
+                  {FORMATO_OPTIONS.map((opt) => (
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                      className="text-xs font-sora font-semibold cursor-pointer rounded-xl py-2 pl-8 pr-3 hover:bg-gray-50 focus:bg-gray-100"
+                    >
+                      <span>{opt.label}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Clear filters button if active */}
+            {(estadoFilter !== "all" || formatoFilter !== "all") && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEstadoFilter("all");
+                  setFormatoFilter("all");
+                }}
+                className="h-7 px-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-900 font-sora text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-[0.98]"
+                title="Limpiar filtros"
+              >
+                <RotateCcw className="w-3 h-3 text-gray-500" />
+                <span>Restablecer</span>
+              </button>
+            )}
           </div>
         </div>
       )}

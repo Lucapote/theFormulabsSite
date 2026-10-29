@@ -12,9 +12,11 @@ import {
   Loader2,
   Send,
   ExternalLink,
-  Crop
+  Crop,
+  Eye
 } from "lucide-react";
 import { formatTimeHHMM } from "@/components/calendar/CalendarGridView";
+import { getPostStatusMeta } from "@/utils/postStatusHelpers";
 
 /**
  * PostCardItem
@@ -32,17 +34,14 @@ export default function PostCardItem({
   onFramingPost = null
 }) {
   const firstFile = post.archivos && post.archivos.length > 0 ? post.archivos[0] : null;
-  const isEmptyBox = !firstFile || post.estado === "borrador";
+  const isEmptyBox = !firstFile && !post.caption;
   const isRatioError = post.estado === "error" && post.error_mensaje?.toLowerCase().includes("aspect ratio");
+  const statusMeta = getPostStatusMeta(post.estado);
 
   return (
     <div
       onClick={() => {
-        if (!isEmptyBox) {
-          onSelectPreview(post);
-        } else {
-          onEditPost(post);
-        }
+        onEditPost(post);
       }}
       className={`bg-white rounded-[2rem] p-5 border shadow-md hover:shadow-xl transition-all flex flex-col justify-between gap-4 group cursor-pointer ${
         isEmptyBox
@@ -53,13 +52,22 @@ export default function PostCardItem({
           ? "border-sky-200 hover:border-sky-300 bg-sky-50/10"
           : "border-gray-100 hover:border-blue-200 hover:border-blue-300"
       }`}
-      title={isEmptyBox ? "Completar información de la caja" : "Ver vista previa de la publicación"}
+      title="Editar publicación"
     >
       {/* Top Section: Thumbnail & Post Details */}
       <div className="flex items-start gap-3.5">
         {/* Thumbnail */}
         {firstFile ? (
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-gray-900 shrink-0 relative border border-gray-100 shadow-xs group-hover:scale-[1.03] transition-all group-hover:ring-2 group-hover:ring-pink-400">
+          <div
+            onClick={(e) => {
+              if (onSelectPreview && !isEmptyBox) {
+                e.stopPropagation();
+                onSelectPreview(post);
+              }
+            }}
+            title="Ver vista previa de Instagram"
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-gray-900 shrink-0 relative border border-gray-100 shadow-xs group-hover:scale-[1.03] transition-all group-hover:ring-2 group-hover:ring-pink-400 cursor-pointer"
+          >
             {firstFile.tipo === "video" ? (
               <div className="w-full h-full relative bg-gray-950 flex items-center justify-center">
                 {firstFile.thumbnail_url ? (
@@ -92,7 +100,7 @@ export default function PostCardItem({
               </span>
             )}
           </div>
-        ) : (
+        ) : isEmptyBox ? (
           /* Empty Box Placeholder */
           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-dashed border-pink-300 bg-pink-50/60 flex flex-col items-center justify-center text-pink-600 shrink-0 text-center p-1.5 shadow-2xs">
             {post.tipo_post === "reel" ? (
@@ -101,6 +109,16 @@ export default function PostCardItem({
               <Layers className="w-5 h-5 mb-0.5 text-brand-blue" />
             )}
             <span className="text-[8px] font-sora font-black uppercase tracking-tighter">Caja Vacía</span>
+          </div>
+        ) : (
+          /* Post with caption/date but awaiting media upload */
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/80 flex flex-col items-center justify-center text-gray-500 shrink-0 text-center p-1.5 shadow-2xs">
+            {post.tipo_post === "reel" ? (
+              <VideoIcon className="w-5 h-5 mb-0.5 text-gray-400" />
+            ) : (
+              <Layers className="w-5 h-5 mb-0.5 text-gray-400" />
+            )}
+            <span className="text-[8px] font-sora font-bold uppercase tracking-tight text-gray-600">Sin Medios</span>
           </div>
         )}
 
@@ -139,12 +157,7 @@ export default function PostCardItem({
             )}
 
             {/* STATUS BADGE */}
-            {post.estado === "publicado" ? (
-              <span className="inline-flex items-center gap-1 font-sora font-bold text-[10px] px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                Publicado
-              </span>
-            ) : post.estado === "procesando" ? (
+            {post.estado === "procesando" ? (
               <span className="inline-flex items-center gap-1 font-sora font-bold text-[10px] px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200 animate-pulse">
                 <Loader2 className="w-3 h-3 animate-spin text-sky-600" />
                 Procesando en Meta...
@@ -154,15 +167,15 @@ export default function PostCardItem({
                 <AlertTriangle className="w-3 h-3 text-rose-600" />
                 Error en Meta
               </span>
-            ) : post.estado === "borrador" ? (
-              <span className="inline-flex items-center gap-1 font-sora font-bold text-[10px] px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                Borrador
+            ) : post.estado === "publicado" ? (
+              <span className="inline-flex items-center gap-1 font-sora font-bold text-[10px] px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                Publicado
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 font-sora font-bold text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                Programado
+              <span className={`inline-flex items-center gap-1.5 font-sora font-bold text-[10px] px-2.5 py-0.5 rounded-full ${statusMeta.lightBadgeClass || "bg-gray-100 text-gray-700 border border-gray-200"}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${statusMeta.dotClass}`} />
+                {statusMeta.label}
               </span>
             )}
           </div>
@@ -203,7 +216,7 @@ export default function PostCardItem({
       {/* Card Footer Action Buttons */}
       <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
         <div className="text-[11px] font-sora font-bold text-gray-400">
-          {isEmptyBox ? "Caja Vacía" : "Publicación"}
+          {isEmptyBox ? "Caja Vacía" : statusMeta.label}
         </div>
 
         <div className="flex items-center gap-1.5">
@@ -262,13 +275,28 @@ export default function PostCardItem({
             </button>
           )}
 
+          {onSelectPreview && !isEmptyBox && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectPreview(post);
+              }}
+              className="h-8 px-2.5 rounded-full bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-200 font-sora font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
+              title="Previsualizar en formato Instagram"
+            >
+              <Eye className="w-3.5 h-3.5 text-pink-500" />
+              <span className="hidden sm:inline">Previsualizar</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               onEditPost(post);
             }}
-            className="h-8 px-3 rounded-full bg-blue-50 hover:bg-blue-100 text-brand-blue font-sora font-bold text-xs flex items-center gap-1 transition-all cursor-pointer shadow-2xs"
+            className="h-8 px-3 rounded-full bg-blue-50 hover:bg-blue-100 text-brand-blue font-sora font-bold text-xs flex items-center gap-1 transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
             title="Editar publicación"
           >
             <Edit2 className="w-3.5 h-3.5" />

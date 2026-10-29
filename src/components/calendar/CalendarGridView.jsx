@@ -21,7 +21,8 @@ export default function CalendarGridView({
   readOnly = false,
   permiteDescarga = false,
   onDayClick,
-  onPostClick
+  onPostClick,
+  onPostUpdated
 }) {
   const [selectedPost, setSelectedPost] = useState(null);
 
@@ -114,7 +115,7 @@ export default function CalendarGridView({
   const [selectedMobileDate, setSelectedMobileDate] = useState(todayStr);
 
   return (
-    <div className="space-y-4 font-inter">
+    <div className="space-y-4 font-inter flex-1 min-h-0 lg:flex lg:flex-col">
       {/* DESKTOP CALENDAR GRID */}
       <CalendarDesktopGrid
         gridCells={gridCells}
@@ -147,6 +148,10 @@ export default function CalendarGridView({
           onPrevPost={goToPrevPost}
           onNextPost={goToNextPost}
           permiteDescarga={permiteDescarga}
+          onPostUpdated={(updated) => {
+            setSelectedPost(updated);
+            if (onPostUpdated) onPostUpdated(updated);
+          }}
           onEdit={!readOnly && onPostClick ? (postToEdit) => {
             setSelectedPost(null);
             onPostClick(postToEdit);

@@ -24,49 +24,58 @@ const ValueSection = () => {
 
         {/* Symptoms / Clinical Cards */}
         <ul className="space-y-5">
-          {symptomsData.map((item, i) => (
-            <motion.li
-              key={item.id || i}
-              className="group p-6 md:p-8 rounded-2xl bg-white border border-lab-border hover:border-brand-magenta/40 hover:-translate-y-1 shadow-sm hover:shadow-md transition-all duration-300"
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.45, delay: i * 0.08 }}
-            >
-              {/* Header: Badge + Icon */}
-              <div className="flex items-center justify-between gap-4 mb-3">
-                <span
-                  className="inline-flex items-center font-sora text-[10px] font-bold tracking-wider uppercase px-3 py-1 rounded-full"
-                  style={{ backgroundColor: `${item.color}15`, color: item.color }}
-                >
-                  {item.badge}
-                </span>
+          {symptomsData.map((item, i) => {
+            const isMagenta = item.color === "#ef18d6";
+            return (
+              <motion.li
+                key={item.id || i}
+                className={`group p-6 md:p-8 rounded-2xl bg-white border border-lab-border hover:-translate-y-1 shadow-sm hover:shadow-md transition-all duration-300 ${
+                  isMagenta ? "hover:border-brand-magenta/40" : "hover:border-brand-blue/40"
+                }`}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.45, delay: i * 0.08 }}
+              >
+                {/* Header: Badge + Icon */}
+                <div className="flex items-center justify-between gap-4 mb-3">
+                  <span
+                    className={`inline-flex items-center font-sora text-[10px] font-bold tracking-wider uppercase px-3 py-1 rounded-full ${
+                      isMagenta ? "bg-brand-magenta/15 text-brand-magenta" : "bg-brand-blue/15 text-brand-blue"
+                    }`}
+                  >
+                    {item.badge}
+                  </span>
 
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors shrink-0"
-                  style={{ backgroundColor: `${item.color}15` }}
-                >
-                  <item.icon className="w-4.5 h-4.5" style={{ color: item.color }} />
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors shrink-0 ${
+                      isMagenta ? "bg-brand-magenta/15 text-brand-magenta" : "bg-brand-blue/15 text-brand-blue"
+                    }`}
+                  >
+                    <item.icon className="w-4.5 h-4.5" />
+                  </div>
                 </div>
-              </div>
 
-              {/* Quote Text */}
-              <p className="font-sora font-bold text-foreground text-[18px] md:text-[20px] leading-snug my-3">
-                {item.quote}
-              </p>
+                {/* Quote Text */}
+                <p className="font-sora font-bold text-foreground text-[18px] md:text-[20px] leading-snug my-3">
+                  {item.quote}
+                </p>
 
-              {/* Subtle divider */}
-              <div className="w-full h-px bg-lab-border/60 my-4" />
+                {/* Subtle divider */}
+                <div className="w-full h-px bg-lab-border/60 my-4" />
 
-              {/* Clinical Prescription (Rx) */}
-              <p className="font-inter text-sm text-lab-text-secondary leading-relaxed">
-                <span className="font-sora font-extrabold text-sm mr-2 inline-block" style={{ color: item.color }}>
-                  Rx →
-                </span>
-                {item.rxText}
-              </p>
-            </motion.li>
-          ))}
+                {/* Clinical Prescription (Rx) */}
+                <p className="font-inter text-sm text-lab-text-secondary leading-relaxed">
+                  <span className={`font-sora font-extrabold text-sm mr-2 inline-block ${
+                    isMagenta ? "text-brand-magenta" : "text-brand-blue"
+                  }`}>
+                    Rx →
+                  </span>
+                  {item.rxText}
+                </p>
+              </motion.li>
+            );
+          })}
         </ul>
       </div>
     </section>

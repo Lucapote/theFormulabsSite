@@ -55,26 +55,34 @@ export default function IntakePhase({ onComplete }) {
           <div className="w-full sm:col-start-2 sm:row-start-1" key={`prog-${key}`}>
             <div className="mb-4 sm:mb-6">
               <div className="flex gap-1 mb-2">
-                {STEPS.map((s, i) => (
-                  <div key={i} className="flex-1 flex flex-col gap-1">
-                    <div
-                      className="h-1 rounded-xs transition-colors duration-300"
-                      style={{
-                        backgroundColor:
-                          i < step ? TUBE_COLORS[i] : i === step ? color : "var(--lab-border)"
-                      }}
-                    />
-                    <span
-                      className="font-mono font-bold text-[9px] tracking-wider uppercase truncate transition-colors duration-300"
-                      style={{
-                        color:
-                          i < step ? TUBE_COLORS[i] : i === step ? color : "var(--lab-text-tertiary)"
-                      }}
-                    >
-                      {s.id}
-                    </span>
-                  </div>
-                ))}
+                {STEPS.map((s, i) => {
+                  const isCurrentOrPast = i <= step;
+                  const isStepMagenta = i % 2 === 0;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col gap-1">
+                      <div
+                        className={`h-1 rounded-xs transition-colors duration-300 ${
+                          isCurrentOrPast
+                            ? isStepMagenta
+                              ? "bg-brand-magenta"
+                              : "bg-brand-blue"
+                            : "bg-gray-200"
+                        }`}
+                      />
+                      <span
+                        className={`font-mono font-bold text-[9px] tracking-wider uppercase truncate transition-colors duration-300 ${
+                          isCurrentOrPast
+                            ? isStepMagenta
+                              ? "text-brand-magenta"
+                              : "text-brand-blue"
+                            : "text-lab-text-tertiary"
+                        }`}
+                      >
+                        {s.id}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -90,28 +98,28 @@ export default function IntakePhase({ onComplete }) {
               {cur.q}
             </h2>
             <div className="flex flex-col gap-2">
-              {cur.opts.map((opt, i) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => pick(opt)}
-                  className="bg-background border border-lab-border text-foreground hover:bg-white hover:shadow-sm font-inter text-left rounded-xl px-4 py-3 cursor-pointer text-sm transition-all duration-200 flex items-center gap-3 animate-fade-in hover:-translate-y-0.5 active:scale-[0.99]"
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = color;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "";
-                  }}
-                >
-                  <span
-                    className="font-mono font-bold text-[11px] min-w-4"
-                    style={{ color }}
+              {cur.opts.map((opt, i) => {
+                const isMagenta = step % 2 === 0;
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => pick(opt)}
+                    className={`bg-background border border-lab-border text-foreground hover:bg-white hover:shadow-sm font-inter text-left rounded-xl px-4 py-3 cursor-pointer text-sm transition-all duration-200 flex items-center gap-3 animate-fade-in hover:-translate-y-0.5 active:scale-[0.99] ${
+                      isMagenta ? "hover:border-brand-magenta" : "hover:border-brand-blue"
+                    }`}
                   >
-                    {String.fromCharCode(65 + i)}
-                  </span>
-                  <span>{opt}</span>
-                </button>
-              ))}
+                    <span
+                      className={`font-mono font-bold text-[11px] min-w-4 ${
+                        isMagenta ? "text-brand-magenta" : "text-brand-blue"
+                      }`}
+                    >
+                      {String.fromCharCode(65 + i)}
+                    </span>
+                    <span>{opt}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
