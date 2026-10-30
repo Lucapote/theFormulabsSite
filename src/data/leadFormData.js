@@ -65,7 +65,7 @@ export const LEAD_FORM_STEPS = [
       { id: "restaurante", label: "Restaurante, café o bar", points: 0, color: "blue", icon: "UtensilsCrossed" },
       { id: "hotel", label: "Hotel o rentas vacacionales", points: 0, color: "magenta", icon: "Hotel" },
       { id: "experiencias", label: "Tours y experiencias", points: 0, color: "blue", icon: "Compass" },
-      { id: "wellness", label: "Belleza, spa o fitness", points: 0, color: "magenta", icon: "Sparkles" },
+      { id: "wellness", label: "Belleza, spa o fitness", points: 0, color: "magenta", icon: "Flame" },
       { id: "salud", label: "Salud o clínica dental", points: 0, color: "blue", icon: "Stethoscope" },
       { id: "inmobiliaria", label: "Inmobiliaria o bienes raíces", points: 0, color: "magenta", icon: "Building2" },
       { id: "retail", label: "Retail o tienda online", points: 0, color: "blue", icon: "ShoppingBag" },
@@ -86,7 +86,7 @@ export const LEAD_FORM_STEPS = [
         label: "Apenas empezando o por lanzar",
         points: -3,
         color: "blue",
-        icon: "Rocket"
+        icon: "Target"
       },
       {
         id: "sin_equipo",
@@ -151,7 +151,7 @@ export const LEAD_FORM_STEPS = [
         label: "Una agencia externa",
         points: 4,
         color: "blue",
-        icon: "Sparkles"
+        icon: "Briefcase"
       }
     ]
   },

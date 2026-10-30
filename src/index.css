@@ -153,7 +153,14 @@
   }
 
   @keyframes labBubble { 0% { transform: translateY(0) scale(1); opacity: .7; } 100% { transform: translateY(-60px) scale(.3); opacity: 0; } }
-  @keyframes labShake { 0%, 100% { transform: rotate(0); } 20% { transform: rotate(-8deg); } 40% { transform: rotate(8deg); } 60% { transform: rotate(-5deg); } 80% { transform: rotate(5deg); } }
+  @keyframes labShake {
+    0%, 100% { transform: rotate(0deg); }
+    15% { transform: rotate(-5deg); }
+    30% { transform: rotate(4deg); }
+    45% { transform: rotate(-3deg); }
+    60% { transform: rotate(2deg); }
+    75% { transform: rotate(-1deg); }
+  }
   @keyframes labFadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes labBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
   @keyframes labPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.5); } }

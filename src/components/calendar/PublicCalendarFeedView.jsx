@@ -4,7 +4,7 @@ import {
   Layers,
   Check,
   Copy,
-  Sparkles
+  Clock
 } from "lucide-react";
 import MediaCarousel from "@/components/common/MediaCarousel";
 import { formatTimeHHMM } from "./CalendarGridView";
@@ -36,7 +36,7 @@ export default function PublicCalendarFeedView({
             <CalendarIcon className="w-7 h-7" />
           </div>
           <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-pink-600 bg-pink-50 border border-pink-200 px-3 py-1 rounded-full mb-3">
-            <Sparkles className="w-3 h-3" />
+            <Clock className="w-3 h-3" />
             FASE DE PRE-PRODUCCIÓN & CURADURÍA
           </span>
           <h3 className="font-sora font-extrabold text-gray-900 text-lg mb-2">

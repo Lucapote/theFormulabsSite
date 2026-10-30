@@ -1,8 +1,15 @@
 import { useId } from "react";
 
-export default function TestTube({ fillPct, bubbling, color, height = 200 }) {
+export default function TestTube({
+  fillPct,
+  bubbling,
+  color,
+  height = 200,
+  width,
+  shakeKey
+}) {
   const clipId = useId();
-  const W = 54;
+  const W = width || Math.round((height * 54) / 200);
   const H = height;
   const tubeTop = 400;
   const tubeBottom = 3800;
@@ -19,11 +26,18 @@ export default function TestTube({ fillPct, bubbling, color, height = 200 }) {
 
   return (
     <svg
+      key={shakeKey !== undefined ? shakeKey : undefined}
       width={W}
       height={H}
       viewBox="0 0 1670 3900"
       preserveAspectRatio="xMidYMid meet"
-      className={`overflow-visible ${bubbling ? "animate-[labShake_0.4s_ease-in-out_3]" : ""}`}
+      className={`overflow-visible origin-bottom ${
+        shakeKey !== undefined
+          ? "animate-[labShake_0.6s_cubic-bezier(0.36,0.07,0.19,0.97)]"
+          : bubbling
+          ? "animate-[labShake_0.5s_ease-in-out_2]"
+          : ""
+      }`}
     >
       <defs>
         <clipPath id={`tubeClip-${clipId}`}>
@@ -60,3 +74,4 @@ export default function TestTube({ fillPct, bubbling, color, height = 200 }) {
     </svg>
   );
 }
+

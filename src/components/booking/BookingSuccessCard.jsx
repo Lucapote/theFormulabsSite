@@ -4,7 +4,7 @@ import {
   CheckCircle2,
   Calendar,
   MapPin,
-  Sparkles,
+  Check,
   RefreshCw,
   Clock,
   Loader2,
@@ -134,7 +134,7 @@ export default function BookingSuccessCard({
               : "bg-emerald-50 text-emerald-700 border-emerald-100"
           }`}
         >
-          {isPreReserva ? <Clock className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
+          {isPreReserva ? <Clock className="w-3.5 h-3.5" /> : <Check className="w-3.5 h-3.5" />}
           <span>
             {isPreReserva
               ? "Pre-Aprobado • Comprobante en Revisión"

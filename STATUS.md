@@ -1,46 +1,41 @@
 # Estado del Proyecto — The Formulab (STATUS.md)
 
-**Última actualización:** 2026-10-27  
-**Fase actual:** Cumplimiento y estandarización integral de `GEMINI.md` (Puntos 1 a 5 Completados con Éxito).
+**Última actualización:** 2026-10-30  
+**Fase actual:** Despliegue de Pantalla "En Preparación" en Raíz ('/') & Limpieza de Landing Anterior.
 
 ---
 
 ## 📸 Foto de Hoy (Contexto Operativo)
 
-Se han completado todos los 5 puntos prioritarios de estandarización técnica y UX definidos según `GEMINI.md` y `DESIGN.md`:
-1. Memoria de IA (tres archivos sincronizados en raíz).
-2. Modales estandarizados sobre `BaseFormModal` y eliminación de duplicados.
-3. Modularización estricta de páginas (`src/pages/` ≤ 200 líneas).
-4. Eliminación de estilos inline en landing migrados a Tailwind CSS.
-5. UX responsive (móvil sin saltos forzados de modal + escritorio adaptativo a 100vh sin scroll parásito) y saneamiento del ciclo de vida de observaciones/cambios en posts programados.
+Se ha optimizado la barra de navegación del Portafolio y la estructura modular de carpetas:
+- **Navbar Limpio y Minimalista (`PortfolioNavbar.jsx`)**:
+  - Se eliminaron todos los textos intermedios (`Reels`, `Casos`, etc.) y el menú hamburguesa móvil.
+  - La barra ahora contiene **exclusivamente el logotipo oficial a la izquierda y el botón magenta "Solicitar diagnóstico" a la derecha** (`Link to="/diagnostico"`).
+- **Arquitectura de Carpetas Refactorizada**:
+  - Al no ser de uso transversal en todo el SaaS, `Navbar` y `Footer` fueron trasladados desde `src/components/common/nav/` a su dominio exclusivo: `src/components/portfolio/` (`PortfolioNavbar.jsx` y `PortfolioFooter.jsx`).
+  - Se eliminó el directorio huérfano `src/components/common/nav/`, manteniendo `src/components/common/` únicamente para primitivas y componentes realmente compartidos (`TestTube`, modales base, carruseles).
+- **Pantalla Raíz ("En Preparación")**: Mantiene su micro-interacción con el tubo reactivo de 390px, shake físico elástico y cero scroll.
 
 ---
 
 ## ✅ Resuelto Recientemente
 
-1. **Sistema de Memoria y Continuidad (Regla 2) — [COMPLETADO]**:
-   - `GEMINI.md` integrado en la raíz del repositorio Git.
-   - Creación y sincronización de `STATUS.md` y `CHANGELOG.md`.
+1. **Inversión de Columnas para Ramos Joyería — [COMPLETADO]**:
+   - Bandera declarativa `reverseLayout: true` en `case-ramos` (`portfolioData.js`).
+   - Clases dinámicas `lg:order-1` y `lg:order-2` en `PortfolioFeaturedCases.jsx` (211 líneas).
+   - Comportamiento sticky impecable en la columna derecha.
 
-2. **Estandarización de Modales y DRY (Regla 3.3 y 5) — [COMPLETADO]**:
-   - Eliminado archivo duplicado `src/components/dashboard/common/ConfirmDeleteModal.jsx` consolidando en `src/components/common/ConfirmDeleteModal.jsx`.
+2. **Activación de Sticky Nativo — [COMPLETADO]**:
+   - Retirado `overflow-hidden` de la sección contenedora y encapsulado en capa absoluta.
+   - Alineación inicial en píxel 0 (`items-start` + `self-start`) y frenado automático en el borde inferior.
 
-3. **Modularización de Páginas (Regla 4.B: Límite estricto ≤ 200 líneas) — [COMPLETADO]**:
-   - `Dashboard.jsx`: 193 líneas.
-   - `PublicCalendarPage.jsx`: 185 líneas.
-   - `ProductionBookingPage.jsx`: 194 líneas.
-   - 100% de las páginas en `src/pages/` cumplen la regla estricta de ≤ 200 líneas.
-
-4. **Eliminación de Estilos Inline Residuales (Regla 3) — [COMPLETADO]**:
-   - Migración completa de estilos inline `style={{ ... }}` a clases utilitarias de Tailwind en landing y formularios diagnósticos.
-
-5. **UX Responsive & Ciclo de Vida de Publicaciones (Regla 3.4 y 10) — [COMPLETADO]**:
-   - **UX Móvil**: Al tocar un día en la cuadrícula mensual móvil, solo se actualiza el día activo en la cabecera / agenda drawer sin disparar previews ni modales invasivos (`CalendarMobileView.jsx`).
-   - **Desktop 100vh**: Estructura `flex-1 min-h-0` con `grid-rows-5` / `grid-rows-6` proporcionales en `CalendarDesktopGrid.jsx` y contención en `PublicCalendarPage.jsx` eliminando el scroll vertical residual en laptops y pantallas de escritorio.
-   - **Gestión de Observaciones**: El banner de cambios solicitados (`PostModal.jsx`) solo se visualiza si el estado es `en_edicion`. Al cambiar a `programado` o guardar, se limpian permanentemente las notas de feedback en Supabase (`notas_cambios = null`).
+3. **Portafolio Oficial de Reels (.jsx) — [COMPLETADO]**:
+   - `PortfolioPage.jsx` modularizada con 51 líneas.
+   - Enlace oficial en Navbar y Footer.
 
 ---
 
 ## ⏳ Próximos Pasos Disponibles
 
-- Realizar pruebas de usuario en vivo o nuevas funcionalidades requeridas por el equipo.
+- Recibir nuevos videos o casos de estudio para anexar al catálogo de `public/portfolio`.
+- Pruebas adicionales en dispositivos físicos según requerimientos del cliente.

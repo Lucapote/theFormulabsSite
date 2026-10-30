@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { User, AtSign, Phone, MapPin, Calendar, Sparkles, ShieldCheck, AlertCircle } from "lucide-react";
+import { User, AtSign, Phone, MapPin, Calendar, CheckCircle2, ShieldCheck, AlertCircle, ArrowRight } from "lucide-react";
 import { UBICACIONES_LIST, CUANDO_INICIAR_LIST } from "@/data/leadFormData";
 
 export default function LeadContactCard({
@@ -32,7 +32,7 @@ export default function LeadContactCard({
       {/* Title & Friendly Intro */}
       <div className="space-y-2">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-magenta/10 border border-brand-magenta/20 text-[11px] font-sora font-bold text-brand-magenta">
-          <Sparkles className="w-3.5 h-3.5 text-brand-magenta" />
+          <CheckCircle2 className="w-3.5 h-3.5 text-brand-magenta" />
           Paso Final
         </div>
         <h2 className="font-sora text-xl sm:text-2xl font-bold tracking-tight text-gray-900 leading-snug">
@@ -222,7 +222,7 @@ export default function LeadContactCard({
             ) : (
               <>
                 <span>Obtener mi diagnóstico y propuesta</span>
-                <Sparkles className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>

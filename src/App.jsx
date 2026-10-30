@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import PublicCalendarPage from "./pages/PublicCalendarPage.jsx";
 import DiagnosticFormPage from "./pages/DiagnosticFormPage.jsx";
 import ProductionBookingPage from "./pages/ProductionBookingPage.jsx";
+import PortfolioPage from "./pages/PortfolioPage.jsx";
 import ProtectedRoute from "./components/auth/ProtectedRoute.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { UploadProvider } from "./context/UploadContext.jsx";
@@ -40,6 +41,8 @@ const App = () => {
             />
             <Route path="/diagnostico" element={<DiagnosticFormPage />} />
             <Route path="/formulario" element={<DiagnosticFormPage />} />
+            <Route path="/portafolio" element={<PortfolioPage />} />
+            <Route path="/portfolio" element={<PortfolioPage />} />
             <Route path="/reservar/produccion" element={<ProductionBookingPage />} />
             <Route path="/propuesta/:slug" element={<ProposalPage />} />
             <Route path="/calendario/:slug" element={<PublicCalendarPage />} />

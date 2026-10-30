@@ -1,8 +1,8 @@
-import { Sparkles, TrendingUp, Zap, Camera, CheckCircle2, Film } from "lucide-react";
+import { Film, TrendingUp, Target, Camera, CheckCircle2 } from "lucide-react";
 import ProposalCalculatorSummary from "./ProposalCalculatorSummary";
 import ProposalAddonCard from "./ProposalAddonCard";
 
-const ICON_MAP = { Sparkles, TrendingUp, Zap };
+const ICON_MAP = { Film, TrendingUp, Target };
 
 /**
  * ProposalCalculatorSection
@@ -53,7 +53,7 @@ export default function ProposalCalculatorSection({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {pricingPlans.map((plan) => {
-                const IconComp = ICON_MAP[plan.iconName] || Sparkles;
+                const IconComp = ICON_MAP[plan.iconName] || Film;
                 const isSelected = selectedPlan === plan.id;
                 return (
                   <div

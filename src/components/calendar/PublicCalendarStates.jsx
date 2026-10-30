@@ -1,4 +1,4 @@
-import { Sparkles, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function PublicCalendarLoading() {
@@ -6,7 +6,7 @@ export function PublicCalendarLoading() {
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col justify-center items-center p-6 font-inter">
       <div className="text-center space-y-4 max-w-sm">
         <div className="w-16 h-16 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center mx-auto shadow-sm">
-          <Sparkles className="w-8 h-8 text-brand-blue animate-spin" />
+          <Loader2 className="w-8 h-8 text-brand-blue animate-spin" />
         </div>
         <h2 className="font-sora text-xl font-bold tracking-tight text-gray-900">
           Cargando Calendario de Contenidos...

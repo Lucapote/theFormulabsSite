@@ -3,8 +3,7 @@ import {
   Building2,
   Video as VideoIcon,
   Smartphone,
-  BarChart2,
-  Sparkles
+  BarChart2
 } from "lucide-react";
 
 /**

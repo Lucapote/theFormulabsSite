@@ -1,5 +1,5 @@
 import { ArrowLeft, FlaskConical } from "lucide-react";
-import TestTube from "@/components/landing/InteractiveDiagnosticForm/TestTube";
+import TestTube from "@/components/common/TestTube";
 
 const STEP_WIDTH_CLASSES = {
   1: "w-[17%]",

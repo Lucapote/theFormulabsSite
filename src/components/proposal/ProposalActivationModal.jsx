@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Sparkles, MessageCircle, Copy, Check } from "lucide-react";
+import { Clapperboard, MessageCircle, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { getDatosBancarios } from "@/services/configService";
 import {
@@ -98,7 +98,7 @@ export default function ProposalActivationModal({
       <DialogContent className="max-w-md w-full bg-white rounded-2xl sm:rounded-3xl border border-gray-100 shadow-2xl p-5 sm:p-6 font-inter text-center max-h-[92vh] overflow-y-auto">
         {/* Header Sintético y Minimalista */}
         <DialogHeader className="space-y-0.5 text-center sm:text-center">
-          <Sparkles className="w-5 h-5 text-[#188ff0] mx-auto mb-1" />
+          <Clapperboard className="w-5 h-5 text-[#188ff0] mx-auto mb-1" />
           <DialogTitle className="font-sora text-lg sm:text-xl font-bold text-gray-900 tracking-tight">
             ¡Todo listo para comenzar!
           </DialogTitle>

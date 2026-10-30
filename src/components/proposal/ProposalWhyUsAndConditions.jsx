@@ -1,4 +1,4 @@
-import { HeartHandshake, Sparkles, Info, Phone, Mail, Instagram, CheckCircle2 } from "lucide-react";
+import { HeartHandshake, CheckCircle2, Info, Phone, Mail, Instagram } from "lucide-react";
 
 /**
  * ProposalWhyUsAndConditions
@@ -26,7 +26,7 @@ export default function ProposalWhyUsAndConditions({
               {whyUs.map((reason, idx) => (
                 <div key={idx} className="flex items-start bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                   <div className="bg-pink-100 p-2 rounded-xl mr-4 shrink-0">
-                    <Sparkles className="w-5 h-5 text-pink-600" />
+                    <CheckCircle2 className="w-5 h-5 text-pink-600" />
                   </div>
                   <p className="text-gray-700 font-medium leading-relaxed mt-1">{reason}</p>
                 </div>

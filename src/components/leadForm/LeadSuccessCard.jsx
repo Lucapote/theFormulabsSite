@@ -1,4 +1,4 @@
-import { Home, Sparkles, Clock, ShieldCheck, FlaskConical, AlertCircle, Check } from "lucide-react";
+import { Home, Clock, ShieldCheck, FlaskConical, AlertCircle, Check, Activity } from "lucide-react";
 
 export default function LeadSuccessCard({ contactData }) {
   const nombre = contactData?.nombre?.trim() || "amigo";
@@ -31,7 +31,7 @@ export default function LeadSuccessCard({ contactData }) {
       <div className="max-w-lg mx-auto bg-gray-50/80 border border-gray-200/80 rounded-2xl p-4 sm:p-5 text-left space-y-3">
         <div className="flex items-center justify-between border-b border-gray-200/60 pb-2.5">
           <span className="text-[11px] font-sora font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-brand-blue" />
+            <Activity className="w-3.5 h-3.5 text-brand-blue" />
             Enfoque de Diagnóstico
           </span>
           <span className="text-[10px] font-mono font-semibold text-gray-400 uppercase tracking-wider">
