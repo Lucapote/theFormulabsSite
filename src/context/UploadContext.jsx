@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   RefreshCw,
   X,
-  Sparkles,
   Film
 } from "lucide-react";
 
@@ -131,8 +130,8 @@ export function UploadProvider({ children }) {
             }%)`,
             {
               icon: (
-                <div className="w-6 h-6 rounded-full bg-pink-50 border border-pink-100 flex items-center justify-center text-pink-500 shrink-0">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-pink-500" />
+                <div className="w-6 h-6 rounded-full bg-pink-50 border border-pink-100 flex items-center justify-center text-brand-magenta shrink-0">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-brand-magenta" />
                 </div>
               ),
               duration: 3500,
@@ -164,8 +163,8 @@ export function UploadProvider({ children }) {
         `¡${successCount} archivo(s) subido(s) a "${calendarioNombre}" con éxito!`,
         {
           icon: (
-            <div className="w-6 h-6 rounded-full bg-pink-50 border border-pink-100 flex items-center justify-center text-pink-500 shrink-0">
-              <Sparkles className="w-3.5 h-3.5 text-pink-500" />
+            <div className="w-6 h-6 rounded-full bg-pink-50 border border-pink-100 flex items-center justify-center text-brand-magenta shrink-0">
+              <CheckCircle2 className="w-3.5 h-3.5 text-brand-magenta" />
             </div>
           ),
         }
@@ -212,13 +211,13 @@ export function UploadProvider({ children }) {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
                 {/* Status Icon Badge */}
-                <div className="w-8 h-8 rounded-full bg-pink-50 border border-pink-100 flex items-center justify-center text-pink-500 shrink-0">
+                <div className="w-8 h-8 rounded-full bg-pink-50 border border-pink-100 flex items-center justify-center text-brand-magenta shrink-0">
                   {uploadState.phase === "compressing" ? (
-                    <Film className="w-4 h-4 animate-pulse text-pink-500" />
+                    <Film className="w-4 h-4 animate-pulse text-brand-magenta" />
                   ) : uploadState.phase === "uploading" ? (
                     <UploadCloud className="w-4 h-4 animate-bounce text-brand-blue" />
                   ) : uploadState.isUploading ? (
-                    <RefreshCw className="w-4 h-4 animate-spin text-pink-500" />
+                    <RefreshCw className="w-4 h-4 animate-spin text-brand-magenta" />
                   ) : (
                     <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                   )}
@@ -234,7 +233,7 @@ export function UploadProvider({ children }) {
                         ? `Subiendo a R2 (${uploadState.uploadPercent}%)`
                         : "Subida completada"}
                     </span>
-                    <span className="text-[10px] font-mono font-bold text-pink-600 bg-pink-50 px-1.5 py-0.5 rounded-full border border-pink-200">
+                    <span className="text-[10px] font-mono font-bold text-brand-magenta bg-pink-50 px-1.5 py-0.5 rounded-full border border-pink-200">
                       {uploadState.current}/{uploadState.total}
                     </span>
                   </div>

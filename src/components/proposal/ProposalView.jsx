@@ -120,7 +120,7 @@ export default function ProposalView({ data = defaultData }) {
               onError={(e) => {
                 const target = e.target;
                 target.onerror = null;
-                target.outerHTML = '<div class="font-black text-xl tracking-tighter flex items-center">the <span class="text-pink-500 ml-1">formu</span>lab</div>';
+                target.outerHTML = '<div class="font-black text-xl tracking-tighter flex items-center">the <span class="text-[#ef18d6] ml-1">formu</span>lab</div>';
               }}
             />
             <div className="flex items-center gap-3">

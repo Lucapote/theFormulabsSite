@@ -17,7 +17,7 @@ export default function ProposalWhyUsAndConditions({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
           <div>
             <div className="flex items-center gap-3 mb-8">
-              <HeartHandshake className="w-8 h-8 text-pink-500" />
+              <HeartHandshake className="w-8 h-8 text-brand-magenta" />
               <h2 className="text-3xl md:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight font-sora">
                 ¿Por qué nosotros?
               </h2>
@@ -26,7 +26,7 @@ export default function ProposalWhyUsAndConditions({
               {whyUs.map((reason, idx) => (
                 <div key={idx} className="flex items-start bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                   <div className="bg-pink-100 p-2 rounded-xl mr-4 shrink-0">
-                    <CheckCircle2 className="w-5 h-5 text-pink-600" />
+                    <CheckCircle2 className="w-5 h-5 text-brand-magenta" />
                   </div>
                   <p className="text-gray-700 font-medium leading-relaxed mt-1">{reason}</p>
                 </div>
@@ -45,7 +45,7 @@ export default function ProposalWhyUsAndConditions({
               <ul className="space-y-5">
                 {conditions.map((condition, idx) => (
                   <li key={idx} className="flex items-start text-gray-600">
-                    <span className="text-pink-500 mr-3 font-bold text-lg mt-0.5">•</span>
+                    <span className="text-brand-magenta mr-3 font-bold text-lg mt-0.5">•</span>
                     <span className="leading-relaxed font-medium">{condition}</span>
                   </li>
                 ))}
@@ -79,11 +79,11 @@ export default function ProposalWhyUsAndConditions({
           )}
 
           <div className="bg-gray-900 text-white rounded-[2rem] p-10 md:p-12 shadow-2xl relative overflow-hidden inline-block w-full">
-            <div className="absolute -top-32 -right-32 w-80 h-80 bg-pink-500 rounded-full opacity-20 blur-[80px] pointer-events-none" />
-            <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-pink-500 rounded-full opacity-20 blur-[80px] pointer-events-none" />
+            <div className="absolute -top-32 -right-32 w-80 h-80 bg-brand-magenta rounded-full opacity-20 blur-[80px] pointer-events-none" />
+            <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-brand-magenta rounded-full opacity-20 blur-[80px] pointer-events-none" />
 
             <h3 className="text-3xl font-bold mb-2 relative z-10 font-sora">{contact.name || "The Formulab"}</h3>
-            <p className="text-pink-400 font-bold tracking-widest uppercase text-xs mb-8 relative z-10 font-sora">
+            <p className="text-brand-magenta font-bold tracking-widest uppercase text-xs mb-8 relative z-10 font-sora">
               {contact.title || "Dirección de Estrategia"}
             </p>
 
@@ -91,18 +91,18 @@ export default function ProposalWhyUsAndConditions({
               {contact.phone && (
                 <a
                   href={`tel:${contact.phone.replace(/-/g, "")}`}
-                  className="flex items-center hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-full"
+                  className="flex items-center hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-full cursor-pointer active:scale-95"
                 >
-                  <Phone className="w-4 h-4 mr-2 text-pink-400" />
+                  <Phone className="w-4 h-4 mr-2 text-brand-magenta" />
                   <span className="font-medium text-sm">{contact.phone}</span>
                 </a>
               )}
               {contact.email && (
                 <a
                   href={`mailto:${contact.email}`}
-                  className="flex items-center hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-full"
+                  className="flex items-center hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-full cursor-pointer active:scale-95"
                 >
-                  <Mail className="w-4 h-4 mr-2 text-pink-400" />
+                  <Mail className="w-4 h-4 mr-2 text-brand-magenta" />
                   <span className="font-medium text-sm">{contact.email}</span>
                 </a>
               )}
@@ -111,9 +111,9 @@ export default function ProposalWhyUsAndConditions({
                   href={`https://instagram.com/${contact.instagram.replace("@", "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-full"
+                  className="flex items-center hover:text-white transition-colors bg-white/5 px-4 py-2 rounded-full cursor-pointer active:scale-95"
                 >
-                  <Instagram className="w-4 h-4 mr-2 text-pink-400" />
+                  <Instagram className="w-4 h-4 mr-2 text-brand-magenta" />
                   <span className="font-medium text-sm">{contact.instagram}</span>
                 </a>
               )}

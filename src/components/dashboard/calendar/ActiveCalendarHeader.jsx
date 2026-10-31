@@ -66,7 +66,7 @@ export default function ActiveCalendarHeader({
         <button
           type="button"
           onClick={() => onCopyCalendarLink(activeCalendar.slug)}
-          className="h-9 sm:h-10 px-3 sm:px-4 bg-pink-50 hover:bg-pink-100 text-pink-600 font-sora font-bold text-xs rounded-full border border-pink-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+          className="h-9 sm:h-10 px-3 sm:px-4 bg-pink-50 hover:bg-pink-100 text-brand-magenta font-sora font-bold text-xs rounded-full border border-pink-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs active:scale-[0.98]"
         >
           {copiedSlug === activeCalendar.slug ? (
             <>
@@ -74,7 +74,7 @@ export default function ActiveCalendarHeader({
             </>
           ) : (
             <>
-              <Copy className="w-3.5 h-3.5 text-pink-500" /> <span className="hidden sm:inline">Copiar Enlace</span><span className="sm:hidden">Enlace</span>
+              <Copy className="w-3.5 h-3.5 text-brand-magenta" /> <span className="hidden sm:inline">Copiar Enlace</span><span className="sm:hidden">Enlace</span>
             </>
           )}
         </button>

@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import {
   FileText,
   Upload,
-  Sparkles,
   AlertCircle,
   Loader2,
   FileCheck
@@ -154,7 +153,7 @@ export default function ImportWordModal({
               }}
             />
             <div className="w-14 h-14 rounded-full bg-white shadow-md flex items-center justify-center group-hover:scale-110 transition-transform">
-              <Upload className="w-6 h-6 text-pink-500" />
+              <Upload className="w-6 h-6 text-brand-magenta" />
             </div>
             <div>
               <p className="font-sora font-extrabold text-gray-800 text-sm">
@@ -164,8 +163,7 @@ export default function ImportWordModal({
                 o haz clic para explorar tus archivos
               </p>
             </div>
-            <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-white rounded-full text-[11px] font-bold text-gray-500 shadow-sm border border-gray-100">
-              <Sparkles className="w-3.5 h-3.5 text-pink-500" />
+            <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-white rounded-full text-[11px] font-bold text-gray-500 shadow-sm border border-gray-100 font-mono uppercase tracking-wider">
               Detección automática de Fechas, Formatos, Captions y CTAs
             </div>
           </div>

@@ -43,7 +43,7 @@ export default function PortfolioCtaSection() {
           <div className="flex flex-col sm:flex-row md:flex-col gap-3 w-full sm:w-auto shrink-0 relative z-10">
             <Link
               to="/diagnostico"
-              className="h-12 px-7 rounded-full bg-brand-magenta hover:bg-pink-600 text-white font-sora font-bold text-xs uppercase tracking-wider shadow-lg shadow-pink-500/20 transition-all inline-flex items-center justify-center gap-2 active:scale-[0.98]"
+              className="h-12 px-7 rounded-full bg-brand-magenta hover:opacity-90 text-white font-sora font-bold text-xs uppercase tracking-wider shadow-lg shadow-pink-500/20 transition-all inline-flex items-center justify-center gap-2 active:scale-[0.98] cursor-pointer"
             >
               <span>Comenzar Diagnóstico</span>
               <ArrowRight className="w-4 h-4" />

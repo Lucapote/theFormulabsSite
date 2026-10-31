@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Clock, Sparkles, Mail, UserCheck, CheckCircle2 } from "lucide-react";
+import { Clock, FilePlus, Mail, UserCheck, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import BaseFormModal from "@/components/common/BaseFormModal";
 import { formatLeadDate, formatSecondsToTime } from "@/utils/formatters";
@@ -62,7 +62,7 @@ export default function LeadDetailModal({ isOpen, onClose, lead, onStatusChange 
       ? "bg-blue-500/20 text-blue-300 border-blue-400/30"
       : route === "web"
       ? "bg-cyan-500/20 text-cyan-300 border-cyan-400/30"
-      : "bg-pink-500/20 text-pink-300 border-pink-400/30";
+      : "bg-brand-magenta/20 text-brand-magenta border-brand-magenta/30";
 
   const handleResendEmail = async () => {
     setIsSendingEmail(true);
@@ -154,7 +154,7 @@ export default function LeadDetailModal({ isOpen, onClose, lead, onStatusChange 
         disabled={isCreatingProposal}
         className="rounded-full bg-[#188ff0] hover:bg-blue-600 text-white font-sora text-xs font-bold px-4 py-2 flex items-center gap-1.5 shadow-md shadow-blue-100 cursor-pointer disabled:opacity-50"
       >
-        <Sparkles className="w-3.5 h-3.5 text-pink-300" />
+        <FilePlus className="w-3.5 h-3.5 text-white" />
         {isCreatingProposal ? "Generando..." : "Generar Propuesta"}
       </Button>
 

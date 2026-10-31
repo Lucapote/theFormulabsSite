@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Calendar as CalendarIcon,
   Plus,
-  Sparkles
+  Loader2
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -207,7 +207,7 @@ export default function ScheduledPostsList({
       {/* RENDER MODE CONTENT */}
       {loading ? (
         <div className="bg-white rounded-[2rem] p-12 text-center shadow-xl border border-gray-100">
-          <Sparkles className="w-8 h-8 text-pink-500 animate-spin mx-auto mb-3" />
+          <Loader2 className="w-8 h-8 text-brand-magenta animate-spin mx-auto mb-3" />
           <p className="text-sm font-sora font-bold text-gray-700">Cargando publicaciones...</p>
         </div>
       ) : viewMode === "grid" ? (
@@ -229,7 +229,7 @@ export default function ScheduledPostsList({
         />
       ) : filteredPosts.length === 0 ? (
         <div className="bg-white rounded-[2rem] p-12 text-center shadow-xl border border-gray-100">
-          <CalendarIcon className="w-12 h-12 text-pink-300 mx-auto mb-3" />
+          <CalendarIcon className="w-12 h-12 text-pink-400 mx-auto mb-3" />
           <h4 className="font-sora font-extrabold text-gray-900 text-lg mb-1">
             {showOnlyDrafts
               ? "No hay cajas vacías pendientes"

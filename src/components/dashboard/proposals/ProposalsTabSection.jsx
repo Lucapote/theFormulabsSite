@@ -164,7 +164,7 @@ export default function ProposalsTabSection({
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
           <div>
-            <p className="hidden sm:block text-pink-500 font-bold tracking-widest uppercase text-xs mb-2 font-sora">
+            <p className="hidden sm:block text-brand-magenta font-bold tracking-widest uppercase text-xs mb-2 font-sora">
               PANEL DE CONTROL GENERAL
             </p>
             <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-gray-900 tracking-tight font-sora">
@@ -195,16 +195,16 @@ export default function ProposalsTabSection({
                 loadConvertedStatus();
                 if (onRefresh) onRefresh();
               }}
-              className="h-10 sm:h-11 px-3 sm:px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-sora font-bold text-xs rounded-full transition-all flex items-center gap-2 cursor-pointer"
+              className="h-10 sm:h-11 px-3 sm:px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-sora font-bold text-xs rounded-full transition-all flex items-center gap-2 cursor-pointer active:scale-[0.98]"
               title="Actualizar datos"
             >
-              <RefreshCw className={`w-4 h-4 ${loadingProposals || loadingDb ? "animate-spin text-pink-500" : ""}`} />
+              <RefreshCw className={`w-4 h-4 ${loadingProposals || loadingDb ? "animate-spin text-brand-magenta" : ""}`} />
               <span className="hidden sm:inline">Actualizar</span>
             </button>
 
             <button
               onClick={onCreateClick}
-              className="h-10 sm:h-11 px-4 sm:px-6 bg-pink-500 hover:bg-pink-600 text-white font-sora font-bold text-xs rounded-full shadow-lg shadow-pink-200 transition-all flex items-center gap-2 cursor-pointer"
+              className="h-10 sm:h-11 px-4 sm:px-6 bg-brand-magenta hover:opacity-90 text-white font-sora font-bold text-xs rounded-full shadow-lg shadow-pink-500/20 transition-all flex items-center gap-2 cursor-pointer active:scale-[0.98]"
             >
               <Plus className="w-4 h-4" />
               <span>Propuesta</span>
@@ -241,14 +241,14 @@ export default function ProposalsTabSection({
         </div>
       ) : propuestasAgrupadas.length === 0 ? (
         <div className="bg-white rounded-[2rem] p-12 text-center border border-gray-100 shadow-lg">
-          <FileText className="w-12 h-12 text-pink-300 mx-auto mb-3" />
+          <FileText className="w-12 h-12 text-brand-magenta mx-auto mb-3" />
           <h3 className="font-sora font-extrabold text-gray-900 text-lg mb-1">No hay propuestas creadas</h3>
           <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
             Comienza creando tu primera propuesta de contenido personalizada para tus clientes.
           </p>
           <button
             onClick={onCreateClick}
-            className="h-11 px-6 bg-pink-500 text-white font-sora font-bold text-xs rounded-full shadow-lg shadow-pink-200 inline-flex items-center gap-2 cursor-pointer"
+            className="h-11 px-6 bg-brand-magenta hover:opacity-90 text-white font-sora font-bold text-xs rounded-full shadow-lg shadow-pink-500/20 inline-flex items-center gap-2 cursor-pointer active:scale-[0.98] transition-all"
           >
             <Plus className="w-4 h-4" /> Crear Propuesta
           </button>

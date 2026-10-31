@@ -290,7 +290,7 @@ export default function CreateClientModal({
                 {/* Cuota de Rodajes Pactados */}
                 <div>
                   <label className="block text-xs font-sora font-semibold text-gray-700 mb-1 flex items-center gap-1">
-                    <Video className="w-3.5 h-3.5 text-pink-500" />
+                    <Video className="w-3.5 h-3.5 text-brand-magenta" />
                     Rodajes / Sesiones por Mes
                   </label>
                   <select

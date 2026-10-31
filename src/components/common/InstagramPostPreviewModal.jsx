@@ -142,7 +142,7 @@ export default function InstagramPostPreviewModal({
                       }}
                       className={`rounded-full transition-all duration-200 cursor-pointer ${
                         idx === activeMediaIndex
-                          ? "bg-pink-500 w-6 h-2 shadow-sm shadow-pink-500/50"
+                          ? "bg-brand-magenta w-6 h-2 shadow-sm shadow-pink-500/50"
                           : "bg-white/40 hover:bg-white/80 w-2 h-2"
                       }`}
                       aria-label={`Ir a diapositiva ${idx + 1}`}
@@ -153,7 +153,7 @@ export default function InstagramPostPreviewModal({
             </>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 text-center text-slate-400 space-y-3">
-              <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-pink-500 shadow-inner">
+              <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-brand-magenta shadow-inner">
                 <Film className="w-8 h-8" />
               </div>
               <div className="space-y-1">

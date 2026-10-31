@@ -36,7 +36,7 @@ export default function CalendarMobileView({
         <div className="bg-white rounded-[2rem] p-4 sm:p-6 shadow-xl border border-gray-100 space-y-3">
           <div className="flex items-center justify-between pb-3 border-b border-gray-100">
             <div>
-              <span className="text-[10px] font-sora font-bold text-pink-500 uppercase tracking-widest block">
+              <span className="text-[10px] font-sora font-bold text-brand-magenta uppercase tracking-widest block">
                 PUBLICACIONES DEL DÍA
               </span>
               <h4 className="font-sora font-extrabold text-gray-900 text-base">
@@ -48,7 +48,7 @@ export default function CalendarMobileView({
               <button
                 type="button"
                 onClick={() => onDayClick(selectedMobileDate)}
-                className="h-9 px-4 rounded-full bg-pink-500 hover:bg-pink-600 text-white font-sora font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-pink-500/25 active:scale-[0.98]"
+                className="h-10 px-4 rounded-full bg-brand-magenta hover:opacity-90 text-white font-sora font-bold text-xs flex items-center gap-1.5 transition-all shadow-md shadow-pink-500/25 active:scale-[0.98] cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Nuevo Post</span>
@@ -90,7 +90,7 @@ export default function CalendarMobileView({
                                 />
                               ) : (
                                 <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-950 flex items-center justify-center">
-                                  <VideoIcon className="w-4 h-4 text-pink-400" />
+                                  <VideoIcon className="w-4 h-4 text-brand-magenta" />
                                 </div>
                               )}
                               <Play className="w-3 h-3 text-white absolute fill-current drop-shadow-xs" />
@@ -106,9 +106,9 @@ export default function CalendarMobileView({
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-white">
                             {post.tipo_post === "reel" ? (
-                              <VideoIcon className="w-4 h-4 text-pink-400" />
+                              <VideoIcon className="w-4 h-4 text-brand-magenta" />
                             ) : (
-                              <Layers className="w-4 h-4 text-[#188ff0]" />
+                              <Layers className="w-4 h-4 text-brand-blue" />
                             )}
                           </div>
                         )}
@@ -120,8 +120,8 @@ export default function CalendarMobileView({
                           <span
                             className={`text-[9px] font-sora font-extrabold uppercase px-2 py-0.5 rounded-full ${
                               post.tipo_post === "reel"
-                                ? "bg-pink-100 text-pink-600"
-                                : "bg-blue-100 text-[#188ff0]"
+                                ? "bg-pink-50 text-brand-magenta border border-pink-100"
+                                : "bg-blue-50 text-brand-blue border border-blue-100"
                             }`}
                           >
                             {post.tipo_post === "reel" ? "Reel" : "Carrusel"}
@@ -200,9 +200,9 @@ export default function CalendarMobileView({
                     : isSelected
                     ? "bg-[#188ff0] text-white font-sora font-extrabold shadow-md scale-105 z-10"
                     : cell.isToday
-                    ? "bg-pink-100 text-pink-700 font-sora font-extrabold border border-pink-300"
+                    ? "bg-pink-50 text-brand-magenta font-sora font-extrabold border border-pink-200"
                     : hasPosts
-                    ? "bg-pink-500 text-white font-sora font-extrabold shadow-xs"
+                    ? "bg-brand-magenta text-white font-sora font-extrabold shadow-xs"
                     : "bg-sky-50/60 text-sky-900 font-sora font-bold hover:bg-sky-100"
                 }`}
               >

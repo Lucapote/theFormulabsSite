@@ -31,7 +31,7 @@ export default function MediaGalleryUploader({
     <div className="lg:col-span-4 bg-white rounded-[2rem] p-6 shadow-xl border border-gray-100 space-y-4 lg:sticky lg:top-6 font-inter">
       <div className="flex items-center justify-between gap-2 pb-3 border-b border-gray-100">
         <div className="flex items-center gap-2">
-          <UploadCloud className="w-4 h-4 text-pink-500" />
+          <UploadCloud className="w-4 h-4 text-brand-magenta" />
           <h3 className="font-sora font-bold text-gray-900 text-sm">Subir Nuevos Medios</h3>
         </div>
       </div>
@@ -41,10 +41,10 @@ export default function MediaGalleryUploader({
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`p-6 border-2 border-dashed rounded-2xl text-center cursor-pointer transition-all ${
+        className={`p-6 border-2 border-dashed rounded-2xl text-center cursor-pointer transition-all active:scale-[0.99] ${
           isDragging
-            ? "border-pink-500 bg-pink-50/50 scale-[1.02]"
-            : "border-gray-200 hover:border-pink-300 hover:bg-pink-50/20"
+            ? "border-brand-magenta bg-pink-50/50 scale-[1.02]"
+            : "border-gray-200 hover:border-brand-magenta/40 hover:bg-pink-50/20"
         }`}
       >
         <input
@@ -59,7 +59,7 @@ export default function MediaGalleryUploader({
             }
           }}
         />
-        <div className="w-12 h-12 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center mx-auto mb-3">
+        <div className="w-12 h-12 rounded-full bg-pink-50 border border-pink-100 text-brand-magenta flex items-center justify-center mx-auto mb-3">
           <UploadCloud className="w-6 h-6" />
         </div>
         <p className="text-xs font-sora font-bold text-gray-800 mb-1">
@@ -72,13 +72,13 @@ export default function MediaGalleryUploader({
 
       {/* Uploading Status Panel with 2-Phase Progress */}
       {isUploading && (
-        <div className="p-4 bg-pink-50 border border-pink-200 rounded-2xl space-y-2.5 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between text-xs font-sora font-bold text-pink-700">
+        <div className="p-4 bg-pink-50 border border-pink-100 rounded-2xl space-y-2.5 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between text-xs font-sora font-bold text-brand-magenta">
             <span className="flex items-center gap-1.5 truncate pr-2">
               {isCompressing ? (
-                <Film className="w-3.5 h-3.5 animate-pulse text-pink-600 shrink-0" />
+                <Film className="w-3.5 h-3.5 animate-pulse text-brand-magenta shrink-0" />
               ) : (
-                <RefreshCw className="w-3.5 h-3.5 animate-spin text-pink-600 shrink-0" />
+                <RefreshCw className="w-3.5 h-3.5 animate-spin text-brand-magenta shrink-0" />
               )}
               <span className="truncate">{phaseTitle}</span>
             </span>
@@ -99,7 +99,7 @@ export default function MediaGalleryUploader({
           <progress
             value={activePercent}
             max={100}
-            className="w-full h-2 rounded-full overflow-hidden accent-pink-500 bg-pink-200 [&::-webkit-progress-bar]:bg-pink-200 [&::-webkit-progress-value]:bg-pink-500 [&::-webkit-progress-value]:transition-all [&::-webkit-progress-value]:duration-200 [&::-moz-progress-bar]:bg-pink-500"
+            className="w-full h-2 rounded-full overflow-hidden accent-brand-magenta bg-pink-100 [&::-webkit-progress-bar]:bg-pink-100 [&::-webkit-progress-value]:bg-brand-magenta [&::-webkit-progress-value]:transition-all [&::-webkit-progress-value]:duration-200 [&::-moz-progress-bar]:bg-brand-magenta"
           />
         </div>
       )}

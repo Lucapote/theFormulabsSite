@@ -192,6 +192,7 @@ export default function PortfolioFeaturedCases() {
                             categoryLabel: "Reel",
                             title: video.title,
                             videoUrl: video.url,
+                            posterUrl: video.posterUrl,
                             colorAccent: item.color
                           }}
                           autoPlayOnHover={true}

@@ -201,7 +201,7 @@ export default function MediaInfoExpandedDetails({
                 <button
                   type="button"
                   onClick={() => onAssignPost && onAssignPost(media, "reel")}
-                  className="w-full py-2.5 px-3 bg-pink-600 hover:bg-pink-500 text-white font-sora font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98] cursor-pointer"
+                  className="w-full py-2.5 px-3 bg-brand-magenta hover:opacity-90 text-white font-sora font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-pink-500/20 active:scale-[0.98] cursor-pointer"
                 >
                   <VideoIcon className="w-4 h-4" />
                   <span>Crear como Reel</span>

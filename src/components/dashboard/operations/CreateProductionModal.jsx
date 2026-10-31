@@ -5,7 +5,6 @@ import {
   Clock,
   MapPin,
   FileText,
-  Sparkles,
   PlusCircle,
   Video,
   DollarSign
@@ -119,7 +118,7 @@ export default function CreateProductionModal({
 
   const headerBadge = isExtra ? (
     <span className="font-mono text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-400/30 inline-flex items-center gap-1.5">
-      <Sparkles className="w-3 h-3" />
+      <PlusCircle className="w-3 h-3" />
       Sesión Extra #{nextNumero}
     </span>
   ) : (
@@ -179,7 +178,6 @@ export default function CreateProductionModal({
             <div className="p-3.5 rounded-xl bg-amber-50/90 border border-amber-200 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200 inline-flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-amber-600" />
                   Sesión Extra ({nextNumero} de {cuotaPautada} contratadas)
                 </span>
                 <span className="text-[10px] text-amber-700 font-semibold">Facturación Adicional</span>

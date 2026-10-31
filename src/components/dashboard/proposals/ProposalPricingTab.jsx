@@ -37,12 +37,12 @@ export default function ProposalPricingTab({
     <div className="space-y-6 font-inter">
       {/* Base Plans Pricing */}
       <div>
-        <h4 className="text-xs font-sora font-extrabold text-pink-600 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+        <h4 className="text-xs font-sora font-extrabold text-brand-magenta uppercase tracking-widest mb-3 flex items-center gap-1.5">
           <DollarSign className="w-4 h-4" /> Planes Base de Producción
         </h4>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { label: "Esencial (8 Reels)", val: priceEsencial, set: setPriceEsencial, bg: "bg-pink-50/30", focus: "focus:border-pink-500" },
+            { label: "Esencial (8 Reels)", val: priceEsencial, set: setPriceEsencial, bg: "bg-pink-50/30", focus: "focus:border-brand-magenta" },
             { label: "Crecimiento (12 Reels)", val: priceCrecimiento, set: setPriceCrecimiento, bg: "bg-blue-50/30", focus: "focus:border-brand-blue" },
             { label: "Escala (16 Reels)", val: priceEscala, set: setPriceEscala, bg: "bg-purple-50/30", focus: "focus:border-purple-500" }
           ].map((plan) => (

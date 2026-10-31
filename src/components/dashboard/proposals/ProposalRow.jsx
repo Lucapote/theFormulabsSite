@@ -160,7 +160,7 @@ export default function ProposalRow({
       {/* 3. Vistas */}
       <td className="p-5 text-center">
         <span className="inline-flex items-center gap-1.5 text-xs font-sora font-bold text-gray-700 bg-gray-100 px-3 py-1 rounded-full">
-          <Eye className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+          <Eye className="w-3.5 h-3.5 text-brand-magenta shrink-0" />
           {versionActiva.contenido?.views || versionActiva.views || 0}
         </span>
       </td>
@@ -242,7 +242,7 @@ export default function ProposalRow({
           <button
             onClick={() => onEditClick(versionActiva)}
             title="Editar propuesta"
-            className="w-8 h-8 rounded-full bg-gray-900 hover:bg-pink-500 text-white inline-flex items-center justify-center transition-all duration-150 active:scale-[0.90] cursor-pointer shrink-0"
+            className="w-8 h-8 rounded-full bg-gray-900 hover:bg-brand-magenta text-white inline-flex items-center justify-center transition-all duration-150 active:scale-[0.90] cursor-pointer shrink-0"
           >
             <Edit2 className="w-3.5 h-3.5" />
           </button>

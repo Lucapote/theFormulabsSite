@@ -26,7 +26,7 @@ export default function ProposalLabPdfReport({
             onError={(e) => {
               const target = e.target;
               target.onerror = null;
-              target.outerHTML = '<div class="font-black text-2xl tracking-tighter text-gray-900">the <span class="text-pink-500">formu</span>lab</div>';
+              target.outerHTML = '<div class="font-black text-2xl tracking-tighter text-gray-900">the <span class="text-[#ef18d6]">formu</span>lab</div>';
             }}
           />
         </div>

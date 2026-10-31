@@ -102,9 +102,9 @@ export default function PostCardItem({
           </div>
         ) : isEmptyBox ? (
           /* Empty Box Placeholder */
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-dashed border-pink-300 bg-pink-50/60 flex flex-col items-center justify-center text-pink-600 shrink-0 text-center p-1.5 shadow-2xs">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 border-dashed border-pink-300 bg-pink-50/60 flex flex-col items-center justify-center text-brand-magenta shrink-0 text-center p-1.5 shadow-2xs">
             {post.tipo_post === "reel" ? (
-              <VideoIcon className="w-5 h-5 mb-0.5 text-pink-500" />
+              <VideoIcon className="w-5 h-5 mb-0.5 text-brand-magenta" />
             ) : (
               <Layers className="w-5 h-5 mb-0.5 text-brand-blue" />
             )}
@@ -282,10 +282,10 @@ export default function PostCardItem({
                 e.stopPropagation();
                 onSelectPreview(post);
               }}
-              className="h-8 px-2.5 rounded-full bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-200 font-sora font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
+              className="h-8 px-2.5 rounded-full bg-pink-50 hover:bg-pink-100 text-brand-magenta border border-pink-200 font-sora font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
               title="Previsualizar en formato Instagram"
             >
-              <Eye className="w-3.5 h-3.5 text-pink-500" />
+              <Eye className="w-3.5 h-3.5 text-brand-magenta" />
               <span className="hidden sm:inline">Previsualizar</span>
             </button>
           )}

@@ -176,11 +176,11 @@ export default function CreateCalendarModal({
                   key={tipo}
                   type="button"
                   onClick={() => toggleTipoContenido && toggleTipoContenido(tipo)}
-                  className={`px-3 py-1.5 rounded-xl border text-xs font-sora font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                    isChecked ? "bg-pink-50 border-pink-300 text-pink-600 shadow-2xs" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-sora font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                    isChecked ? "bg-pink-50 border-pink-300 text-brand-magenta shadow-2xs" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
                   }`}
                 >
-                  <span className={`w-4 h-4 rounded-md flex items-center justify-center text-[10px] ${isChecked ? "bg-pink-500 text-white" : "border border-gray-300 bg-white"}`}>
+                  <span className={`w-4 h-4 rounded-md flex items-center justify-center text-[10px] ${isChecked ? "bg-brand-magenta text-white" : "border border-gray-300 bg-white"}`}>
                     {isChecked && <Check className="w-3 h-3" />}
                   </span>
                   <span>{tipo}</span>

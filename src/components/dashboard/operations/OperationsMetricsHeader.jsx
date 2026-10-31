@@ -174,7 +174,7 @@ export default function OperationsMetricsHeader({ ciclos = [] }) {
           <span className="text-[11px] font-sora font-semibold text-gray-500 uppercase tracking-wider">
             Estado Editorial
           </span>
-          <div className="w-7 h-7 rounded-full bg-pink-50 text-pink-500 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-full bg-pink-50 text-brand-magenta flex items-center justify-center">
             <CalendarCheck className="w-4 h-4" />
           </div>
         </div>
@@ -186,7 +186,7 @@ export default function OperationsMetricsHeader({ ciclos = [] }) {
             </span>
           </div>
           <div className="text-xs text-gray-500 mt-2 font-inter flex items-center justify-between">
-            <span className="text-pink-500 font-sora font-semibold text-[11px]">
+            <span className="text-brand-magenta font-sora font-semibold text-[11px]">
               {metrics.calendariosPendientes > 0
                 ? `${metrics.calendariosPendientes} pendientes`
                 : "100% vinculados"}

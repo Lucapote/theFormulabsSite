@@ -1,4 +1,4 @@
-import { Sparkles, Plus, AlertTriangle, FileCheck2, LockKeyhole } from "lucide-react";
+import { Video, Plus, AlertTriangle, FileCheck2, LockKeyhole } from "lucide-react";
 import ProductionSessionCapsule from "./ProductionSessionCapsule";
 
 /**
@@ -26,7 +26,7 @@ export default function CycleSessionsTrack({
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-sora font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-brand-blue" />
+              <Video className="w-3.5 h-3.5 text-brand-blue" />
               Rodajes ({producciones.length})
             </span>
             {onOpenCreateProdModal && (

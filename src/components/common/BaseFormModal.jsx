@@ -64,7 +64,7 @@ export default function BaseFormModal({
               onClick={onClose}
               disabled={isLoading}
               className={cn(
-                "h-11 px-5 rounded-full border border-gray-200 hover:bg-gray-100 text-gray-700 font-sora font-bold text-xs uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50",
+                "h-11 px-5 rounded-full border border-gray-200 hover:bg-gray-100 text-gray-700 font-sora font-bold text-xs uppercase tracking-wider transition-all cursor-pointer active:scale-[0.98] disabled:opacity-50",
                 cancelButtonClass
               )}
             >
@@ -179,7 +179,7 @@ export default function BaseFormModal({
               >
                 <button
                   type="button"
-                  className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-gray-300 hover:text-white transition-all cursor-pointer shrink-0"
+                  className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-gray-300 hover:text-white transition-all cursor-pointer shrink-0 active:scale-95"
                 >
                   <X className="w-5 h-5" />
                   <span className="sr-only">Cerrar</span>

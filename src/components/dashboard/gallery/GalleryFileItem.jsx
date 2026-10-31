@@ -38,7 +38,7 @@ export default function GalleryFileItem({
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-gray-900 to-slate-950 flex items-center justify-center pointer-events-none">
-            <VideoIcon className="w-6 h-6 text-pink-400/80" />
+            <VideoIcon className="w-6 h-6 text-brand-magenta/80" />
           </div>
         )
       ) : (

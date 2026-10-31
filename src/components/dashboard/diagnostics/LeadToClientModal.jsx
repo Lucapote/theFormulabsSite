@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { UserCheck, DollarSign, MapPin, Briefcase, GraduationCap, Zap, LockKeyhole } from "lucide-react";
+import { UserCheck, DollarSign, MapPin, Briefcase, GraduationCap, Package, LockKeyhole } from "lucide-react";
 import BaseFormModal from "@/components/common/BaseFormModal";
 import { convertLeadToClient } from "@/services/leadService";
 import { getPaymentSplitOptions, getDefaultFirstPaymentSessions } from "@/utils/bookingHelpers";
@@ -121,7 +121,7 @@ export default function LeadToClientModal({ isOpen, onClose, lead, onClientCreat
                 tipoServicio === "servicio_unico" ? "bg-white text-gray-900 shadow-xs font-bold" : "text-gray-500 hover:text-gray-800"
               }`}
             >
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
+              <Package className="w-3.5 h-3.5 text-amber-500" />
               <span>Servicio Único</span>
             </button>
           </div>

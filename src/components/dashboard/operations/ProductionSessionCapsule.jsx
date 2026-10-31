@@ -1,4 +1,4 @@
-import { Link2, ExternalLink, LockKeyhole, AlertTriangle, Clock, Sparkles } from "lucide-react";
+import { Link2, ExternalLink, LockKeyhole, AlertTriangle, Clock, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { getSessionDisplayName, getBookingUrl } from "@/utils/formatters";
 import { checkSesionDesbloqueada } from "@/services/operationsService";
@@ -87,7 +87,7 @@ export default function ProductionSessionCapsule({
       ) : isPreReserved ? (
         <Clock className="w-3 h-3 text-indigo-600 shrink-0" />
       ) : isProposedByAgency ? (
-        <Sparkles className="w-3 h-3 text-brand-blue shrink-0" />
+        <CalendarClock className="w-3 h-3 text-brand-blue shrink-0" />
       ) : (
         !isScheduled &&
         !estaDesbloqueada && <LockKeyhole className="w-3 h-3 text-amber-500 shrink-0" />

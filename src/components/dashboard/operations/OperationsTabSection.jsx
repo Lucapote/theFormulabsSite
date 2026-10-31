@@ -4,7 +4,7 @@ import {
   ChevronLeft,
   ChevronRight,
   RefreshCw,
-  Sparkles,
+  CalendarPlus,
   Users,
   AlertCircle,
   FileCheck2
@@ -144,7 +144,7 @@ export default function OperationsTabSection({ setActiveTab = null }) {
               onClick={handleEnsureAllCycles}
               className="h-9 px-4 rounded-full bg-[#188ff0] hover:bg-blue-600 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-blue-200 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 active:scale-[0.98]"
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <CalendarPlus className="w-3.5 h-3.5" />
               <span>
                 {generating ? "Generando..." : `Generar ${activeClientesWithoutCycle.length} Ciclos`}
               </span>
@@ -243,7 +243,7 @@ export default function OperationsTabSection({ setActiveTab = null }) {
               onClick={handleEnsureAllCycles}
               className="h-10 px-6 rounded-full bg-brand-blue hover:bg-blue-600 text-white text-xs font-sora font-bold uppercase tracking-wider shadow-md shadow-blue-200 transition-all inline-flex items-center gap-2 cursor-pointer active:scale-[0.98]"
             >
-              <Sparkles className="w-4 h-4" />
+              <CalendarPlus className="w-4 h-4" />
               <span>
                 {generating ? "Generando Ciclos..." : "Generar Ciclos Mensuales Automáticamente"}
               </span>

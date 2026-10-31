@@ -157,11 +157,11 @@ export default function PostCopyBottomSheet({
           {/* Badges Row */}
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-sora font-extrabold uppercase tracking-wider bg-pink-500/20 text-pink-400 border border-pink-500/30">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-sora font-extrabold uppercase tracking-wider bg-brand-magenta/20 text-brand-magenta border border-brand-magenta/30">
                 {post.tipo_post === "reel" ? (
-                  <VideoIcon className="w-3 h-3 text-pink-400" />
+                  <VideoIcon className="w-3 h-3 text-brand-magenta" />
                 ) : (
-                  <Layers className="w-3 h-3 text-pink-400" />
+                  <Layers className="w-3 h-3 text-brand-magenta" />
                 )}
                 {formatBadge}
               </span>
@@ -295,7 +295,7 @@ export default function PostCopyBottomSheet({
                   <button
                     type="button"
                     onClick={handleCopy}
-                    className="bg-pink-600 hover:bg-pink-500 text-white font-semibold h-11 w-full rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg shadow-pink-600/25 cursor-pointer text-xs uppercase tracking-wider font-sora"
+                    className="bg-brand-magenta hover:opacity-90 text-white font-semibold h-11 w-full rounded-full flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg shadow-pink-500/25 cursor-pointer text-xs uppercase tracking-wider font-sora"
                   >
                     {copied ? (
                       <>

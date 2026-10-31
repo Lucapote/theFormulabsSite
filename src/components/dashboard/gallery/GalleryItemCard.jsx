@@ -29,10 +29,10 @@ export default function GalleryItemCard({
   return (
     <div
       {...eventHandlers}
-      className={`group bg-gray-900 rounded-[1.5rem] overflow-hidden relative aspect-square shadow-md transition-all cursor-pointer border-2 select-none ${
+      className={`group bg-gray-900 rounded-[1.5rem] overflow-hidden relative aspect-square shadow-md transition-all cursor-pointer border-2 select-none active:scale-[0.98] ${
         isSelected
-          ? "border-pink-500 ring-4 ring-pink-500/20 scale-[0.98]"
-          : "border-gray-100 hover:border-pink-300 hover:shadow-xl"
+          ? "border-brand-magenta ring-4 ring-brand-magenta/20 scale-[0.98]"
+          : "border-gray-100 hover:border-brand-magenta/40 hover:shadow-xl"
       }`}
       title={
         isSelectMode
@@ -52,7 +52,7 @@ export default function GalleryItemCard({
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-gray-900 to-slate-950 flex items-center justify-center">
-              <VideoIcon className="w-8 h-8 text-pink-400/80" />
+              <VideoIcon className="w-8 h-8 text-brand-magenta/80" />
             </div>
           )}
           <div className="absolute inset-0 bg-black/30 opacity-80 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -88,7 +88,7 @@ export default function GalleryItemCard({
       {isSelectMode ? (
         <div className="absolute top-2.5 right-2.5 z-20 pointer-events-none">
           {isSelected ? (
-            <div className="w-6 h-6 rounded-full bg-pink-500 text-white flex items-center justify-center shadow-md animate-in zoom-in-75 duration-150">
+            <div className="w-6 h-6 rounded-full bg-brand-magenta text-white flex items-center justify-center shadow-md animate-in zoom-in-75 duration-150">
               <Check className="w-4 h-4" />
             </div>
           ) : (

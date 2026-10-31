@@ -15,15 +15,15 @@ const Toaster = ({ ...props }) => {
             "group toast group-[.toaster]:bg-white group-[.toaster]:text-gray-900 group-[.toaster]:border-pink-300 group-[.toaster]:border group-[.toaster]:shadow-xl group-[.toaster]:shadow-pink-500/10 group-[.toaster]:rounded-full group-[.toaster]:px-4 group-[.toaster]:py-2.5 font-sora text-xs font-extrabold flex items-center gap-3",
           description: "group-[.toast]:text-gray-500 font-normal",
           actionButton:
-            "group-[.toast]:bg-pink-500 group-[.toast]:text-white group-[.toast]:font-sora group-[.toast]:rounded-full",
+            "group-[.toast]:bg-brand-magenta group-[.toast]:text-white group-[.toast]:font-sora group-[.toast]:rounded-full active:scale-95 cursor-pointer",
           cancelButton:
-            "group-[.toast]:bg-gray-100 group-[.toast]:text-gray-700 group-[.toast]:rounded-full",
+            "group-[.toast]:bg-gray-100 group-[.toast]:text-gray-700 group-[.toast]:rounded-full active:scale-95 cursor-pointer",
         },
       }}
       icons={{
         success: (
-          <div className="w-7 h-7 rounded-full bg-pink-50 border border-pink-100 flex items-center justify-center shrink-0 text-pink-500">
-            <CheckCircle2 className="w-4 h-4 text-pink-500 stroke-[2.5]" />
+          <div className="w-7 h-7 rounded-full bg-pink-50 border border-pink-100 flex items-center justify-center shrink-0 text-brand-magenta">
+            <CheckCircle2 className="w-4 h-4 text-brand-magenta stroke-[2.5]" />
           </div>
         ),
         error: (
@@ -32,8 +32,8 @@ const Toaster = ({ ...props }) => {
           </div>
         ),
         info: (
-          <div className="w-7 h-7 rounded-full bg-pink-50 border border-pink-100 flex items-center justify-center shrink-0 text-pink-500">
-            <Info className="w-4 h-4 text-pink-500 stroke-[2.5]" />
+          <div className="w-7 h-7 rounded-full bg-pink-50 border border-pink-100 flex items-center justify-center shrink-0 text-brand-magenta">
+            <Info className="w-4 h-4 text-brand-magenta stroke-[2.5]" />
           </div>
         ),
         warning: (
@@ -42,8 +42,8 @@ const Toaster = ({ ...props }) => {
           </div>
         ),
         loading: (
-          <div className="w-7 h-7 rounded-full bg-pink-50 border border-pink-100 flex items-center justify-center shrink-0 text-pink-500">
-            <Loader2 className="w-4 h-4 text-pink-500 animate-spin stroke-[2.5]" />
+          <div className="w-7 h-7 rounded-full bg-pink-50 border border-pink-100 flex items-center justify-center shrink-0 text-brand-magenta">
+            <Loader2 className="w-4 h-4 text-brand-magenta animate-spin stroke-[2.5]" />
           </div>
         ),
       }}

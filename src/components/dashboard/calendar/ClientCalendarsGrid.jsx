@@ -3,7 +3,7 @@ import {
   Building2,
   Mail,
   Plus,
-  Sparkles,
+  Loader2,
   Users,
   Trash2,
   Copy,
@@ -108,7 +108,7 @@ export default function ClientCalendarsGrid({
             <button
               type="button"
               onClick={onOpenCalendarModal}
-              className="h-10 px-5 bg-pink-500 hover:bg-pink-600 text-white font-sora font-bold text-xs rounded-full shadow-md shadow-pink-100 transition-all inline-flex items-center gap-2 cursor-pointer self-start sm:self-auto"
+              className="h-10 px-5 bg-brand-magenta hover:opacity-90 text-white font-sora font-bold text-xs rounded-full shadow-md shadow-pink-500/20 transition-all active:scale-[0.98] inline-flex items-center gap-2 cursor-pointer self-start sm:self-auto"
             >
               <Plus className="w-4 h-4" /> Crear Calendario
             </button>
@@ -123,12 +123,12 @@ export default function ClientCalendarsGrid({
 
             {loadingCalendarios ? (
               <div className="p-12 text-center bg-gray-50 rounded-2xl">
-                <Sparkles className="w-6 h-6 text-pink-500 animate-spin mx-auto mb-2" />
+                <Loader2 className="w-6 h-6 text-brand-magenta animate-spin mx-auto mb-2" />
                 <p className="text-xs font-sora font-bold text-gray-600">Cargando calendarios...</p>
               </div>
             ) : calendarios.length === 0 ? (
               <div className="p-10 text-center bg-gray-50 rounded-[1.5rem] border border-dashed border-gray-200">
-                <CalendarIcon className="w-10 h-10 text-pink-300 mx-auto mb-3" />
+                <CalendarIcon className="w-10 h-10 text-brand-magenta/40 mx-auto mb-3" />
                 <h5 className="font-sora font-bold text-gray-900 text-base mb-1">
                   Sin calendarios asignados
                 </h5>
@@ -138,7 +138,7 @@ export default function ClientCalendarsGrid({
                 <button
                   type="button"
                   onClick={onOpenCalendarModal}
-                  className="h-10 px-6 bg-pink-500 text-white font-sora font-bold text-xs rounded-full shadow-md inline-flex items-center gap-2 cursor-pointer"
+                  className="h-10 px-6 bg-brand-magenta hover:opacity-90 text-white font-sora font-bold text-xs rounded-full shadow-md shadow-pink-500/20 inline-flex items-center gap-2 cursor-pointer active:scale-[0.98]"
                 >
                   <Plus className="w-4 h-4" /> Crear Primer Calendario
                 </button>
@@ -167,10 +167,10 @@ export default function ClientCalendarsGrid({
 
                       <div className="flex flex-wrap items-center gap-2 mb-3">
                         <span className="inline-flex items-center gap-1.5 text-[11px] font-sora font-bold text-gray-700 bg-gray-100 px-3 py-1 rounded-full">
-                          <CalendarIcon className="w-3.5 h-3.5 text-pink-500" />
+                          <CalendarIcon className="w-3.5 h-3.5 text-brand-magenta" />
                           {MONTH_NAMES[(cal.mes || 1) - 1]} {cal.anio}
                         </span>
-                        <span className="inline-block font-mono text-[11px] font-semibold text-pink-600 bg-pink-50 border border-pink-100 px-3 py-1 rounded-full">
+                        <span className="inline-block font-mono text-[11px] font-semibold text-brand-magenta bg-pink-50 border border-pink-100 px-3 py-1 rounded-full">
                           {formatCalendarUrlPath(cal.slug, selectedCliente?.nombre)}
                         </span>
                       </div>
@@ -180,7 +180,7 @@ export default function ClientCalendarsGrid({
                       <button
                         type="button"
                         onClick={() => onCopyCalendarLink(cal.slug)}
-                        className="h-8 px-3 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-full text-xs font-sora font-medium inline-flex items-center gap-1.5 transition-all cursor-pointer"
+                        className="h-8 px-3 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-full text-xs font-sora font-medium inline-flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
                       >
                         {copiedSlug === cal.slug ? (
                           <Check className="w-3.5 h-3.5 text-green-600" />
@@ -194,7 +194,7 @@ export default function ClientCalendarsGrid({
                         <button
                           type="button"
                           onClick={() => onSelectActiveCalendar(cal)}
-                          className="h-8 px-3.5 bg-pink-50 hover:bg-pink-500 text-pink-600 hover:text-white rounded-full text-xs font-sora font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                          className="h-8 px-3.5 bg-pink-50 hover:bg-brand-magenta text-brand-magenta hover:text-white rounded-full text-xs font-sora font-bold inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95"
                           title="Gestionar galería de medios"
                         >
                           <Film className="w-3.5 h-3.5 shrink-0" />

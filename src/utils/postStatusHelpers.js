@@ -74,11 +74,11 @@ export const POST_STATUSES = {
     key: "publicado",
     label: "Publicado",
     colorHex: "#ef18d6",
-    dotClass: "bg-pink-500",
-    textClass: "text-pink-500",
-    badgeClass: "bg-pink-500/20 text-pink-400 border border-pink-500/30",
-    lightBadgeClass: "bg-pink-50 text-pink-600 border border-pink-200",
-    pillCalendarClass: "bg-pink-500 text-white shadow-xs shadow-pink-500/30",
+    dotClass: "bg-brand-magenta",
+    textClass: "text-brand-magenta",
+    badgeClass: "bg-brand-magenta/20 text-brand-magenta border border-brand-magenta/30",
+    lightBadgeClass: "bg-pink-50 text-brand-magenta border border-pink-200",
+    pillCalendarClass: "bg-brand-magenta text-white shadow-xs shadow-pink-500/30",
     requiresMedia: true,
     description: "Publicación emitida y en vivo en redes sociales."
   }

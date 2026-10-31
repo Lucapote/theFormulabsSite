@@ -224,7 +224,7 @@ export default function NotificationCenterPopover({ onNavigateTab, onNavigateToC
         <div className="bg-slate-950 text-white p-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-              <Bell className="w-4 h-4 text-pink-400" />
+              <Bell className="w-4 h-4 text-brand-magenta" />
             </div>
             <div>
               <h4 className="font-sora font-bold text-xs uppercase tracking-wider text-white">
@@ -284,7 +284,7 @@ export default function NotificationCenterPopover({ onNavigateTab, onNavigateToC
                             {clienteNombre}
                           </span>
                           <span className="text-[10px] text-gray-400 flex items-center gap-1 font-mono">
-                            {post.tipo_post === "reel" ? <VideoIcon className="w-2.5 h-2.5 text-pink-500" /> : <Layers className="w-2.5 h-2.5 text-brand-blue" />}
+                            {post.tipo_post === "reel" ? <VideoIcon className="w-2.5 h-2.5 text-brand-magenta" /> : <Layers className="w-2.5 h-2.5 text-brand-blue" />}
                             {post.fecha_programada} • {post.hora_programada?.slice(0, 5)} hrs
                           </span>
                         </div>
@@ -400,7 +400,7 @@ export default function NotificationCenterPopover({ onNavigateTab, onNavigateToC
 
                         <div>
                           <span className="text-[10px] text-gray-400 flex items-center gap-1 font-mono mt-0.5">
-                            {post.tipo_post === "reel" ? <VideoIcon className="w-2.5 h-2.5 text-pink-500" /> : <Layers className="w-2.5 h-2.5 text-brand-blue" />}
+                            {post.tipo_post === "reel" ? <VideoIcon className="w-2.5 h-2.5 text-brand-magenta" /> : <Layers className="w-2.5 h-2.5 text-brand-blue" />}
                             {post.fecha_programada} • {post.hora_programada?.slice(0, 5)} hrs
                           </span>
                         </div>

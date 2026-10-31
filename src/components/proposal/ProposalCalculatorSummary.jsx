@@ -27,7 +27,7 @@ export default function ProposalCalculatorSummary({
       <div className="hidden lg:block w-1/3 sticky top-28">
         <div className="bg-gray-900 rounded-[2rem] p-8 shadow-2xl text-white border border-gray-800">
           <div className="flex items-center gap-3 mb-6 pb-6 border-b border-gray-800">
-            <Calculator className="w-7 h-7 text-pink-400" />
+            <Calculator className="w-7 h-7 text-brand-magenta" />
             <h3 className="text-2xl font-bold font-sora">Resumen Mensual</h3>
           </div>
 
@@ -58,7 +58,7 @@ export default function ProposalCalculatorSummary({
 
             {hasAddonsSelected && (
               <div className="pt-4 border-t border-gray-800/80 space-y-4">
-                <p className="text-xs text-pink-400 font-bold uppercase tracking-wider">
+                <p className="text-xs text-brand-magenta font-bold uppercase tracking-wider">
                   Módulos Extra
                 </p>
                 {addons.map((addon) => {
@@ -91,7 +91,7 @@ export default function ProposalCalculatorSummary({
             <div>
               <p className="text-gray-400 text-sm mb-1 font-medium">Inversión Estimada</p>
               <div className="flex items-end gap-2">
-                <span className="text-4xl font-black text-pink-400 font-sora">
+                <span className="text-4xl font-black text-brand-magenta font-sora">
                   {formatPrice(totalPrice)}
                 </span>
                 <span className="text-gray-400 mb-2 font-semibold">MXN</span>
@@ -133,7 +133,7 @@ export default function ProposalCalculatorSummary({
           }`}
         >
           <div className="p-6 pt-8 text-white overflow-y-auto max-h-[60vh]">
-            <h4 className="font-bold text-lg mb-4 text-pink-400 border-b border-gray-800 pb-2 font-sora">
+            <h4 className="font-bold text-lg mb-4 text-brand-magenta border-b border-gray-800 pb-2 font-sora">
               Desglose Mensual
             </h4>
             <div className="flex justify-between items-center mb-3 text-sm">
@@ -192,7 +192,7 @@ export default function ProposalCalculatorSummary({
           </div>
 
           <div>
-            <p className="text-[11px] text-pink-400 font-bold uppercase tracking-wider mb-0.5">
+            <p className="text-[11px] text-brand-magenta font-bold uppercase tracking-wider mb-0.5">
               Inversión Estimada
             </p>
             <div className="flex items-baseline gap-1">

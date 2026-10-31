@@ -40,7 +40,7 @@ export default function PostMediaPreview({
           imageClassName={imageClassName}
           showControls={showControls}
           showDots={showDots}
-          activeDotColorClass="bg-pink-500 w-6 h-2 shadow-sm shadow-pink-500/50"
+          activeDotColorClass="bg-brand-magenta w-6 h-2 shadow-sm shadow-pink-500/50"
         />
       </div>
     );

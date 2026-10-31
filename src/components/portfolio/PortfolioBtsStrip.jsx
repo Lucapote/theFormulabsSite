@@ -49,11 +49,13 @@ export default function PortfolioBtsStrip() {
                 ) : (
                   <video
                     src={shot.videoPreview}
+                    poster={shot.posterUrl}
                     autoPlay
                     loop
                     muted
                     playsInline
-                    preload="metadata"
+                    webkit-playsinline="true"
+                    preload="none"
                     className="w-full h-full object-cover"
                   />
                 )}

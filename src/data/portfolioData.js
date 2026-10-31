@@ -2,6 +2,7 @@
  * portfolioData.js
  * Datos estructurados y contratos de medios para el Portafolio oficial de The Formulab.
  * Activos alojados localmente en /public/portfolio/{marca}/{archivo}.
+ * Incluye posterUrl optimizado en WebP para erradicar pantallas negras en iOS y acelerar carga en Android.
  */
 
 export const PORTFOLIO_CATEGORIES = [
@@ -21,6 +22,7 @@ export const PORTFOLIO_REELS = [
     title: "Platillo del Mes",
     hook: "El chef presenta su receta icónica en 15 segundos con ritmo dinámico.",
     videoUrl: "/portfolio/yamamoto/1.mp4",
+    posterUrl: "/portfolio/yamamoto/1_poster.webp",
     aspect: "vertical",
     colorAccent: "#ef18d6"
   },
@@ -32,6 +34,7 @@ export const PORTFOLIO_REELS = [
     title: "Detrás de la Barra",
     hook: "La preparación artesanal que nadie ve antes de que el plato llegue a la mesa.",
     videoUrl: "/portfolio/yamamoto/2.mp4",
+    posterUrl: "/portfolio/yamamoto/2_poster.webp",
     aspect: "vertical",
     colorAccent: "#188ff0"
   },
@@ -43,6 +46,7 @@ export const PORTFOLIO_REELS = [
     title: "La Toma del Vapor",
     hook: "Una toma macro cinematográfica diseñada específicamente para generar antojo inmediato.",
     videoUrl: "/portfolio/yamamoto/3.mp4",
+    posterUrl: "/portfolio/yamamoto/3_poster.webp",
     aspect: "vertical",
     colorAccent: "#ef18d6"
   },
@@ -54,6 +58,7 @@ export const PORTFOLIO_REELS = [
     title: "Experiencia Omakase",
     hook: "El ritual completo de cocina japonesa tradicional de 37 años de legado.",
     videoUrl: "/portfolio/yamamoto/4.mp4",
+    posterUrl: "/portfolio/yamamoto/4_poster.webp",
     aspect: "vertical",
     colorAccent: "#188ff0"
   },
@@ -65,6 +70,7 @@ export const PORTFOLIO_REELS = [
     title: "El Formato Propio",
     hook: "Un hook visual inconfundible que se reconoce en el primer segundo del scroll.",
     videoUrl: "/portfolio/mauFuentes/1.mp4",
+    posterUrl: "/portfolio/mauFuentes/1_poster.webp",
     aspect: "vertical",
     colorAccent: "#188ff0"
   },
@@ -76,6 +82,7 @@ export const PORTFOLIO_REELS = [
     title: "Storytime en Acción",
     hook: "Una narrativa real de alto valor contada mientras ocurre una acción física paralela.",
     videoUrl: "/portfolio/mauFuentes/2.mp4",
+    posterUrl: "/portfolio/mauFuentes/2_poster.webp",
     aspect: "vertical",
     colorAccent: "#ef18d6"
   },
@@ -87,6 +94,7 @@ export const PORTFOLIO_REELS = [
     title: "De la Llegada a la Calma",
     hook: "La experiencia de relajación holística transmitida en primera persona.",
     videoUrl: "/portfolio/xochipilli/1.mp4",
+    posterUrl: "/portfolio/xochipilli/1_poster.webp",
     aspect: "vertical",
     colorAccent: "#ef18d6"
   },
@@ -98,6 +106,7 @@ export const PORTFOLIO_REELS = [
     title: "Ritual de Sanación",
     hook: "Conexión con la naturaleza y calma sensorial en menos de 20 segundos.",
     videoUrl: "/portfolio/xochipilli/2.mp4",
+    posterUrl: "/portfolio/xochipilli/2_poster.webp",
     aspect: "vertical",
     colorAccent: "#188ff0"
   },
@@ -109,6 +118,7 @@ export const PORTFOLIO_REELS = [
     title: "Lookbook en Movimiento",
     hook: "Transición estilizada destacando texturas y fluidez del producto.",
     videoUrl: "/portfolio/margaret/1.mp4",
+    posterUrl: "/portfolio/margaret/1_poster.webp",
     aspect: "vertical",
     colorAccent: "#ef18d6"
   },
@@ -120,6 +130,7 @@ export const PORTFOLIO_REELS = [
     title: "Detalles Quirúrgicos",
     hook: "Cortes rápidos y encuadres cercanos que realzan la calidad de la prenda.",
     videoUrl: "/portfolio/margaret/2.mp4",
+    posterUrl: "/portfolio/margaret/2_poster.webp",
     aspect: "vertical",
     colorAccent: "#188ff0"
   },
@@ -131,6 +142,7 @@ export const PORTFOLIO_REELS = [
     title: "Antes y Después",
     hook: "El resultado del servicio filmado con ritmo ágil y tendencia de audio actual.",
     videoUrl: "/portfolio/lemonade/1.mp4",
+    posterUrl: "/portfolio/lemonade/1_poster.webp",
     aspect: "vertical",
     colorAccent: "#ef18d6"
   }
@@ -152,10 +164,10 @@ export const FEATURED_CASES = [
     quote: "Lograron que un restaurante de casi 4 décadas se sienta como el lugar más contemporáneo de Cancún en Instagram.",
     clientRole: "Dirección General · Yamamoto",
     stripVideos: [
-      { id: "y1", title: "Platillo del mes", url: "/portfolio/yamamoto/1.mp4" },
-      { id: "y2", title: "Detrás de la barra", url: "/portfolio/yamamoto/2.mp4" },
-      { id: "y3", title: "La toma del vapor", url: "/portfolio/yamamoto/3.mp4" },
-      { id: "y4", title: "Experiencia Omakase", url: "/portfolio/yamamoto/4.mp4" }
+      { id: "y1", title: "Platillo del mes", url: "/portfolio/yamamoto/1.mp4", posterUrl: "/portfolio/yamamoto/1_poster.webp" },
+      { id: "y2", title: "Detrás de la barra", url: "/portfolio/yamamoto/2.mp4", posterUrl: "/portfolio/yamamoto/2_poster.webp" },
+      { id: "y3", title: "La toma del vapor", url: "/portfolio/yamamoto/3.mp4", posterUrl: "/portfolio/yamamoto/3_poster.webp" },
+      { id: "y4", title: "Experiencia Omakase", url: "/portfolio/yamamoto/4.mp4", posterUrl: "/portfolio/yamamoto/4_poster.webp" }
     ],
     color: "#ef18d6"
   },
@@ -202,8 +214,8 @@ export const FEATURED_CASES = [
     quote: "Grabar 20 videos en una sola sesión de 3 horas cambió por completo la consistencia de mi negocio.",
     clientRole: "Creador & Consultor",
     stripVideos: [
-      { id: "m1", title: "El formato propio", url: "/portfolio/mauFuentes/1.mp4" },
-      { id: "m2", title: "Storytime en acción", url: "/portfolio/mauFuentes/2.mp4" }
+      { id: "m1", title: "El formato propio", url: "/portfolio/mauFuentes/1.mp4", posterUrl: "/portfolio/mauFuentes/1_poster.webp" },
+      { id: "m2", title: "Storytime en acción", url: "/portfolio/mauFuentes/2.mp4", posterUrl: "/portfolio/mauFuentes/2_poster.webp" }
     ],
     color: "#ef18d6"
   }
@@ -239,6 +251,7 @@ export const BTS_SHOTS = [
     title: "Dirección de escena gastronómica",
     tag: "Yamamoto · Cancún",
     videoPreview: "/portfolio/yamamoto/2.mp4",
+    posterUrl: "/portfolio/yamamoto/2_bts_poster.webp",
     aspect: "aspect-[4/5]",
     rotation: "rotate-2"
   },
@@ -247,6 +260,7 @@ export const BTS_SHOTS = [
     title: "Grabación en lote y ritmo dinámico",
     tag: "Mau Fuentes · Estudio",
     videoPreview: "/portfolio/mauFuentes/1.mp4",
+    posterUrl: "/portfolio/mauFuentes/1_bts_poster.webp",
     aspect: "aspect-[4/5]",
     rotation: "-rotate-1"
   }
@@ -262,4 +276,3 @@ export const PORTFOLIO_BRANDS = [
   { id: "mv-mobile", name: "MV Mobile Notary", niche: "Servicios Legales B2B" },
   { id: "universal", name: "Universal Hyundai", niche: "Automotriz B2C" }
 ];
-

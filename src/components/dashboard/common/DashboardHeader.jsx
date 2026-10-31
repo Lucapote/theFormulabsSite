@@ -39,7 +39,7 @@ export default function DashboardHeader({
                 type="button"
                 className="inline-flex items-center h-10 px-3.5 sm:px-4 rounded-full text-xs font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 shadow-2xs gap-2 transition-all cursor-pointer outline-hidden focus:ring-2 focus:ring-[#188ff0]/20 active:scale-[0.98]"
               >
-                <User className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+                <User className="w-3.5 h-3.5 text-brand-magenta shrink-0" />
                 <span className="truncate max-w-[130px] sm:max-w-[200px]">{user?.email}</span>
                 <ChevronDown className="w-3.5 h-3.5 text-gray-400 shrink-0 transition-transform duration-200" />
               </button>

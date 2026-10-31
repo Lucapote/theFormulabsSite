@@ -22,7 +22,7 @@ export default function DashboardTabs({
             : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
         }`}
       >
-        <FileText className="w-4 h-4 text-pink-400" />
+        <FileText className="w-4 h-4 text-brand-magenta" />
         Propuestas ({totalPropuestasReales})
       </button>
 
@@ -35,7 +35,7 @@ export default function DashboardTabs({
             : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
         }`}
       >
-        <Users className="w-4 h-4 text-pink-500" />
+        <Users className="w-4 h-4 text-brand-magenta" />
         Calendarios
       </button>
 

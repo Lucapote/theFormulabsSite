@@ -1,474 +1,85 @@
-import { useState, useEffect } from "react";
-import { Users, RefreshCw, UserPlus, Calendar as CalendarIcon } from "lucide-react";
-import { toast } from "sonner";
-import {
-  getClientes,
-  createCliente,
-  deleteCliente,
-  getCalendariosByCliente,
-  createCalendario,
-  deleteCalendario,
-  generateSlug,
-  formatCalendarUrlPath,
-  createDraftPlaceholderPosts,
-  updateClientDownloadPermission
-} from "@/services/calendarService";
-import { ensureCicloActual } from "@/services/operationsService";
-
 import MediaGallery from "@/components/dashboard/gallery/MediaGallery";
 import ScheduledPostsList from "./ScheduledPostsList";
-
 import ClientListSidebar from "./ClientListSidebar";
 import ClientCalendarsGrid from "./ClientCalendarsGrid";
 import CreateClientModal from "./CreateClientModal";
 import EditClientModal from "./EditClientModal";
 import CreateCalendarModal from "./CreateCalendarModal";
-import { useWindowFocusRefresh } from "@/hooks/useWindowFocusRefresh";
 import ActiveCalendarHeader from "./ActiveCalendarHeader";
 import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
+import ClientsCalendarHeaderCard from "./subcomponents/ClientsCalendarHeaderCard";
+import { useClientsCalendarManager } from "@/hooks/useClientsCalendarManager";
 
 const MONTH_NAMES = [
-  "Enero",
-  "Febrero",
-  "Marzo",
-  "Abril",
-  "Mayo",
-  "Junio",
-  "Julio",
-  "Agosto",
-  "Septiembre",
-  "Octubre",
-  "Noviembre",
-  "Diciembre"
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
 ];
 
 const TIPO_CONTENIDO_OPTIONS = [
-  "Reels",
-  "Carruseles",
-  "Fotos / Estáticos",
-  "Historias / Stories"
+  "Reels", "Carruseles", "Fotos / Estáticos", "Historias / Stories"
 ];
 
 const PLATAFORMAS_OPTIONS = [
-  "Instagram",
-  "Facebook",
-  "TikTok",
-  "LinkedIn",
-  "YouTube"
+  "Instagram", "Facebook", "TikTok", "LinkedIn", "YouTube"
 ];
 
 /**
  * ClientsCalendarSection
- * Main orchestrator container component for managing clients, their content calendars,
- * and navigating active calendar media galleries and scheduled posts.
+ * Contenedor orquestador modular para gestión de clientes y calendarios de contenido.
+ * Desacoplado con hook useClientsCalendarManager y subcomponentes especializados.
  */
 export default function ClientsCalendarSection({
   initialClienteId = null,
   initialCalendarId = null,
   onClearInitial = null
 }) {
-  const [clientes, setClientes] = useState([]);
-  const [loadingClientes, setLoadingClientes] = useState(false);
-  const [selectedCliente, setSelectedCliente] = useState(null);
-
-  const [calendarios, setCalendarios] = useState([]);
-  const [loadingCalendarios, setLoadingCalendarios] = useState(false);
-  const [activeCalendar, setActiveCalendar] = useState(null);
-  const [calendarSubTab, setCalendarSubTab] = useState("posts"); // 'posts' | 'gallery'
-  const [galleryRefreshKey, setGalleryRefreshKey] = useState(0);
-
-  const handlePostUpdated = () => setGalleryRefreshKey((prev) => prev + 1);
-
-  // Modals state
-  const [showClientModal, setShowClientModal] = useState(false);
-  const [showCalendarModal, setShowCalendarModal] = useState(false);
-
-  // Form states - Client
-  const DEFAULT_CLIENT_FORM = {
-    nombre: "",
-    empresa: "",
-    email: "",
-    locacion_default: "",
-    permite_descarga: false,
-    monto_retainer: "",
-    esquema_pago: "mensual",
-    dia_corte_pago: 1,
-    dia_corte_pago_2: 15,
-    tipo_sesion_default: "organica",
-    producciones_por_mes: 1
-  };
-
-  const [clientForm, setClientForm] = useState(DEFAULT_CLIENT_FORM);
-  const [isSavingClient, setIsSavingClient] = useState(false);
-  const [editingClient, setEditingClient] = useState(null);
-
-  const handleOpenClientModal = () => {
-    setClientForm({ ...DEFAULT_CLIENT_FORM });
-    setShowClientModal(true);
-  };
-
-  const handleCloseClientModal = () => {
-    setClientForm({ ...DEFAULT_CLIENT_FORM });
-    setShowClientModal(false);
-  };
-
-  // Confirm Modal State
-  const [confirmModal, setConfirmModal] = useState({
-    isOpen: false,
-    title: "",
-    message: "",
-    confirmText: "Eliminar",
-    onConfirm: null,
-    isProcessing: false
+  const {
+    clientes,
+    loadingClientes,
+    selectedCliente,
+    setSelectedCliente,
+    calendarios,
+    loadingCalendarios,
+    activeCalendar,
+    setActiveCalendar,
+    calendarSubTab,
+    setCalendarSubTab,
+    galleryRefreshKey,
+    handlePostUpdated,
+    showClientModal,
+    setShowClientModal,
+    showCalendarModal,
+    setShowCalendarModal,
+    clientForm,
+    setClientForm,
+    isSavingClient,
+    editingClient,
+    setEditingClient,
+    calendarForm,
+    setCalendarForm,
+    isSavingCalendar,
+    copiedSlug,
+    deletingId,
+    confirmModal,
+    setConfirmModal,
+    loadClientes,
+    handleOpenClientModal,
+    handleCloseClientModal,
+    openNewCalendarModal,
+    toggleTipoContenido,
+    togglePlataforma,
+    handleSaveClient,
+    handleToggleDownloadPermission,
+    handleSaveCalendar,
+    handleCalendarNameChange,
+    handleDeleteClient,
+    handleDeleteCalendar,
+    copyCalendarLink
+  } = useClientsCalendarManager({
+    initialClienteId,
+    initialCalendarId,
+    onClearInitial
   });
-
-  // Form states - Calendar
-  const currentMonth = new Date().getMonth() + 1;
-  const currentYear = new Date().getFullYear();
-
-  const DEFAULT_CALENDAR_FORM = {
-    nombre: "",
-    mes: currentMonth,
-    anio: currentYear,
-    slug: "",
-    tiposSeleccionados: ["Reels", "Carruseles"],
-    plataformasSeleccionadas: ["Instagram", "Facebook"],
-    permite_descarga: null,
-    isNameModified: false,
-    isSlugModified: false
-  };
-
-  const [calendarForm, setCalendarForm] = useState(DEFAULT_CALENDAR_FORM);
-  const [isSavingCalendar, setIsSavingCalendar] = useState(false);
-  const [copiedSlug, setCopiedSlug] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
-
-  const openNewCalendarModal = (clienteOverride = null) => {
-    const target = clienteOverride || selectedCliente;
-    if (!target) {
-      toast.error("Por favor crea o selecciona un cliente primero.");
-      return;
-    }
-    if (clienteOverride) {
-      setSelectedCliente(clienteOverride);
-    }
-    setCalendarForm({ ...DEFAULT_CALENDAR_FORM });
-    setShowCalendarModal(true);
-  };
-
-  const toggleTipoContenido = (tipo) => {
-    setCalendarForm((prev) => {
-      const list = prev.tiposSeleccionados || [];
-      const exists = list.includes(tipo);
-      const updated = exists ? list.filter((t) => t !== tipo) : [...list, tipo];
-      return { ...prev, tiposSeleccionados: updated };
-    });
-  };
-
-  const togglePlataforma = (plat) => {
-    setCalendarForm((prev) => {
-      const list = prev.plataformasSeleccionadas || [];
-      const exists = list.includes(plat);
-      const updated = exists ? list.filter((p) => p !== plat) : [...list, plat];
-      return { ...prev, plataformasSeleccionadas: updated };
-    });
-  };
-
-  // Load clients
-  const loadClientes = async (preserveSelectedId = null) => {
-    setLoadingClientes(true);
-    const res = await getClientes();
-    if (res.success) {
-      const list = res.data || [];
-      setClientes(list);
-      if (list.length > 0) {
-        if (preserveSelectedId) {
-          const found = list.find((c) => c.id === preserveSelectedId);
-          setSelectedCliente(found || list[0]);
-        } else if (!selectedCliente) {
-          setSelectedCliente(list[0]);
-        }
-      } else {
-        setSelectedCliente(null);
-      }
-    } else {
-      toast.error(res.error || "No se pudieron cargar los clientes");
-    }
-    setLoadingClientes(false);
-  };
-
-  // Load calendars for selected client
-  const loadCalendarios = async (clienteId) => {
-    if (!clienteId) {
-      setCalendarios([]);
-      return;
-    }
-    setLoadingCalendarios(true);
-    const res = await getCalendariosByCliente(clienteId);
-    if (res.success) {
-      setCalendarios(res.data || []);
-    } else {
-      toast.error(res.error || "Error al cargar los calendarios");
-    }
-    setLoadingCalendarios(false);
-  };
-
-  useEffect(() => {
-    loadClientes(initialClienteId);
-  }, [initialClienteId]);
-
-  useWindowFocusRefresh(() => {
-    loadClientes(selectedCliente?.id);
-  }, { minIntervalMs: 8000 });
-
-  useEffect(() => {
-    if (selectedCliente?.id) {
-      loadCalendarios(selectedCliente.id);
-    } else {
-      setCalendarios([]);
-    }
-  }, [selectedCliente]);
-
-  // Selección automática de cliente cuando viene target desde notificaciones
-  useEffect(() => {
-    if (initialClienteId && clientes.length > 0) {
-      const foundClient = clientes.find((c) => c.id === initialClienteId);
-      if (foundClient && foundClient.id !== selectedCliente?.id) {
-        setSelectedCliente(foundClient);
-      }
-    }
-  }, [initialClienteId, clientes]);
-
-  // Apertura automática del calendario específico solicitado
-  useEffect(() => {
-    if (initialCalendarId && calendarios.length > 0) {
-      const foundCal = calendarios.find((cal) => cal.id === initialCalendarId);
-      if (foundCal) {
-        setActiveCalendar(foundCal);
-        if (onClearInitial) onClearInitial();
-      }
-    }
-  }, [initialCalendarId, calendarios, onClearInitial]);
-
-  // Create Client Submit
-  const handleSaveClient = async (e) => {
-    e.preventDefault();
-    if (!clientForm.nombre.trim()) {
-      toast.error("Por favor ingresa el nombre del cliente.");
-      return;
-    }
-
-    setIsSavingClient(true);
-    const res = await createCliente(clientForm);
-    if (res.success) {
-      const nuevoCliente = res.data;
-
-      // Inicializar automáticamente el ciclo operativo y sesiones del mes corriente
-      const now = new Date();
-      await ensureCicloActual(
-        nuevoCliente.id,
-        now.getMonth() + 1,
-        now.getFullYear(),
-        Number(clientForm.monto_retainer) || 0,
-        Number(clientForm.producciones_por_mes) || 1,
-        clientForm.tipo_sesion_default || "organica",
-        clientForm.locacion_default?.trim() || null
-      );
-
-      toast.success(`Cliente "${clientForm.nombre}" creado exitosamente.`, {
-        action: {
-          label: "Crear Calendario",
-          onClick: () => openNewCalendarModal(nuevoCliente)
-        }
-      });
-      handleCloseClientModal();
-      await loadClientes(nuevoCliente?.id);
-    } else {
-      toast.error(res.error || "No se pudo crear el cliente.");
-    }
-    setIsSavingClient(false);
-  };
-
-  // Toggle Download Permission (Live Control with Optimistic Update)
-  const handleToggleDownloadPermission = async (clienteToUpdate) => {
-    if (!clienteToUpdate?.id) return;
-    const nextStatus = !clienteToUpdate.permite_descarga;
-
-    const prevList = [...clientes];
-    const prevSelected = selectedCliente ? { ...selectedCliente } : null;
-    const prevActive = activeCalendar ? { ...activeCalendar } : null;
-
-    setClientes((prev) =>
-      prev.map((c) => (c.id === clienteToUpdate.id ? { ...c, permite_descarga: nextStatus } : c))
-    );
-    if (selectedCliente?.id === clienteToUpdate.id) {
-      setSelectedCliente((prev) => ({ ...prev, permite_descarga: nextStatus }));
-    }
-    if (activeCalendar?.cliente?.id === clienteToUpdate.id || activeCalendar?.cliente_id === clienteToUpdate.id) {
-      setActiveCalendar((prev) =>
-        prev
-          ? {
-              ...prev,
-              cliente: prev.cliente ? { ...prev.cliente, permite_descarga: nextStatus } : prev.cliente
-            }
-          : prev
-      );
-    }
-
-    const res = await updateClientDownloadPermission(clienteToUpdate.id, nextStatus);
-    if (res.success) {
-      toast.success(
-        nextStatus
-          ? "Permisos de descarga actualizados: Activadas"
-          : "Permisos de descarga actualizados: Inactivas"
-      );
-    } else {
-      setClientes(prevList);
-      setSelectedCliente(prevSelected);
-      setActiveCalendar(prevActive);
-      toast.error(res.error || "No se pudieron actualizar los permisos de descarga.");
-    }
-  };
-
-  // Create Calendar Submit
-  const handleSaveCalendar = async (e) => {
-    e.preventDefault();
-    if (!selectedCliente) {
-      toast.error("Selecciona un cliente primero.");
-      return;
-    }
-    if (!calendarForm.nombre.trim()) {
-      toast.error("Por favor ingresa el nombre del calendario.");
-      return;
-    }
-
-    setIsSavingCalendar(true);
-
-    const strTipo =
-      calendarForm.tiposSeleccionados.length > 0
-        ? calendarForm.tiposSeleccionados.join(" y ")
-        : "Reels y Carruseles";
-
-    const strPlataformas =
-      calendarForm.plataformasSeleccionadas.length > 0
-        ? calendarForm.plataformasSeleccionadas.join(" y ")
-        : "Instagram y Facebook";
-
-    const res = await createCalendario({
-      cliente_id: selectedCliente.id,
-      clienteNombre: selectedCliente.nombre,
-      nombre: calendarForm.nombre,
-      mes: Number(calendarForm.mes),
-      anio: Number(calendarForm.anio),
-      slug: calendarForm.slug,
-      tipo_contenido: strTipo,
-      plataformas: strPlataformas,
-      permite_descarga: calendarForm.permite_descarga !== undefined ? calendarForm.permite_descarga : null
-    });
-
-    if (res.success && res.data?.id) {
-      if (Number(calendarForm.cantReels) > 0 || Number(calendarForm.cantCarruseles) > 0) {
-        await createDraftPlaceholderPosts({
-          calendarioId: res.data.id,
-          cantReels: Number(calendarForm.cantReels) || 0,
-          cantCarruseles: Number(calendarForm.cantCarruseles) || 0,
-          mes: calendarForm.mes,
-          anio: calendarForm.anio
-        });
-      }
-
-      toast.success(
-        `Calendario "${calendarForm.nombre}" creado con éxito.`
-      );
-
-      setCalendarForm({ ...DEFAULT_CALENDAR_FORM });
-      setShowCalendarModal(false);
-      loadCalendarios(selectedCliente.id);
-    } else {
-      toast.error(res.error || "No se pudo crear el calendario.");
-    }
-    setIsSavingCalendar(false);
-  };
-
-  // Auto-generate slug as calendar name changes with client prefix
-  const handleCalendarNameChange = (e) => {
-    const val = e.target.value;
-    const clientPrefix = selectedCliente?.nombre ? generateSlug(selectedCliente.nombre) : "";
-    const calSlug = generateSlug(val);
-    const combinedSlug =
-      clientPrefix && calSlug && !calSlug.startsWith(clientPrefix)
-        ? `${clientPrefix}-${calSlug}`
-        : calSlug;
-
-    setCalendarForm((prev) => ({
-      ...prev,
-      nombre: val,
-      slug: prev.isSlugModified ? prev.slug : combinedSlug
-    }));
-  };
-
-  // Delete Client Confirmation
-  const handleDeleteClient = (clientItem, e) => {
-    if (e) e.stopPropagation();
-    setConfirmModal({
-      isOpen: true,
-      title: `¿Eliminar cliente "${clientItem.nombre}"?`,
-      message: `Esta acción eliminará permanentemente al cliente "${clientItem.nombre}" y todos sus calendarios de contenido asociados.`,
-      confirmText: "Eliminar Cliente",
-      isProcessing: false,
-      onConfirm: async () => {
-        setConfirmModal((prev) => ({ ...prev, isProcessing: true }));
-        setDeletingId(clientItem.id);
-        const res = await deleteCliente(clientItem.id);
-        if (res.success) {
-          toast.success(`Cliente "${clientItem.nombre}" eliminado.`);
-          if (selectedCliente?.id === clientItem.id) {
-            setSelectedCliente(null);
-          }
-          loadClientes();
-        } else {
-          toast.error(res.error || "Error al eliminar el cliente.");
-        }
-        setDeletingId(null);
-        setConfirmModal({ isOpen: false, title: "", message: "", confirmText: "Eliminar", onConfirm: null, isProcessing: false });
-      }
-    });
-  };
-
-  // Delete Calendar Confirmation
-  const handleDeleteCalendar = (calId, calNombre, e) => {
-    if (e) e.stopPropagation();
-    setConfirmModal({
-      isOpen: true,
-      title: `¿Eliminar calendario "${calNombre}"?`,
-      message: `Estás a punto de eliminar el calendario "${calNombre}". Se eliminarán sus publicaciones y se liberarán sus archivos en galería.`,
-      confirmText: "Eliminar Calendario",
-      isProcessing: false,
-      onConfirm: async () => {
-        setConfirmModal((prev) => ({ ...prev, isProcessing: true }));
-        const res = await deleteCalendario(calId);
-        if (res.success) {
-          toast.success(`Calendario "${calNombre}" eliminado.`);
-          if (selectedCliente?.id) {
-            loadCalendarios(selectedCliente.id);
-          }
-        } else {
-          toast.error(res.error || "Error al eliminar calendario.");
-        }
-        setConfirmModal({ isOpen: false, title: "", message: "", confirmText: "Eliminar", onConfirm: null, isProcessing: false });
-      }
-    });
-  };
-
-  // Copy Calendar Link
-  const copyCalendarLink = (slug) => {
-    const path = formatCalendarUrlPath(slug, selectedCliente?.nombre);
-    const fullUrl = `${window.location.origin}${path}`;
-    navigator.clipboard.writeText(fullUrl);
-    setCopiedSlug(slug);
-    toast.success("Enlace del calendario copiado al portapapeles.");
-    setTimeout(() => setCopiedSlug(null), 2000);
-  };
 
   if (activeCalendar) {
     return (
@@ -523,54 +134,14 @@ export default function ClientsCalendarSection({
 
   return (
     <div className="space-y-8 font-inter">
-      {/* Top Header Card */}
-      <div className="bg-white rounded-[2rem] p-6 md:p-8 shadow-xl border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <div className="inline-flex items-center gap-2 text-pink-500 font-bold tracking-widest uppercase text-xs mb-2 font-sora">
-            <Users className="w-4 h-4" />
-            <span>FASE 2 • GESTIÓN DE CONTENIDOS</span>
-          </div>
-          <h2 className="text-2xl md:text-4xl font-extrabold text-gray-900 font-sora tracking-tight">
-            Clientes y <span className="text-brand-blue">Calendarios</span>
-          </h2>
-          <p className="text-gray-500 text-xs sm:text-sm mt-1 font-medium">
-            Organiza tus clientes y gestiona sus calendarios de contenido.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={() => loadClientes(selectedCliente?.id)}
-            className="h-11 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-sora font-bold text-xs rounded-full transition-all flex items-center gap-2 cursor-pointer"
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${
-                loadingClientes || loadingCalendarios ? "animate-spin text-pink-500" : ""
-              }`}
-            />
-          </button>
-
-          <button
-            type="button"
-            onClick={handleOpenClientModal}
-            className="h-11 px-5 bg-gray-900 hover:bg-gray-800 text-white font-sora font-bold text-xs rounded-full shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-[0.98]"
-          >
-            <UserPlus className="w-4 h-4 text-pink-400" />
-            Nuevo Cliente
-          </button>
-
-          <button
-            type="button"
-            onClick={openNewCalendarModal}
-            disabled={!selectedCliente}
-            className="h-11 px-6 bg-pink-500 hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-sora font-bold text-xs rounded-full shadow-lg shadow-pink-200 transition-all flex items-center gap-2 cursor-pointer"
-          >
-            <CalendarIcon className="w-4 h-4" />
-            Nuevo Calendario
-          </button>
-        </div>
-      </div>
+      {/* Cabecera Modularizada */}
+      <ClientsCalendarHeaderCard
+        isLoading={loadingClientes || loadingCalendarios}
+        selectedCliente={selectedCliente}
+        onReload={() => loadClientes(selectedCliente?.id)}
+        onNewClient={handleOpenClientModal}
+        onNewCalendar={() => openNewCalendarModal()}
+      />
 
       {/* Main Grid: Client Sidebar + Calendars Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

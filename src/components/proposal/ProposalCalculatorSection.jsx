@@ -45,7 +45,7 @@ export default function ProposalCalculatorSection({
           {/* Step 1: Base Plans */}
           <div>
             <div className="flex items-center gap-3 mb-6">
-              <div className="bg-pink-100 text-pink-600 font-bold w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+              <div className="bg-pink-100 text-brand-magenta font-bold w-8 h-8 rounded-full flex items-center justify-center shrink-0">
                 1
               </div>
               <h3 className="text-2xl font-bold text-gray-900 font-sora">Selecciona tu Plan Base</h3>
@@ -59,9 +59,9 @@ export default function ProposalCalculatorSection({
                   <div
                     key={plan.id}
                     onClick={() => setSelectedPlan(plan.id)}
-                    className={`relative cursor-pointer rounded-3xl p-6 transition-all duration-300 flex flex-col h-full ${
+                    className={`relative cursor-pointer rounded-3xl p-6 transition-all duration-300 flex flex-col h-full active:scale-[0.99] ${
                       isSelected
-                        ? "bg-pink-50 border-2 border-pink-500 shadow-lg shadow-pink-100 -translate-y-1"
+                        ? "bg-pink-50 border-2 border-brand-magenta shadow-lg shadow-pink-500/10 -translate-y-1"
                         : "bg-white border-2 border-gray-100 shadow-sm hover:border-pink-200 hover:shadow-md"
                     }`}
                   >
@@ -77,7 +77,7 @@ export default function ProposalCalculatorSection({
                         <span className="text-xs text-gray-500 font-medium">{plan.subtitle}</span>
                       </div>
                       <div className={`p-2 rounded-xl ${isSelected ? "bg-pink-100" : "bg-gray-50"}`}>
-                        <IconComp className="w-6 h-6 text-pink-500" />
+                        <IconComp className="w-6 h-6 text-brand-magenta" />
                       </div>
                     </div>
 
@@ -89,7 +89,7 @@ export default function ProposalCalculatorSection({
                     <div className="flex-grow flex flex-col">
                       <div
                         className={`flex items-center gap-2 mb-3 p-2.5 rounded-xl font-bold text-sm ${
-                          isSelected ? "bg-pink-500 text-white" : "bg-gray-100 text-gray-800"
+                          isSelected ? "bg-brand-magenta text-white shadow-xs shadow-pink-500/20" : "bg-gray-100 text-gray-800"
                         }`}
                       >
                         <Camera className="w-4 h-4" />
@@ -101,7 +101,7 @@ export default function ProposalCalculatorSection({
                     <div className="mt-4 flex justify-center">
                       <div
                         className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                          isSelected ? "border-pink-500 bg-pink-500" : "border-gray-300"
+                          isSelected ? "border-brand-magenta bg-brand-magenta" : "border-gray-300"
                         }`}
                       >
                         {isSelected && <CheckCircle2 className="w-4 h-4 text-white" />}
@@ -177,7 +177,7 @@ export default function ProposalCalculatorSection({
           {addons.length > 0 && (
             <div>
               <div className="flex items-center gap-3 mb-6">
-                <div className="bg-pink-100 text-pink-600 font-bold w-8 h-8 rounded-full flex items-center justify-center shrink-0">
+                <div className="bg-pink-100 text-brand-magenta font-bold w-8 h-8 rounded-full flex items-center justify-center shrink-0">
                   3
                 </div>
                 <div>

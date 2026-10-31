@@ -1,4 +1,4 @@
-import { Building2, Plus, Sparkles, Users, Mail, Trash2, ChevronRight, Settings } from "lucide-react";
+import { Building2, Plus, Loader2, Users, Mail, Trash2, ChevronRight, Settings } from "lucide-react";
 
 /**
  * ClientListSidebar
@@ -18,13 +18,13 @@ export default function ClientListSidebar({
     <div className="lg:col-span-4 bg-white rounded-[2rem] p-6 shadow-xl border border-gray-100 space-y-4">
       <div className="flex items-center justify-between pb-3 border-b border-gray-100">
         <h3 className="font-sora font-bold text-gray-900 text-sm flex items-center gap-2">
-          <Building2 className="w-4 h-4 text-pink-500" />
+          <Building2 className="w-4 h-4 text-brand-magenta" />
           Directorio de Clientes ({clientes.length})
         </h3>
         <button
           type="button"
           onClick={onOpenClientModal}
-          className="p-1.5 rounded-full hover:bg-pink-50 text-pink-600 transition-all cursor-pointer"
+          className="p-1.5 rounded-full hover:bg-pink-50 text-brand-magenta transition-all cursor-pointer active:scale-95"
           title="Agregar cliente"
         >
           <Plus className="w-4 h-4" />
@@ -33,7 +33,7 @@ export default function ClientListSidebar({
 
       {loadingClientes ? (
         <div className="p-8 text-center">
-          <Sparkles className="w-6 h-6 text-pink-500 animate-spin mx-auto mb-2" />
+          <Loader2 className="w-6 h-6 text-brand-magenta animate-spin mx-auto mb-2" />
           <span className="text-xs font-sora font-medium text-gray-500">Cargando clientes...</span>
         </div>
       ) : clientes.length === 0 ? (
@@ -44,7 +44,7 @@ export default function ClientListSidebar({
           <button
             type="button"
             onClick={onOpenClientModal}
-            className="h-9 px-4 bg-pink-500 text-white font-sora font-bold text-xs rounded-full shadow-xs inline-flex items-center gap-1.5 cursor-pointer"
+            className="h-9 px-4 bg-brand-magenta hover:opacity-90 text-white font-sora font-bold text-xs rounded-full shadow-xs inline-flex items-center gap-1.5 cursor-pointer active:scale-[0.98]"
           >
             <Plus className="w-3.5 h-3.5" /> Agregar Cliente
           </button>
@@ -69,7 +69,7 @@ export default function ClientListSidebar({
                       {c.nombre}
                     </span>
                     {isSelected && (
-                      <span className="w-2 h-2 rounded-full bg-pink-500 shrink-0" />
+                      <span className="w-2 h-2 rounded-full bg-brand-magenta shrink-0" />
                     )}
                   </div>
                   {c.empresa && (
@@ -109,7 +109,7 @@ export default function ClientListSidebar({
                   </button>
                   <ChevronRight
                     className={`w-4 h-4 transition-transform ${
-                      isSelected ? "text-pink-500 translate-x-0.5" : "text-gray-300"
+                      isSelected ? "text-brand-magenta translate-x-0.5" : "text-gray-300"
                     }`}
                   />
                 </div>

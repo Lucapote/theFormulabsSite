@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, Target, Layers, Sparkles, CheckCircle2, ArrowRight } from "lucide-react";
+import { Users, Target, Layers, CheckCircle2, ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LeadMetricsHeader({ stats, loading = false }) {
@@ -153,7 +153,7 @@ export default function LeadMetricsHeader({ stats, loading = false }) {
           <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] bg-gray-950 text-white border border-gray-800 rounded-[1.5rem] sm:rounded-[2rem] p-3 sm:p-3.5 flex flex-col justify-between shadow-xl overflow-hidden">
             <div className="flex items-center justify-between border-b border-gray-800/80 pb-1">
               <div className="flex items-center gap-1.5 truncate">
-                <Sparkles className="w-3.5 h-3.5 text-brand-magenta shrink-0" />
+                <Target className="w-3.5 h-3.5 text-brand-magenta shrink-0" />
                 <span className="text-[10px] font-sora font-bold tracking-wider text-gray-200 uppercase truncate">
                   SERVICIOS Y PRECIOS RECOMENDADOS
                 </span>

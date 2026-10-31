@@ -8,7 +8,7 @@ export default function ProposalHeroHeader({ clientData, showSecondText = false 
       <div className="bg-white rounded-[2rem] p-8 md:p-12 shadow-xl border border-gray-100 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-pink-50 rounded-bl-[100%] -z-10 opacity-70" />
 
-        <p className="text-pink-500 font-bold tracking-widest uppercase text-xs mb-3 font-sora">
+        <p className="text-brand-magenta font-bold tracking-widest uppercase text-xs mb-3 font-sora">
           {clientData.proposalTitle}
         </p>
         <h1 className="text-2xl md:text-4xl font-extrabold text-gray-900 mb-6 leading-tight font-sora">
@@ -21,7 +21,7 @@ export default function ProposalHeroHeader({ clientData, showSecondText = false 
           </p>
 
           <div
-            className={`h-1 bg-gradient-to-r from-pink-500 to-pink-300 rounded-full transition-all duration-700 ease-out ${
+            className={`h-1 bg-gradient-to-r from-brand-magenta to-brand-blue rounded-full transition-all duration-700 ease-out ${
               showSecondText ? "w-20 opacity-100" : "w-0 opacity-0"
             }`}
           />

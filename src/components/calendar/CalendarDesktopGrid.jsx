@@ -55,7 +55,7 @@ export default function CalendarDesktopGrid({
                 !cell.isCurrentMonth
                   ? "bg-gray-100/40 text-gray-300 opacity-30 pointer-events-none"
                   : hasPosts
-                  ? "bg-gradient-to-tr from-pink-500 to-pink-600 text-white shadow-md shadow-pink-500/20 border border-pink-400 hover:scale-[1.01] cursor-pointer"
+                  ? "bg-gradient-to-tr from-brand-magenta to-[#d912c2] text-white shadow-md shadow-pink-500/20 border border-brand-magenta/40 hover:scale-[1.01] cursor-pointer"
                   : "bg-sky-50/70 border border-sky-200/70 hover:bg-sky-100/80 text-sky-900 cursor-pointer"
               }`}
             >
@@ -64,7 +64,7 @@ export default function CalendarDesktopGrid({
                 <span
                   className={`font-sora text-xs font-black ${
                     cell.isToday
-                      ? "w-5 h-5 rounded-full bg-white text-pink-600 flex items-center justify-center shadow-xs text-[11px]"
+                      ? "w-5 h-5 rounded-full bg-white text-brand-magenta flex items-center justify-center shadow-xs text-[11px]"
                       : hasPosts
                       ? "text-white"
                       : "text-sky-900"
@@ -97,10 +97,10 @@ export default function CalendarDesktopGrid({
                         e.stopPropagation();
                         if (onDayClick) onDayClick(cell.dateString);
                       }}
-                      className={`w-4 h-4 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-2xs ${
+                      className={`w-4 h-4 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-2xs active:scale-90 cursor-pointer ${
                         hasPosts
-                          ? "bg-white text-pink-600 hover:bg-pink-100"
-                          : "bg-pink-500 text-white hover:bg-pink-600"
+                          ? "bg-white text-brand-magenta hover:bg-pink-50"
+                          : "bg-brand-magenta text-white hover:opacity-90"
                       }`}
                       title="Programar post para este día"
                     >
@@ -136,7 +136,7 @@ export default function CalendarDesktopGrid({
                                 />
                               ) : (
                                 <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-950 flex items-center justify-center">
-                                  <VideoIcon className="w-2.5 h-2.5 text-pink-400" />
+                                  <VideoIcon className="w-2.5 h-2.5 text-brand-magenta" />
                                 </div>
                               )}
                               <Play className="w-2.5 h-2.5 text-white absolute fill-current drop-shadow-xs" />

@@ -145,7 +145,7 @@ export default function MediaCarousel({
               onClick={(e) => scrollToSlide(idx, e)}
               className={`rounded-full transition-all duration-200 cursor-pointer ${
                 idx === activeIndex
-                  ? (activeDotColorClass || "bg-pink-500 w-6 h-2 shadow-sm shadow-pink-500/50")
+                  ? (activeDotColorClass || "bg-brand-magenta w-6 h-2 shadow-sm shadow-pink-500/50")
                   : "bg-white/40 w-2 h-2 hover:bg-white/80"
               }`}
               aria-label={`Ir a diapositiva ${idx + 1}`}

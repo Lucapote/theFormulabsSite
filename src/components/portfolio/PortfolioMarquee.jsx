@@ -17,7 +17,7 @@ export default function PortfolioMarquee({ reels = [] }) {
             key={`${reel.id}-${index}`}
             className="w-[170px] sm:w-[195px] md:w-[215px] shrink-0"
           >
-            <PortfolioReelCard reel={reel} autoPlayOnHover={true} />
+            <PortfolioReelCard reel={reel} autoPlayOnHover={false} />
           </div>
         ))}
       </div>

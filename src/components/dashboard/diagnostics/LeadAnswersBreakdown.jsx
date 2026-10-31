@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 
 export const QUESTION_TITLES = {
   objetivo: "Necesidad principal",
@@ -18,7 +18,7 @@ export default function LeadAnswersBreakdown({ answers = {} }) {
   return (
     <div className="space-y-2.5 font-inter">
       <h4 className="font-sora text-xs font-bold text-gray-900 uppercase tracking-wider pt-2 flex items-center gap-1.5">
-        <Sparkles className="w-4 h-4 text-brand-magenta" /> Desglose Clínico de Respuestas ({answersList.length})
+        <ClipboardList className="w-4 h-4 text-brand-magenta" /> Desglose Clínico de Respuestas ({answersList.length})
       </h4>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

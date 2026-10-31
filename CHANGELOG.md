@@ -6,6 +6,74 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ---
 
+## [2026-10-31] — Auditoría Maestro GEMINI.md, Ergonomía Háptica & Modularización Quirúrgica
+
+### Eliminado
+- **Purga de Iconos Cliché de IA (`Sparkles` & `Zap`)**:
+  - Reemplazo del 100% de `Sparkles` giratorio por el componente estándar de carga `Loader2` en `Login.jsx`, `ClientCalendarsGrid.jsx`, `ClientListSidebar.jsx`, `MediaGallery.jsx` y `ScheduledPostsList.jsx`.
+  - Eliminación de destellos decorativos innecesarios en `ImportWordModal`, `UploadContext`, `LeadAnswersBreakdown`, `LeadDetailModal`, `LeadMetricsHeader`, `CreateProductionModal`, `OperationsTabSection`, `ProductionScheduleFields` y `FramingControls`.
+  - Sustitución de `Zap` en `LeadToClientModal` por `Package`, reservando `Flame` con rigor semántico exclusivo en `LeadQuestionCard` para el nicho *Wellness & Fitness*.
+
+### Agregado
+- **Alineación Vertical de Filtros en Portafolio (`PortfolioReelsWall.jsx`)**:
+  - Reubicación del menú segmentado de categorías para posicionarse debajo del bloque descriptivo y titular, con geometría píldora (`rounded-full`) y respuesta táctil (`active:scale-[0.98]`).
+- **Tactilidad & Feedback Físico Global (`src/components/ui/button.jsx`)**:
+  - Incorporación de `cursor-pointer active:scale-[0.98] transition-all duration-150` en la base de `buttonVariants`, dotando de reactividad háptica a todos los botones shadcn del proyecto.
+- **Nuevos Hooks de Dominio Especializados**:
+  - `src/hooks/useMediaGalleryManager.js`: Encapsula carga reactiva, filtros, selecciones múltiples, eliminación en lote y asignación de medios a posts.
+  - `src/hooks/useProductionDetailManager.js`: Centraliza validaciones de pago, cancelaciones, mapas y mutaciones RPC de sesiones de rodaje.
+  - `src/hooks/useFramingGestures.js`: Manejador de eventos mouse/touch para encuadre y paneo libre en lienzo Instagram.
+  - `src/hooks/useClientsCalendarManager.js`: Orquestador de CRUD de clientes y meses editoriales.
+  - `src/hooks/useMediaRatios.js`: Detección en tiempo real de proporciones Meta (4:5 y 1.91:1).
+- **Subcomponentes Atómicos Especializados**:
+  - `src/components/dashboard/gallery/MediaGalleryEmptyState.jsx`.
+  - `src/components/dashboard/operations/subcomponents/ProductionScheduleFields.jsx` & `ProductionLogisticsFields.jsx`.
+  - `src/components/dashboard/calendar/subcomponents/FramingViewport.jsx` & `FramingControls.jsx`.
+  - `src/utils/canvasFramingHelper.js`: Motor de renderizado offscreen y subida optimizada a Cloudflare R2.
+  - `src/components/dashboard/calendar/subcomponents/PostModalClientFeedbackBanner.jsx`, `PostModalMediaGalleryPicker.jsx`, `PostModalScheduleFields.jsx`, `ClientsCalendarHeaderCard.jsx`.
+  - `src/components/dashboard/operations/subcomponents/ReceiptCycleSelectorList.jsx` & `ReceiptPreviewActionPanel.jsx`.
+
+### Modificado
+- **Modularización Quirúrgica de Monolitos ($\le 250$ líneas)**:
+  - `MediaFramingModal.jsx`: Reducido de 778 a **229 líneas**.
+  - `ClientsCalendarSection.jsx`: Reducido de 662 a **232 líneas**.
+  - `ProductionDetailModal.jsx`: Reducido de 528 a **158 líneas**.
+  - `PostModal.jsx`: Reducido de 518 a **243 líneas**.
+  - `MediaGallery.jsx`: Reducido de 504 a **246 líneas**.
+  - `PendingReceiptsReviewModal.jsx`: Reducido de 380 a **164 líneas**.
+- **Estandarización de Modales en `BaseFormModal` (Alto Estático 95vh)**:
+  - Migración completa de `PendingReceiptsReviewModal.jsx` y `ProposalActivationModal.jsx` a `BaseFormModal` con `h-[95vh] max-h-[95vh]`, cabecera institucional `bg-slate-950` y scroll interno exclusivo.
+- **Unificación de ADN Visual (Clinical High-Tech Lab)**:
+  - Sustitución de `pink-500` / `pink-600` genéricos por `brand-magenta` (`#ef18d6`) y `brand-blue` (`#188ff0`) en más de 30 componentes de propuestas, calendarios, dashboard, feedback y notificaciones.
+- **Validación Estricta de Páginas**:
+  - Las 9 páginas de `src/pages/` cumplen con la restricción de $\le 200$ líneas.
+  - Eliminación de cualquier emoji en UI en favor exclusivo de `lucide-react`.
+
+---
+
+## [2026-10-30] — Optimización de Alto Rendimiento para Videos en Móvil (iPhone & Android)
+
+### Agregado
+- **Generación de Pósters Ultra-Ligeros (FFmpeg WebP)**:
+  - Generación de fotogramas clave en formato WebP (<40 KB) y JPEG para los 11 reels principales y tomas BTS en `public/portfolio/{brand}/`.
+  - Contratos de datos actualizados en `src/data/portfolioData.js` incorporando `posterUrl` para cada video.
+- **Micro-Spinner Táctil de Carga**:
+  - Indicador visual `Loader2` animado en `PortfolioReelCard.jsx` que proporciona feedback instantáneo al usuario mientras el buffer de reproducción inicializa.
+
+### Modificado
+- **Propagación de Pósters en Casos de Estudio (`PortfolioFeaturedCases.jsx`)**:
+  - Se vinculó explícitamente `posterUrl: video.posterUrl` en la instanciación de `PortfolioReelCard`, solucionando las tarjetas negras que persistían en los casos de Yamamoto Restaurante y Mau Fuentes.
+- **Cero Pantallas Negras en iOS / Safari (`PortfolioReelCard.jsx`)**:
+  - Inclusión de capa de respaldo estática `<img src={reel.posterUrl} />` visible de inmediato (0ms de latencia visual).
+  - Configuración de flags de renderizado móvil estricto: `playsInline`, `webkit-playsinline="true"` y `x5-playsinline="true"`.
+- **Carga Bajo Demanda y Ahorro Masivo de Datos en Android (`PortfolioReelCard.jsx`, `PortfolioMarquee.jsx`)**:
+  - Reemplazo de precarga voraz por `preload="none"`. Reducción del payload inicial de ~56 MB a menos de 400 KB.
+  - Reproducción bajo demanda (*lazy load*): el stream de video solo se monta tras interacción explícita (hover en desktop o tap en móvil).
+  - Desactivación de autoPlay concurrente en el marquee duplicado para evitar saturación del decodificador móvil.
+  - Aplicación de póster y `webkit-playsinline` a tomas BTS en `PortfolioBtsStrip.jsx`.
+
+---
+
 ## [2026-10-30] — Navbar Minimalista de Portafolio & Reubicación de Componentes
 
 ### Modificado

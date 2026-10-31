@@ -22,7 +22,7 @@ const ESTADO_OPTIONS = [
   { value: "aprobado", label: "Aprobado", dotClass: "bg-emerald-500" },
   { value: "programado", label: "Programado", dotClass: "bg-[#188ff0]" },
   { value: "error", label: "Con Error en Meta", dotClass: "bg-rose-700" },
-  { value: "publicado", label: "Publicados", dotClass: "bg-pink-500" }
+  { value: "publicado", label: "Publicados", dotClass: "bg-brand-magenta" }
 ];
 
 const FORMATO_OPTIONS = [
@@ -57,7 +57,7 @@ export default function ScheduledPostsFilterBar({
     <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] p-4 sm:p-6 shadow-xl border border-gray-100 space-y-3 sm:space-y-4 font-inter">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <div className="hidden sm:inline-flex items-center gap-2 text-pink-500 font-bold tracking-widest uppercase text-xs mb-1 font-sora">
+          <div className="hidden sm:inline-flex items-center gap-2 text-brand-magenta font-bold tracking-widest uppercase text-xs mb-1 font-sora">
             <Film className="w-4 h-4 text-brand-blue" />
             <span>{showOnlyDrafts ? "CAJAS VACÍAS PENDIENTES" : "PUBLICACIONES Y CAJAS EDITORIALES"}</span>
           </div>
@@ -76,7 +76,7 @@ export default function ScheduledPostsFilterBar({
             <button
               type="button"
               onClick={onNewPostClick}
-              className="h-9 px-3.5 sm:px-4 bg-[#188ff0] hover:bg-blue-600 text-white font-sora font-bold text-xs rounded-full shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+              className="h-9 px-3.5 sm:px-4 bg-[#188ff0] hover:bg-blue-600 text-white font-sora font-bold text-xs rounded-full shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-[0.98]"
               title="Crear o programar una nueva publicación"
             >
               <Plus className="w-4 h-4" />
@@ -87,10 +87,10 @@ export default function ScheduledPostsFilterBar({
           <button
             type="button"
             onClick={onImportClick}
-            className="h-9 px-3.5 sm:px-4 bg-pink-50 hover:bg-pink-100 text-pink-600 border border-pink-200 font-sora font-bold text-xs rounded-full transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-sm"
+            className="h-9 px-3.5 sm:px-4 bg-pink-50 hover:bg-pink-100 text-brand-magenta border border-pink-100 font-sora font-bold text-xs rounded-full transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-xs active:scale-[0.98]"
             title="Importar publicaciones desde archivo Word (.docx)"
           >
-            <FileText className="w-4 h-4 text-pink-500" />
+            <FileText className="w-4 h-4 text-brand-magenta" />
             <span className="hidden sm:inline">Importar Word (.docx)</span>
           </button>
 
@@ -129,10 +129,10 @@ export default function ScheduledPostsFilterBar({
           <button
             type="button"
             onClick={onRefreshClick}
-            className="h-9 w-9 p-0 bg-gray-100 hover:bg-gray-200 text-gray-700 font-sora font-bold text-xs rounded-full transition-all flex items-center justify-center cursor-pointer shrink-0"
+            className="h-9 w-9 p-0 bg-gray-100 hover:bg-gray-200 text-gray-700 font-sora font-bold text-xs rounded-full transition-all flex items-center justify-center cursor-pointer shrink-0 active:scale-90"
             title="Recargar publicaciones"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-pink-500" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-brand-magenta" : ""}`} />
           </button>
         </div>
       </div>
