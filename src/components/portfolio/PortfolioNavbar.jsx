@@ -17,7 +17,7 @@ export default function PortfolioNavbar() {
           to="/"
           className="flex items-center gap-2.5 hover:opacity-90 transition-opacity active:scale-[0.98]"
         >
-          <img src="/logo.png" alt="The Formulab" className="h-8 w-auto object-contain" />
+          <img src="/logo.png" alt="The Formulab" decoding="async" className="h-8 w-auto object-contain" />
         </Link>
 
         {/* CTA Directo a Diagnóstico */}

@@ -1,14 +1,14 @@
-import { useState, useRef, useEffect } from "react";
-import { Play, Pause, Volume2, VolumeX, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Play, Volume2, VolumeX, Loader2 } from "lucide-react";
 
 /**
  * PortfolioReelCard
  * Tarjeta interactiva estilo Smartphone vertical (9:16).
- * Arquitectura High-Performance Mobile:
- * - Poster estático en WebP (<40KB) visible de inmediato: CERO pantallas negras en iOS.
- * - preload="none": No descarga 56MB de video en redes móviles.
- * - playsInline + webkit-playsinline: Reproducción en el propio marco sin abrir pantalla completa en Safari.
- * - Carga bajo demanda al interactuar (clic / tap / hover).
+ * Arquitectura High-Performance Mobile & Lazy-Load:
+ * - Poster estático WebP con decoding="async" y loading="lazy": Renderizado instantáneo sin pantallas negras.
+ * - Zero Video Transfer on Mount: El src del video NO se adjunta hasta la primera interacción del usuario.
+ * - IntersectionObserver: Pausa automática cuando la tarjeta sale del viewport para ahorrar batería y memoria en móviles.
+ * - Atributos WebKit/iOS estrictos (playsInline, webkit-playsinline) para prevenir pantalla completa forzada en Safari.
  */
 export default function PortfolioReelCard({
   reel,
@@ -18,11 +18,29 @@ export default function PortfolioReelCard({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const cardRef = useRef(null);
   const videoRef = useRef(null);
 
-  const startPlayback = () => {
+  const pausePlayback = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
+    video.pause();
+    setIsPlaying(false);
+    setIsLoading(false);
+  }, []);
+
+  const startPlayback = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Conexión y carga bajo demanda estricta (Zero waste network)
+    if (!isLoaded) {
+      setIsLoaded(true);
+      video.src = reel.videoUrl;
+      video.load();
+    }
+
     setIsLoading(true);
 
     const playPromise = video.play();
@@ -33,21 +51,34 @@ export default function PortfolioReelCard({
           setIsLoading(false);
         })
         .catch((err) => {
-          // En iOS modo ahorro de batería o políticas de autoplay, prevenir cuelgues
           console.warn("Reproducción pausada por el dispositivo:", err?.message);
           setIsPlaying(false);
           setIsLoading(false);
         });
     }
-  };
+  }, [isLoaded, reel.videoUrl]);
 
-  const pausePlayback = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.pause();
-    setIsPlaying(false);
-    setIsLoading(false);
-  };
+  // Observer para pausar videos que salgan de la pantalla y ahorrar CPU/GPU móvil
+  useEffect(() => {
+    const element = cardRef.current;
+    if (!element || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting && isPlaying) {
+            pausePlayback();
+          }
+        });
+      },
+      { threshold: 0.25 }
+    );
+
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+    };
+  }, [isPlaying, pausePlayback]);
 
   const togglePlay = (e) => {
     e?.stopPropagation();
@@ -83,6 +114,7 @@ export default function PortfolioReelCard({
 
   return (
     <div
+      ref={cardRef}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={togglePlay}
@@ -94,16 +126,17 @@ export default function PortfolioReelCard({
           src={reel.posterUrl}
           alt={reel.title}
           loading="lazy"
+          decoding="async"
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 pointer-events-none ${
             isPlaying ? "opacity-0" : "opacity-100"
           }`}
         />
       )}
 
-      {/* 2. Video Element con Atributos iOS / WebKit Estrictos */}
+      {/* 2. Video Element con Carga Bajo Demanda y Atributos iOS / WebKit Estrictos */}
       <video
         ref={videoRef}
-        src={reel.videoUrl}
+        src={isLoaded ? reel.videoUrl : undefined}
         poster={reel.posterUrl}
         loop
         muted={isMuted}

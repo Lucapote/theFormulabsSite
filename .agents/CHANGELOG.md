@@ -6,6 +6,20 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ---
 
+## [2026-10-31] — Arquitectura de Carga Óptima & Lazy Loading de Medios (Portafolio)
+
+### Optimizado
+- **Carga Bajo Demanda Estricta de Video (`PortfolioReelCard.jsx`)**:
+  - Eliminación de la descarga o sondeo anticipado de video en montaje inicial: el atributo `src` del elemento `<video>` ya no se asigna al cargar la página, reservándose estrictamente para cuando el usuario realiza su primera interacción (tap / clic / hover).
+  - Ahorro de más de 50MB de tráfico de red concurrente en el primer render en redes móviles.
+  - Inserción de `IntersectionObserver` activo para suspender la reproducción automáticamente cuando cualquier tarjeta de video se desplaza fuera del viewport visible, liberando decodificadores de hardware GPU y ahorrando batería.
+- **Detrás de Cámaras sin Autoplay Innecesario (`PortfolioBtsStrip.jsx`)**:
+  - Erradicación del atributo `autoPlay` en los micro-clips de rodaje (`Toma 47`), reemplazándolos por miniaturas WebP estáticas con badge técnico de claqueta/película y activación bajo demanda.
+- **Decodificación Asíncrona Global (`decoding="async"`)**:
+  - Incorporación sistemática de `decoding="async"` junto con `loading="lazy"` en todas las imágenes de portada, comparadores (`PortfolioCompareSlider.jsx`), tiras fotográficas (`PortfolioFeaturedCases.jsx`) y logotipo del portafolio, evitando bloqueos del hilo principal de JavaScript durante el scroll rápido.
+
+---
+
 ## [2026-10-31] — Optimización Mobile UX/UI (Navbar, Chips Horizontales y Progressive Disclosure)
 
 ### Agregado

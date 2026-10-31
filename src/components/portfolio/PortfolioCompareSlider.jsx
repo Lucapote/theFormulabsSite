@@ -31,6 +31,7 @@ export default function PortfolioCompareSlider({
             src={setImg}
             alt={setLabel}
             loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover"
           />
           <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 text-[10px] font-mono font-bold uppercase tracking-wider text-white">
@@ -47,6 +48,7 @@ export default function PortfolioCompareSlider({
             src={finalImg}
             alt={finalLabel}
             loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover"
           />
           <div className="absolute top-3 right-3 bg-brand-blue/90 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 text-[10px] font-mono font-bold uppercase tracking-wider text-white">

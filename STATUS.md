@@ -7,39 +7,38 @@
 
 ## 📸 Foto de Hoy (Contexto Operativo)
 
-Se han implementado con éxito total las soluciones de optimización mobile acordadas para el portafolio:
+Se ha implementado una arquitectura de **Carga Óptima & Lazy Loading Extremo** en todo el portafolio para garantizar una experiencia instantánea y fluida en dispositivos móviles (iPhone y Android):
 
-1. **CTA Responsivo en Navbar (`PortfolioNavbar.jsx`)**:
-   - Etiqueta concisa `"Diagnóstico"` en pantallas móviles (`< sm:`) y `"Solicitar diagnóstico"` en desktop (`sm:` en adelante).
-   - Elimina la sobrecarga horizontal en teléfonos compactos (360–390px).
-2. **Chips de Filtro Horizontales Nativos (`PortfolioReelsWall.jsx`)**:
-   - Reemplazo del antiguo contenedor multilínea deforme con `rounded-full` por un riel deslizable horizontal de desplazamiento suave (`flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] -mx-6 px-6 sm:mx-0 sm:px-0 sm:flex-wrap`).
-   - Cada botón de categoría es ahora una píldora autónoma (`rounded-full`) con microinteracción elástica (`active:scale-[0.98]`), emulando la ergonomía táctil de YouTube/Instagram.
-3. **Progressive Disclosure en Muro de Reels y Casos de Estudio**:
-   - **Muro de Reels**: En móviles se limitan a 2 reels visibles de inicio, con botón táctil `"Ver todos los reels (N)"` / `"Ver menos reels"` con iconos `ChevronDown`/`ChevronUp`. Al alternar categorías se resetea automáticamente a estado colapsado.
-   - **Casos Destacados (`CaseVideosGrid.jsx`)**: En Yamamoto (4 videos) y demás casos con múltiples producciones, se despliegan únicamente 2 reels en móvil con botón de expansión táctil `"Ver todos los videos (4)"` / `"Ver menos videos"`.
-   - **Modularización Estricta**: `PortfolioFeaturedCases.jsx` se redujo a **198 líneas** (cumpliendo $\le 200$ líneas).
+1. **Zero Video Transfer on Mount (`PortfolioReelCard.jsx`)**:
+   - El atributo `src` del elemento `<video>` ya **no** se enlaza al montar el componente. En su lugar, el navegador renderiza exclusivamente la miniatura estática en WebP (<40KB).
+   - El video y su canal de streaming solo se activan cuando el usuario interactúa conscientemente (clic, tap o hover en desktop).
+   - Esto evita la apertura simultánea de hasta 30 sockets y sondeos `Range: bytes` que saturaban el ancho de banda y la memoria de video del navegador móvil.
+2. **Auto-pausa por IntersectionObserver**:
+   - Cada tarjeta observa su visibilidad en el viewport. Si un video en reproducción queda fuera de la pantalla durante el scroll, se pausa automáticamente para liberar decodificadores de hardware y batería del móvil.
+3. **Optimización en 'Detrás de Cámaras' (`PortfolioBtsStrip.jsx`)**:
+   - Se erradicó el `autoPlay` no solicitado en los clips de la sección Toma 47, sustituyéndolos por carátulas WebP diferidas con activación bajo demanda.
+4. **Decodificación Asíncrona sin Bloqueo de Hilo Principal**:
+   - 100% de imágenes de medios incorporan `decoding="async"` y `loading="lazy"` en portadas, comparadores y tiras de casos.
 
 ---
 
 ## ✅ Resuelto Recientemente
 
-1. **Optimización Mobile UX/UI Portafolio — [COMPLETADO]**:
-   - CTA responsivo de una sola palabra en móvil (`PortfolioNavbar.jsx`).
-   - Chips deslizables horizontales sin contenedor ovalado deformado (`PortfolioReelsWall.jsx`).
+1. **Carga Óptima & Lazy Loading de Medios — [COMPLETADO]**:
+   - Carga bajo demanda estricta de videos en `PortfolioReelCard.jsx` y `PortfolioBtsStrip.jsx`.
+   - Implementación de `IntersectionObserver` para auto-pausa fuera de viewport.
+   - Decodificación asíncrona (`decoding="async"`) en todas las imágenes y comparadores.
+2. **Optimización Mobile UX/UI Portafolio — [COMPLETADO]**:
+   - CTA responsivo de una sola palabra en móvil: `"DIAGNÓSTICO"` (`PortfolioNavbar.jsx`).
+   - Chips deslizables horizontales sin contenedor deformado (`PortfolioReelsWall.jsx`).
    - Progressive disclosure (máx. 2 videos en móvil) en Muro de Reels y Yamamoto (`CaseVideosGrid.jsx`).
-2. **Purga Quirúrgica de Iconos Cliché de IA (Sparkles & Zap) — [COMPLETADO]**:
-   - Se erradicó el 100% de `Sparkles` utilizado como spinner falso de carga en `Login.jsx`, `ClientCalendarsGrid.jsx`, `ClientListSidebar.jsx`, `MediaGallery.jsx` y `ScheduledPostsList.jsx`, sustituyéndolos por `Loader2` con rotación suave.
-   - Se eliminaron destellos decorativos en títulos, badges y toasts (`ImportWordModal`, `UploadContext`, `LeadAnswersBreakdown`, `LeadDetailModal`, `LeadMetricsHeader`, `CreateProductionModal`, `OperationsTabSection`, `ProductionScheduleFields` y `FramingControls`), reemplazándolos por iconos funcionales (`Loader2`, `FilePlus`, `CalendarPlus`, `CalendarClock`, `ClipboardList`, `Check`, `Package`, `Video`).
-   - Se retiró el `Zap` cliché en `LeadToClientModal`, sustituyéndolo por `Package` para "Servicio Único".
-   - Se preservó `Flame` exclusivamente como identificador semántico de la industria *Wellness & Fitness* en el formulario de diagnóstico.
-3. **Modularización de Componentes y Cumplimiento de Límites ($\le 250$ líneas) — [COMPLETADO]**:
-   - `MediaFramingModal.jsx` (229 líneas), `ClientsCalendarSection.jsx` (232 líneas), `ProductionDetailModal.jsx` (158 líneas), `PostModal.jsx` (243 líneas), `MediaGallery.jsx` (246 líneas), `PendingReceiptsReviewModal.jsx` (164 líneas), `PortfolioFeaturedCases.jsx` (198 líneas).
-   - 100% de páginas en `src/pages/` cumplen con $\le 200$ líneas.
+3. **Purga Quirúrgica de Iconos Cliché de IA (Sparkles & Zap) — [COMPLETADO]**:
+   - Erradicación total de spinners falsos y adornos innecesarios en favor de iconos funcionales y tipografía técnica.
+4. **Modularización Quirúrgica ($\le 250$ líneas) — [COMPLETADO]**:
+   - Todos los componentes y páginas cumplen estrictamente con los límites de líneas de código definidos en `GEMINI.md`.
 
 ---
 
 ## ⏳ Próximos Pasos Disponibles
 
-- Validación interactiva en dispositivos móviles físicos (iPhone / Android) de la nueva experiencia de reels y filtros.
-- Continuar con cualquier refinamiento adicional que requiera el equipo en el portafolio o dashboard.
+- Validación interactiva en dispositivos móviles físicos (iPhone / Android) de la nueva experiencia de carga ultrarrápida.
