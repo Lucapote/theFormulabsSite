@@ -6,6 +6,24 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ---
 
+## [2026-10-31] — Optimización Mobile UX/UI (Navbar, Chips Horizontales y Progressive Disclosure)
+
+### Agregado
+- **Subcomponente Atómico `CaseVideosGrid.jsx` (`src/components/portfolio/subcomponents/CaseVideosGrid.jsx`)**:
+  - Implementa visualización de videos para casos de estudio con progressive disclosure en pantallas móviles (`< sm:`), limitando a 2 videos por defecto y agregando botón táctil elástico para expandir o colapsar el contenido restante.
+- **Riel Horizontal Nativo de Filtros (`PortfolioReelsWall.jsx`)**:
+  - Desplazamiento horizontal fluido en móviles con bleeding edge-to-edge (`-mx-6 px-6 overflow-x-auto [scrollbar-width:none]`) y chips individuales en forma de píldora táctil (`rounded-full active:scale-[0.98]`), erradicando la deformación por contenedor multilínea previo.
+
+### Modificado
+- **Navbar Portafolio Responsiva (`PortfolioNavbar.jsx`)**:
+  - Sustitución del texto del CTA principal: `"Diagnóstico"` en móvil (`< sm:`) y `"Solicitar diagnóstico"` en desktop (`sm:` en adelante), optimizando el espacio visual de la barra superior.
+- **Progressive Disclosure en Muro de Reels (`PortfolioReelsWall.jsx`)**:
+  - Restricción a 2 reels visibles por defecto en móvil con botón de alternancia `"Ver todos los reels (N)"` / `"Ver menos reels"` con iconos `ChevronDown`/`ChevronUp` y reseteo automático de expansión al cambiar de categoría.
+- **Modularización de Casos Destacados (`PortfolioFeaturedCases.jsx`)**:
+  - Delegación de la cuadrícula de videos al subcomponente `CaseVideosGrid.jsx`, reduciendo el archivo a **198 líneas** (cumpliendo con la regla de $\le 200$ líneas).
+
+---
+
 ## [2026-10-31] — Auditoría Maestro GEMINI.md, Ergonomía Háptica & Modularización Quirúrgica
 
 ### Eliminado

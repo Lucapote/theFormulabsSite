@@ -24,10 +24,13 @@ export default function PortfolioNavbar() {
         <Button
           variant="lab"
           size="sm"
-          className="px-5 h-9 bg-brand-magenta hover:bg-brand-magenta/90 text-white shadow-sm hover:shadow-md font-sora text-xs uppercase tracking-wider rounded-full active:scale-[0.98] transition-all cursor-pointer"
+          className="px-4 sm:px-5 h-9 bg-brand-magenta hover:bg-brand-magenta/90 text-white shadow-sm hover:shadow-md font-sora text-xs uppercase tracking-wider rounded-full active:scale-[0.98] transition-all cursor-pointer"
           asChild
         >
-          <Link to="/diagnostico">Solicitar diagnóstico</Link>
+          <Link to="/diagnostico">
+            <span className="sm:hidden">Diagnóstico</span>
+            <span className="hidden sm:inline">Solicitar diagnóstico</span>
+          </Link>
         </Button>
       </nav>
     </header>

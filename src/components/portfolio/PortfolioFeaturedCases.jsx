@@ -4,7 +4,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import PortfolioCompareSlider from "./PortfolioCompareSlider";
-import PortfolioReelCard from "./PortfolioReelCard";
+import CaseVideosGrid from "./subcomponents/CaseVideosGrid";
 import { FEATURED_CASES } from "@/data/portfolioData";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -181,25 +181,11 @@ export default function PortfolioFeaturedCases() {
                     )}
                   </div>
                 ) : (
-                  /* Video Strip in 2-column grid (2x2 for Yamamoto) */
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {(item.stripVideos || []).map((video) => (
-                      <div key={video.id} className="w-full">
-                        <PortfolioReelCard
-                          reel={{
-                            id: video.id,
-                            client: item.clientName,
-                            categoryLabel: "Reel",
-                            title: video.title,
-                            videoUrl: video.url,
-                            posterUrl: video.posterUrl,
-                            colorAccent: item.color
-                          }}
-                          autoPlayOnHover={true}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  <CaseVideosGrid
+                    videos={item.stripVideos}
+                    clientName={item.clientName}
+                    colorAccent={item.color}
+                  />
                 )}
               </div>
             </article>
