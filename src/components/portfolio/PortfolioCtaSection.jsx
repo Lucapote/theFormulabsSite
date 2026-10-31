@@ -48,16 +48,6 @@ export default function PortfolioCtaSection() {
               <span>Comenzar Diagnóstico</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
-
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="h-12 px-7 rounded-full bg-white hover:bg-gray-50 border border-gray-200 text-gray-800 font-sora font-bold text-xs uppercase tracking-wider shadow-sm transition-all inline-flex items-center justify-center gap-2 active:scale-[0.98]"
-            >
-              <MessageCircle className="w-4 h-4 text-emerald-600" />
-              <span>WhatsApp de Lab</span>
-            </a>
           </div>
         </motion.div>
       </div>
