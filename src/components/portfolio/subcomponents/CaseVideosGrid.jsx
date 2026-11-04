@@ -58,7 +58,7 @@ export default function CaseVideosGrid({
             <span>
               {isExpanded
                 ? "Ver menos videos"
-                : `Ver todos los videos (${videos.length})`}
+                : "Ver todos los videos"}
             </span>
             {isExpanded ? (
               <ChevronUp className="w-4 h-4 text-brand-magenta" />

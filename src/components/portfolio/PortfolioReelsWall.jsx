@@ -101,7 +101,7 @@ export default function PortfolioReelsWall() {
               <span>
                 {isExpanded
                   ? "Ver menos reels"
-                  : `Ver todos los reels (${filteredReels.length})`}
+                  : "Ver todos los reels"}
               </span>
               {isExpanded ? (
                 <ChevronUp className="w-4 h-4 text-brand-magenta" />
