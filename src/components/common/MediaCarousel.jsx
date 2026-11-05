@@ -14,17 +14,34 @@ export default function MediaCarousel({
 }) {
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const carouselRef = useRef(null);
+  const isProgrammaticScroll = useRef(false);
+  const scrollTimeoutRef = useRef(null);
 
   useEffect(() => {
     setActiveIndex(initialIndex);
-    if (carouselRef.current && initialIndex > 0) {
+    if (carouselRef.current) {
       const slideWidth = carouselRef.current.clientWidth;
-      carouselRef.current.scrollTo({
-        left: initialIndex * slideWidth,
-        behavior: "instant"
-      });
+      if (slideWidth > 0) {
+        const currentScroll = carouselRef.current.scrollLeft;
+        const targetScroll = initialIndex * slideWidth;
+        // Solo ajustar si hay discrepancia física real para evitar cancelaciones de animación
+        if (Math.abs(currentScroll - targetScroll) > 10) {
+          carouselRef.current.scrollTo({
+            left: targetScroll,
+            behavior: "instant"
+          });
+        }
+      }
     }
   }, [initialIndex]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (!files || files.length === 0) {
     return (
@@ -37,19 +54,29 @@ export default function MediaCarousel({
 
   const scrollToSlide = (idx, e) => {
     if (e) e.stopPropagation();
+    if (idx < 0 || idx >= files.length) return;
+
     setActiveIndex(idx);
     if (onIndexChange) onIndexChange(idx);
+
     if (carouselRef.current) {
+      isProgrammaticScroll.current = true;
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+
       const slideWidth = carouselRef.current.clientWidth;
       carouselRef.current.scrollTo({
         left: idx * slideWidth,
         behavior: "smooth"
       });
+
+      scrollTimeoutRef.current = setTimeout(() => {
+        isProgrammaticScroll.current = false;
+      }, 400);
     }
   };
 
   const handleScroll = () => {
-    if (!carouselRef.current) return;
+    if (!carouselRef.current || isProgrammaticScroll.current) return;
     const slideWidth = carouselRef.current.clientWidth;
     if (slideWidth > 0) {
       const idx = Math.round(carouselRef.current.scrollLeft / slideWidth);

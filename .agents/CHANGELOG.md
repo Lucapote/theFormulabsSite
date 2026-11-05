@@ -6,6 +6,16 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ---
 
+## [2026-11-04] — Corrección del Bloqueo en Navegación de Carruseles (`MediaCarousel.jsx`)
+
+### Corregido
+- **Bloqueo de Retroceso a Diapositiva Inicial en Carrusel (`MediaCarousel.jsx`)**:
+  - Se eliminó el condicional restrictivo `initialIndex > 0` que impedía realizar el desplazamiento por scroll hacia la diapositiva `0` al retroceder.
+  - Se resolvió la condición de carrera (race condition) entre el scroll suave programático y el listener nativo `onScroll`: se incorporó la bandera `isProgrammaticScroll` con desbloqueo diferido de 400ms para ignorar las posiciones fraccionarias intermedias durante la animación de las flechas o puntos indicadores.
+  - Esto garantiza que al navegar hacia atrás desde `2/4` se retorne de forma suave y precisa a `1/4` sin rebotes ni bloqueos en el modal de publicaciones de los calendarios.
+
+---
+
 ## [2026-11-04] — Reemplazo Auténtico de Material 'Toma 47' & Optimización BTS (Portafolio)
 
 ### Modificado
