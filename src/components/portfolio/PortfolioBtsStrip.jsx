@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Camera, Film } from "lucide-react";
 import { BTS_SHOTS } from "@/data/portfolioData";
@@ -6,46 +6,84 @@ import { BTS_SHOTS } from "@/data/portfolioData";
 /**
  * BtsPolaroidCard
  * Tarjeta técnica detrás de cámaras con carga diferida (lazy load) estricta:
- * los clips de video no adjuntan stream ni consumen red hasta la interacción del usuario.
+ * - Poster estático en WebP (<40KB) visible de inmediato.
+ * - Conexión de video bajo demanda: Cero bytes de stream descargados al montar.
+ * - Reproducción al pasar el cursor (desktop) o al tocar (mobile).
+ * - Auto-pausa con IntersectionObserver si la tarjeta sale de la pantalla.
  */
 function BtsPolaroidCard({ shot, idx }) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const cardRef = useRef(null);
   const videoRef = useRef(null);
 
-  const handleToggle = () => {
+  const pausePlayback = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    setIsPlaying(false);
+  }, []);
+
+  const startPlayback = useCallback(() => {
+    if (!shot.videoPreview || !videoRef.current) return;
+    if (!videoRef.current.src) {
+      videoRef.current.src = shot.videoPreview;
+      videoRef.current.load();
+    }
+    videoRef.current
+      .play()
+      .then(() => setIsPlaying(true))
+      .catch((err) => {
+        console.warn("Reproducción BTS pausada por el dispositivo:", err?.message);
+        setIsPlaying(false);
+      });
+  }, [shot.videoPreview]);
+
+  // Auto-pausa cuando sale del viewport
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting && isPlaying) {
+            pausePlayback();
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isPlaying, pausePlayback]);
+
+  const handleToggle = (e) => {
+    e?.stopPropagation();
     if (!shot.videoPreview) return;
     if (isPlaying) {
-      videoRef.current?.pause();
-      setIsPlaying(false);
+      pausePlayback();
     } else {
-      if (videoRef.current) {
-        if (!videoRef.current.src) {
-          videoRef.current.src = shot.videoPreview;
-          videoRef.current.load();
-        }
-        videoRef.current
-          .play()
-          .then(() => setIsPlaying(true))
-          .catch(() => setIsPlaying(false));
-      }
+      startPlayback();
     }
   };
 
   return (
     <motion.div
+      ref={cardRef}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: idx * 0.08 }}
+      onMouseEnter={startPlayback}
+      onMouseLeave={pausePlayback}
       onClick={handleToggle}
-      className={`p-3 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.03] flex flex-col justify-between h-full space-y-2.5 ${
-        shot.rotation
-      } ${shot.videoPreview ? "cursor-pointer" : ""}`}
+      className={`p-3 bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.03] flex flex-col justify-between h-full space-y-2.5 group cursor-pointer select-none active:scale-[0.98] ${shot.rotation}`}
     >
       {/* Media Container con carga diferida */}
       <div className="w-full aspect-[4/5] rounded-xl overflow-hidden bg-gray-900 relative shrink-0">
         <img
-          src={shot.imgUrl || shot.posterUrl}
+          src={shot.posterUrl || shot.imgUrl}
           alt={shot.title}
           loading="lazy"
           decoding="async"
@@ -63,14 +101,20 @@ function BtsPolaroidCard({ shot, idx }) {
               muted
               playsInline
               webkit-playsinline="true"
+              x5-playsinline="true"
               preload="none"
-              className={`absolute inset-0 w-full h-full object-cover ${
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
                 isPlaying ? "opacity-100" : "opacity-0 pointer-events-none"
               }`}
             />
-            {!isPlaying && (
+            {!isPlaying ? (
               <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-xs">
                 <Film className="w-3 h-3 text-brand-magenta" />
+              </div>
+            ) : (
+              <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md border border-white/20 flex items-center gap-1.5 text-[9px] font-mono font-bold uppercase text-white shadow-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-magenta animate-pulse" />
+                En vivo
               </div>
             )}
           </>
@@ -79,7 +123,7 @@ function BtsPolaroidCard({ shot, idx }) {
 
       {/* Title & Tag */}
       <div className="space-y-0.5">
-        <h4 className="font-sora font-bold text-xs text-gray-900 leading-tight">
+        <h4 className="font-sora font-bold text-xs text-gray-900 leading-tight group-hover:text-brand-magenta transition-colors">
           {shot.title}
         </h4>
         <span className="block font-mono text-[10px] text-gray-500 uppercase tracking-wider">

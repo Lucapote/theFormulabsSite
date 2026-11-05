@@ -6,6 +6,25 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ---
 
+## [2026-11-04] — Reemplazo Auténtico de Material 'Toma 47' & Optimización BTS (Portafolio)
+
+### Modificado
+- **Contenido Auténtico Detrás de Cámaras (`src/data/portfolioData.js`)**:
+  - Reemplazo completo de las fotos de stock anteriores por los 5 videos reales de rodaje de `/portfolio/toma47/`.
+  - Generación de miniaturas WebP de alta fidelidad y bajo peso (`seleccionado1.webp` a `seleccionado5.webp`) para carga instantánea.
+  - Creación de títulos y etiquetas técnicas cinematográficas que reflejan exactamente la acción de cada video:
+    1. `"Corte milimétrico de sashimi"` (`Yamamoto · Set Gastronómico`).
+    2. `"Estrategia previa al rodaje"` (`Dirección Creativa · Set`).
+    3. `"Dirección de arte y atmósfera"` (`Locación · Estilismo de Set`).
+    4. `"Ajuste y rigging de iluminación"` (`Gaffer & Rigging · Cancún`).
+    5. `"Tomas macro e iluminación en barra"` (`Yamamoto · Mixología & B-Roll`).
+- **Interactividad & Lazy Loading en Polaroids BTS (`PortfolioBtsStrip.jsx`)**:
+  - Implementación de previsualización al pasar el cursor (desktop) y toque táctil (mobile).
+  - Cero transferencia de video al montar (poster WebP visible al instante; el stream se solicita únicamente bajo demanda).
+  - Suspensión automática mediante `IntersectionObserver` si la tarjeta sale de la pantalla visible.
+
+---
+
 ## [2026-10-31] — Arquitectura de Carga Óptima & Lazy Loading de Medios (Portafolio)
 
 ### Optimizado

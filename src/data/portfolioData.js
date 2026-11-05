@@ -224,43 +224,46 @@ export const FEATURED_CASES = [
 export const BTS_SHOTS = [
   {
     id: "bts-1",
-    title: "Montaje de luces macro",
-    tag: "Ramos Joyería · Set",
-    imgUrl: "/portfolio/ramosJoyeria/1.webp",
+    title: "Corte milimétrico de sashimi",
+    tag: "Yamamoto · Set Gastronómico",
+    videoPreview: "/portfolio/toma47/seleccionado1.mp4",
+    posterUrl: "/portfolio/toma47/seleccionado1.webp",
     aspect: "aspect-[4/5]",
     rotation: "-rotate-1"
   },
   {
     id: "bts-2",
-    title: "Calibración de color en set",
-    tag: "Ramos Joyería · Post",
-    imgUrl: "/portfolio/ramosJoyeria/2a.webp",
+    title: "Estrategia previa al rodaje",
+    tag: "Dirección Creativa · Set",
+    videoPreview: "/portfolio/toma47/seleccionado2.mp4",
+    posterUrl: "/portfolio/toma47/seleccionado2.webp",
     aspect: "aspect-[4/5]",
     rotation: "rotate-1"
   },
   {
     id: "bts-3",
-    title: "Composición de producto final",
-    tag: "Ramos Joyería · Entrega",
-    imgUrl: "/portfolio/ramosJoyeria/3.webp",
+    title: "Dirección de arte y atmósfera",
+    tag: "Locación · Estilismo de Set",
+    videoPreview: "/portfolio/toma47/seleccionado3.mp4",
+    posterUrl: "/portfolio/toma47/seleccionado3.webp",
     aspect: "aspect-[4/5]",
     rotation: "-rotate-2"
   },
   {
     id: "bts-4",
-    title: "Dirección de escena gastronómica",
-    tag: "Yamamoto · Cancún",
-    videoPreview: "/portfolio/yamamoto/2.mp4",
-    posterUrl: "/portfolio/yamamoto/2_bts_poster.webp",
+    title: "Ajuste y rigging de iluminación",
+    tag: "Gaffer & Rigging · Cancún",
+    videoPreview: "/portfolio/toma47/seleccionado4.mp4",
+    posterUrl: "/portfolio/toma47/seleccionado4.webp",
     aspect: "aspect-[4/5]",
     rotation: "rotate-2"
   },
   {
     id: "bts-5",
-    title: "Grabación en lote y ritmo dinámico",
-    tag: "Mau Fuentes · Estudio",
-    videoPreview: "/portfolio/mauFuentes/1.mp4",
-    posterUrl: "/portfolio/mauFuentes/1_bts_poster.webp",
+    title: "Tomas macro e iluminación en barra",
+    tag: "Yamamoto · Mixología & B-Roll",
+    videoPreview: "/portfolio/toma47/seleccionado5.mp4",
+    posterUrl: "/portfolio/toma47/seleccionado5.webp",
     aspect: "aspect-[4/5]",
     rotation: "-rotate-1"
   }
