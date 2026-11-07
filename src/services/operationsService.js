@@ -224,6 +224,11 @@ export async function updateProduccion(produccionId, prodData = {}) {
     if (prodData.duracion_horas !== undefined) {
       updatePayload.duracion_horas = Number(prodData.duracion_horas) || 4;
     }
+    if (prodData.requerimientos !== undefined) {
+      updatePayload.requerimientos = Array.isArray(prodData.requerimientos)
+        ? prodData.requerimientos
+        : [];
+    }
 
     let { data, error } = await supabase
       .from("producciones")
@@ -232,18 +237,23 @@ export async function updateProduccion(produccionId, prodData = {}) {
       .select()
       .single();
 
-    // Fallback defensivo si la columna 'nombre' aún no existe en Supabase
-    if (error && error.message && error.message.includes("column \"nombre\"") && updatePayload.nombre !== undefined) {
-      const fallbackPayload = { ...updatePayload };
-      delete fallbackPayload.nombre;
-      const retry = await supabase
-        .from("producciones")
-        .update(fallbackPayload)
-        .eq("id", produccionId)
-        .select()
-        .single();
-      if (!retry.error) {
-        return { success: true, data: { ...retry.data, nombre: updatePayload.nombre } };
+    // Fallback defensivo si la columna 'requerimientos' o 'nombre' aún no existe en el schema cache de Supabase
+    if (error && error.message) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes("requerimientos") || msg.includes("nombre")) {
+        const fallbackPayload = { ...updatePayload };
+        if (msg.includes("requerimientos")) delete fallbackPayload.requerimientos;
+        if (msg.includes("nombre")) delete fallbackPayload.nombre;
+        const retry = await supabase
+          .from("producciones")
+          .update(fallbackPayload)
+          .eq("id", produccionId)
+          .select()
+          .single();
+        if (!retry.error) {
+          data = retry.data;
+          error = null;
+        }
       }
     }
 
@@ -689,6 +699,65 @@ export async function confirmarReservaProduccion(token, reservaData = {}) {
 }
 
 /**
+ * Actualiza el estado de los requerimientos (checklist) de una sesión de rodaje.
+ * Utiliza el token de reserva público para autenticar la operación de forma segura.
+ *
+ * @param {string} token - Token de reserva de la sesión
+ * @param {Array} requerimientos - Array de requerimientos [{ id, texto, completado, updated_at }]
+ * @returns {Promise<{ success: boolean, data?: object, error?: string }>}
+ */
+export async function actualizarChecklistProduccion(token, requerimientos = []) {
+  if (!token) {
+    return { success: false, error: "Token de reserva no proporcionado." };
+  }
+
+  try {
+    if (!supabase) {
+      return { success: false, error: "Supabase no está configurado." };
+    }
+
+    const cleanReqs = Array.isArray(requerimientos) ? requerimientos : [];
+
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("actualizar_checklist_produccion_rpc", {
+      p_token: token.trim(),
+      p_requerimientos: cleanReqs
+    });
+
+    if (rpcErr) {
+      console.warn("actualizarChecklistProduccion rpc notice:", rpcErr.message);
+      // Fallback directo por token si el RPC aún no fue migrado
+      const { data: directData, error: directErr } = await supabase
+        .from("producciones")
+        .update({ requerimientos: cleanReqs })
+        .eq("token_reserva", token.trim())
+        .select("id, requerimientos")
+        .single();
+
+      if (directErr) {
+        return { success: false, error: directErr.message };
+      }
+
+      return {
+        success: true,
+        data: { requerimientos: directData?.requerimientos || cleanReqs }
+      };
+    }
+
+    if (!rpcRes?.success) {
+      return { success: false, error: rpcRes?.error || "Error al actualizar requerimientos." };
+    }
+
+    return {
+      success: true,
+      data: { requerimientos: rpcRes.requerimientos || cleanReqs }
+    };
+  } catch (err) {
+    console.error("actualizarChecklistProduccion unexpected error:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
  * Valida el pago de un ciclo mensual, desbloquea las reservas, confirma pre-reservas
  * cubiertas por el tramo de pago y dispara email al cliente.
  * Soporta esquema de 2 pagos ('primer_pago' para el 1er tramo o 'pagado' para el 100%).
@@ -914,7 +983,8 @@ export async function createProduccionExtra({
   fecha_produccion = null,
   notas_brief = "",
   estado = "pendiente_agendamiento",
-  precio_extra = null
+  precio_extra = null,
+  requerimientos = []
 }) {
   try {
     // 1. Obtener el número de sesión correlativo
@@ -961,12 +1031,13 @@ export async function createProduccionExtra({
       locacion: locacion?.trim() || null,
       fecha_produccion: fecha_produccion || null,
       notas_brief: notas_brief?.trim() || "",
+      requerimientos: Array.isArray(requerimientos) ? requerimientos : [],
       estado: estado || (fecha_produccion ? "fecha_propuesta" : "pendiente_agendamiento"),
       token_reserva: tokenReserva,
       precio_extra: extraPrice
     };
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("producciones")
       .insert(payload)
       .select(`
@@ -975,6 +1046,31 @@ export async function createProduccionExtra({
         ciclo:ciclos_mensuales(*)
       `)
       .single();
+
+    // Fallback defensivo si la columna 'requerimientos' o 'nombre' aún no existe en el schema cache de Supabase
+    if (error && error.message) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes("requerimientos") || msg.includes("nombre")) {
+        const fallbackPayload = { ...payload };
+        if (msg.includes("requerimientos")) delete fallbackPayload.requerimientos;
+        if (msg.includes("nombre")) delete fallbackPayload.nombre;
+        const retry = await supabase
+          .from("producciones")
+          .insert(fallbackPayload)
+          .select(`
+            *,
+            cliente:clientes(*),
+            ciclo:ciclos_mensuales(*)
+          `)
+          .single();
+        if (!retry.error) {
+          data = retry.data;
+          error = null;
+        } else {
+          error = retry.error;
+        }
+      }
+    }
 
     if (error) throw error;
     return { success: true, data };

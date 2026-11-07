@@ -7,6 +7,7 @@ import BookingSuccessCard from "@/components/booking/BookingSuccessCard";
 import BookingLockedCard from "@/components/booking/BookingLockedCard";
 import BookingSideContextPanel from "@/components/booking/BookingSideContextPanel";
 import BookingHeader from "@/components/booking/BookingHeader";
+import BookingChecklistSection from "@/components/booking/BookingChecklistSection";
 import { BookingLoadingSkeleton, BookingErrorCard } from "@/components/booking/BookingStates";
 
 /**
@@ -42,32 +43,17 @@ export default function ProductionBookingPage() {
         const cliente = res.data.cliente || {};
         const ciclo = res.data.ciclo || {};
         const totalSesiones = Math.max(1, cliente.producciones_por_mes || 1);
-        const sesionesPrimerPago =
-          cliente.sesiones_primer_pago || Math.max(1, Math.floor(totalSesiones / 2));
-        const esSegundoTramo =
-          cliente.esquema_pago === "dos_pagos" &&
-          totalSesiones >= 2 &&
-          res.data.numero_sesion > sesionesPrimerPago;
-
-        const receiptParaEsteTramo = esSegundoTramo
-          ? ciclo.comprobante_2_url || null
-          : ciclo.comprobante_url || null;
-
-        if (receiptParaEsteTramo) {
-          setComprobanteSubidoUrl(receiptParaEsteTramo);
-        }
+        const sesionesPrimerPago = cliente.sesiones_primer_pago || Math.max(1, Math.floor(totalSesiones / 2));
+        const esSegundoTramo = cliente.esquema_pago === "dos_pagos" && totalSesiones >= 2 && res.data.numero_sesion > sesionesPrimerPago;
+        const receipt = esSegundoTramo ? ciclo.comprobante_2_url : ciclo.comprobante_url;
+        if (receipt) setComprobanteSubidoUrl(receipt);
 
         const pagoAcreditado = esSegundoTramo
           ? ciclo.estado_pago === "pagado"
           : ["primer_pago", "pagado"].includes(ciclo.estado_pago);
 
-        const isEnRevision =
-          !pagoAcreditado &&
-          (res.data.estado === "pre_reservada" ||
-            (Boolean(ciclo.comprobante_en_revision) && Boolean(receiptParaEsteTramo)));
-
-        const isAgendada =
-          res.data.estado === "agendada" && Boolean(res.data.fecha_produccion);
+        const isEnRevision = !pagoAcreditado && (res.data.estado === "pre_reservada" || (Boolean(ciclo.comprobante_en_revision) && Boolean(receipt)));
+        const isAgendada = res.data.estado === "agendada" && Boolean(res.data.fecha_produccion);
 
         if (isEnRevision || (isAgendada && pagoAcreditado)) {
           setShowSuccess(true);
@@ -98,26 +84,22 @@ export default function ProductionBookingPage() {
           : "¡Fecha de rodaje agendada con éxito!"
       );
 
-      // Disparar notificación por email vía Resend en segundo plano (non-blocking)
-      try {
-        fetch("/api/notify-booking", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            clienteNombre: res.data.cliente?.nombre || "Cliente",
-            numeroSesion: res.data.numero_sesion || 1,
-            mes: res.data.ciclo?.mes,
-            anio: res.data.ciclo?.anio,
-            fechaProduccion: res.data.fecha_produccion,
-            locacion: res.data.locacion,
-            notasBrief: res.data.notas_brief,
-            esPreReserva,
-            comprobanteUrl: formData.comprobante_url || comprobanteSubidoUrl || null
-          })
-        }).catch((err) => console.warn("Notice: Booking notification dispatch:", err));
-      } catch (err) {
-        console.warn("Notice: Booking notification dispatch exception:", err);
-      }
+      // Notificación de reserva vía Resend en segundo plano
+      fetch("/api/notify-booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clienteNombre: res.data.cliente?.nombre || "Cliente",
+          numeroSesion: res.data.numero_sesion || 1,
+          mes: res.data.ciclo?.mes,
+          anio: res.data.ciclo?.anio,
+          fechaProduccion: res.data.fecha_produccion,
+          locacion: res.data.locacion,
+          notasBrief: res.data.notas_brief,
+          esPreReserva,
+          comprobanteUrl: formData.comprobante_url || comprobanteSubidoUrl || null
+        })
+      }).catch((err) => console.warn("Notice: Booking notification dispatch:", err));
     } else {
       toast.error(res.error || "Ocurrió un error al confirmar la reserva.");
     }
@@ -134,18 +116,27 @@ export default function ProductionBookingPage() {
       {/* Gradiente Ambiental de Laboratorio */}
       <div className="absolute top-16 right-0 w-[500px] h-[500px] bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#ef18d6]/10 via-transparent to-transparent pointer-events-none" />
 
-      <main className="relative max-w-xl lg:max-w-5xl 2xl:max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8 z-10">
+      <main className="relative max-w-xl lg:max-w-5xl 2xl:max-w-6xl mx-auto px-3.5 sm:px-6 py-2.5 sm:py-8 z-10">
         {loading && <BookingLoadingSkeleton />}
         {!loading && error && <BookingErrorCard error={error} />}
 
         {!loading && !error && produccion && (
           showSuccess ? (
-            <div className="max-w-xl mx-auto">
+            <div className="w-full max-w-xl mx-auto space-y-4">
               <BookingSuccessCard
                 produccion={produccion}
                 onReschedule={() => setShowSuccess(false)}
                 onProduccionUpdated={(updated) => setProduccion(updated)}
               />
+              <div className="bg-white border border-gray-100 shadow-xl rounded-3xl overflow-hidden">
+                <BookingChecklistSection
+                  requerimientos={produccion.requerimientos}
+                  token={token}
+                  onRequerimientosUpdated={(updated) =>
+                    setProduccion((prev) => ({ ...prev, requerimientos: updated }))
+                  }
+                />
+              </div>
             </div>
           ) : (
             <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:items-start">
@@ -158,8 +149,8 @@ export default function ProductionBookingPage() {
                 />
               </div>
 
-              {/* Columna Derecha: Tarjeta de Reserva */}
-              <div className="lg:col-span-7">
+              {/* Columna Derecha: Tarjeta de Reserva Unificada */}
+              <div className="lg:col-span-7 flex justify-center">
                 {isLocked ? (
                   <BookingLockedCard
                     produccion={produccion}
@@ -169,6 +160,9 @@ export default function ProductionBookingPage() {
                     motivoBloqueo={produccion.motivoBloqueo || "pago_pendiente"}
                     tokenReserva={token}
                     onReceiptUploaded={(url) => setComprobanteSubidoUrl(url)}
+                    onRequerimientosUpdated={(updated) =>
+                      setProduccion((prev) => ({ ...prev, requerimientos: updated }))
+                    }
                   />
                 ) : (
                   <BookingFormCard
@@ -181,6 +175,9 @@ export default function ProductionBookingPage() {
                     duracionHoras={produccion.duracion_horas}
                     comprobanteSubidoUrl={comprobanteSubidoUrl}
                     onComprobanteUploaded={(url) => setComprobanteSubidoUrl(url)}
+                    onRequerimientosUpdated={(updated) =>
+                      setProduccion((prev) => ({ ...prev, requerimientos: updated }))
+                    }
                   />
                 )}
               </div>

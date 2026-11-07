@@ -1,0 +1,239 @@
+import { DollarSign, Calendar, Video, LockKeyhole } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { getPaymentSplitOptions, getDefaultFirstPaymentSessions } from "@/utils/bookingHelpers";
+
+/**
+ * CreateClientRetainerTab
+ * Pestaña 2: Configuración del retainer, esquema de pagos y rodajes pactados.
+ */
+export default function CreateClientRetainerTab({
+  clientForm,
+  onChangeField,
+  onBatchUpdate
+}) {
+  const isDosPagos =
+    clientForm.esquema_pago === "dos_pagos" || clientForm.esquema_pago === "quincenal";
+  const prodsPorMes = Number(clientForm.producciones_por_mes) || 1;
+
+  return (
+    <>
+      {/* Fila Operativa: Monto Retainer, Esquema de Pago y Días de Pago */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        <div>
+          <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-1.5 flex items-center gap-1">
+            <DollarSign className="w-3.5 h-3.5 text-brand-magenta" />
+            Retainer Mensual Total ($)
+          </label>
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 font-sora font-bold text-xs">
+              $
+            </span>
+            <input
+              type="number"
+              min="0"
+              step="100"
+              placeholder="0.00"
+              value={clientForm.monto_retainer ?? ""}
+              onChange={(e) => onChangeField("monto_retainer", e.target.value)}
+              className="w-full h-11 pl-7 pr-3 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 bg-gray-50/50 outline-none text-sm text-gray-900 font-semibold transition-all"
+            />
+          </div>
+          {isDosPagos && Number(clientForm.monto_retainer) > 0 && (
+            <p className="text-[11px] font-inter text-gray-500 mt-1">
+              2 pagos de{" "}
+              <strong className="text-gray-800">
+                ${(Number(clientForm.monto_retainer) / 2).toLocaleString("es-MX")}
+              </strong>
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-1.5 flex items-center gap-1">
+            <Calendar className="w-3.5 h-3.5 text-brand-blue" />
+            Esquema y Días de Pago
+          </label>
+          <div className="space-y-1.5">
+            <select
+              value={isDosPagos ? "dos_pagos" : "mensual"}
+              onChange={(e) => onChangeField("esquema_pago", e.target.value)}
+              className="w-full h-11 px-3 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-xs text-gray-900 font-sora font-semibold bg-gray-50/50 transition-all cursor-pointer"
+            >
+              <option value="mensual">1 Pago Mensual</option>
+              <option value="dos_pagos">2 Pagos Mensuales</option>
+            </select>
+
+            {isDosPagos ? (
+              <div className="grid grid-cols-2 gap-1.5">
+                <div>
+                  <span className="text-[10px] font-sora font-semibold text-gray-500 block mb-0.5">
+                    1er Pago
+                  </span>
+                  <select
+                    value={clientForm.dia_corte_pago ?? 1}
+                    onChange={(e) => onChangeField("dia_corte_pago", Number(e.target.value))}
+                    className="w-full h-9 px-2 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-xs text-gray-900 font-medium bg-gray-50/50 transition-all cursor-pointer"
+                  >
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map((dia) => (
+                      <option key={dia} value={dia}>
+                        Día {dia}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <span className="text-[10px] font-sora font-semibold text-gray-500 block mb-0.5">
+                    2do Pago
+                  </span>
+                  <select
+                    value={clientForm.dia_corte_pago_2 ?? 15}
+                    onChange={(e) => onChangeField("dia_corte_pago_2", Number(e.target.value))}
+                    className="w-full h-9 px-2 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-xs text-gray-900 font-medium bg-gray-50/50 transition-all cursor-pointer"
+                  >
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map((dia) => (
+                      <option key={dia} value={dia}>
+                        Día {dia}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <span className="text-[10px] font-sora font-semibold text-gray-500 block mb-0.5">
+                  Día de corte mensual
+                </span>
+                <select
+                  value={clientForm.dia_corte_pago ?? 1}
+                  onChange={(e) => onChangeField("dia_corte_pago", Number(e.target.value))}
+                  className="w-full h-9 px-2 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-xs text-gray-900 font-medium bg-gray-50/50 transition-all cursor-pointer"
+                >
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map((dia) => (
+                    <option key={dia} value={dia}>
+                      Día {dia} de cada mes
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* SECCIÓN OPERATIVA: PRODUCCIONES MENSUALES Y TIPO */}
+      <div className="p-3.5 rounded-xl border border-gray-200/80 bg-gray-50/60 space-y-3">
+        <span className="text-[11px] font-sora font-bold text-gray-700 uppercase tracking-wider block">
+          Producción y Rodajes Mensuales
+        </span>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Cuota de Rodajes Pactados */}
+          <div>
+            <label className="block text-xs font-sora font-semibold text-gray-700 mb-1 flex items-center gap-1">
+              <Video className="w-3.5 h-3.5 text-brand-magenta" />
+              Rodajes / Sesiones por Mes
+            </label>
+            <select
+              value={clientForm.producciones_por_mes ?? 1}
+              onChange={(e) => {
+                const prods = Number(e.target.value);
+                const defaultFirstPayment = getDefaultFirstPaymentSessions(prods);
+                onBatchUpdate({
+                  producciones_por_mes: prods,
+                  sesiones_primer_pago: defaultFirstPayment
+                });
+              }}
+              className="w-full h-10 px-3 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-xs text-gray-900 font-sora font-semibold bg-white transition-all cursor-pointer"
+            >
+              <option value={0}>0 Sesiones (Sólo Gestión o Asesoría)</option>
+              <option value={1}>1 Sesión al Mes</option>
+              <option value={2}>2 Sesiones al Mes</option>
+              <option value={3}>3 Sesiones al Mes</option>
+              <option value={4}>4 Sesiones al Mes</option>
+              <option value={5}>5 Sesiones al Mes</option>
+              <option value={6}>6 Sesiones al Mes</option>
+            </select>
+            <span className="text-[10px] text-gray-400 mt-1 block">
+              Generará automáticamente estas sesiones en cada ciclo operativo mensual.
+            </span>
+          </div>
+
+          {/* Tipo de Sesión Predeterminada */}
+          <div>
+            <label className="block text-xs font-sora font-semibold text-gray-700 mb-1">
+              Tipo de Sesión Predeterminada
+            </label>
+            <select
+              value={clientForm.tipo_sesion_default || "organica"}
+              onChange={(e) => onChangeField("tipo_sesion_default", e.target.value)}
+              className="w-full h-10 px-3 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-xs text-gray-900 font-sora font-semibold bg-white transition-all cursor-pointer"
+            >
+              <option value="organica">Orgánica / Reel Batch (4 hrs)</option>
+              <option value="profesional">Producción Profesional (6 hrs)</option>
+            </select>
+            <span className="text-[10px] text-gray-400 mt-1 block">
+              Define la duración inicial y estilo de rodaje del cliente.
+            </span>
+          </div>
+        </div>
+
+        {/* Correlación Pagos <-> Sesiones cuando son 2 pagos y >= 2 sesiones */}
+        {isDosPagos && prodsPorMes >= 2 && (
+          <div className="p-3 rounded-xl border border-blue-100 bg-blue-50/40 space-y-1.5">
+            <span className="text-[11px] font-sora font-bold text-gray-800 flex items-center gap-1.5">
+              <LockKeyhole className="w-3.5 h-3.5 text-brand-blue" />
+              Desbloqueo de Sesiones por Pago (2 Pagos)
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+              {getPaymentSplitOptions(prodsPorMes).map((opt) => {
+                const currentSplit =
+                  Number(clientForm.sesiones_primer_pago) ||
+                  getDefaultFirstPaymentSessions(prodsPorMes);
+                const isSelected = currentSplit === opt.firstPaymentSessions;
+                return (
+                  <button
+                    key={opt.firstPaymentSessions}
+                    type="button"
+                    onClick={() =>
+                      onChangeField("sesiones_primer_pago", opt.firstPaymentSessions)
+                    }
+                    className={`py-2 px-3 rounded-full text-[11px] font-sora font-semibold transition-all cursor-pointer border text-center ${
+                      isSelected
+                        ? "bg-gray-900 text-white border-gray-900 shadow-xs"
+                        : "bg-white text-gray-700 border-gray-200 hover:border-brand-blue"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Permiso de Descarga en Vista Pública */}
+      <div className="flex items-center justify-between p-3.5 rounded-xl border border-gray-100 bg-gray-50/70 hover:bg-gray-50 transition-colors">
+        <div className="space-y-0.5 pr-3">
+          <Label
+            htmlFor="permite-descarga-toggle"
+            className="text-xs font-sora font-bold text-gray-800 cursor-pointer"
+          >
+            Permitir descarga de archivos en vista pública
+          </Label>
+          <p className="text-[11px] text-gray-500 font-normal leading-relaxed">
+            Habilita a este cliente descargar fotos y videos desde su calendario.
+          </p>
+        </div>
+        <Switch
+          id="permite-descarga-toggle"
+          checked={Boolean(clientForm.permite_descarga)}
+          onCheckedChange={(checked) => onChangeField("permite_descarga", checked)}
+        />
+      </div>
+    </>
+  );
+}
+

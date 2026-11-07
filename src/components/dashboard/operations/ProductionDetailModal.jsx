@@ -4,6 +4,7 @@ import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
 import SlugPreviewField from "@/components/common/SlugPreviewField";
 import ProductionScheduleFields from "./subcomponents/ProductionScheduleFields";
 import ProductionLogisticsFields from "./subcomponents/ProductionLogisticsFields";
+import ProductionChecklistManager from "./subcomponents/ProductionChecklistManager";
 import { useProductionDetailManager } from "@/hooks/useProductionDetailManager";
 
 /**
@@ -116,6 +117,11 @@ export default function ProductionDetailModal({
             ciclo={ciclo}
             produccion={produccion}
             handleOpenMaps={handleOpenMaps}
+          />
+
+          <ProductionChecklistManager
+            requerimientos={formData.requerimientos}
+            onChange={(nextReqs) => setFormData({ ...formData, requerimientos: nextReqs })}
           />
 
           {reservationUrl && (

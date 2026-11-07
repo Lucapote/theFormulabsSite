@@ -346,3 +346,41 @@ export function checkProductionPaymentRisk(produccion, ciclo, cliente = {}, tota
     plazoVencido: false
   };
 }
+
+/**
+ * Determina la próxima sesión operativa a filmar dentro de un conjunto de producciones.
+ * Prioriza sesiones agendadas/propuestas futuras más cercanas, o la primera pendiente.
+ *
+ * @param {Array} producciones - Array de producciones del ciclo
+ * @returns {{ upcomingSession: object|null, otherSessions: Array }}
+ */
+export function getClosestUpcomingSession(producciones = []) {
+  if (!Array.isArray(producciones) || producciones.length === 0) {
+    return { upcomingSession: null, otherSessions: [] };
+  }
+
+  const now = Date.now();
+  const sorted = [...producciones].sort((a, b) => (a.numero_sesion || 1) - (b.numero_sesion || 1));
+
+  // Sesiones con fecha futura o actual
+  const upcomingWithDate = sorted
+    .filter((p) => p.fecha_produccion && new Date(p.fecha_produccion).getTime() >= now - 6 * 60 * 60 * 1000)
+    .sort((a, b) => new Date(a.fecha_produccion).getTime() - new Date(b.fecha_produccion).getTime());
+
+  let chosen = null;
+  if (upcomingWithDate.length > 0) {
+    chosen = upcomingWithDate[0];
+  } else {
+    // Primera pendiente de filmación
+    const pending = sorted.find((p) => !["rodaje_completado", "en_edicion", "finalizada"].includes(p.estado));
+    chosen = pending || sorted[0];
+  }
+
+  const otherSessions = sorted.filter((p) => p.id !== chosen?.id);
+
+  return {
+    upcomingSession: chosen,
+    otherSessions
+  };
+}
+

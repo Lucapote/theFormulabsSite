@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
-import { UserPlus, DollarSign, Calendar, Video, MapPin, LockKeyhole, FileText, ArrowRight } from "lucide-react";
+import { UserPlus, DollarSign, FileText } from "lucide-react";
 import BaseFormModal from "@/components/common/BaseFormModal";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { getPaymentSplitOptions, getDefaultFirstPaymentSessions } from "@/utils/bookingHelpers";
+import CreateClientIdentityTab from "./subcomponents/CreateClientIdentityTab";
+import CreateClientRetainerTab from "./subcomponents/CreateClientRetainerTab";
 
 /**
  * CreateClientModal
- * Modal dialog for creating a new client/brand with Retainers & Operations fields.
- * Clinical High-Tech Lab design system with 2-step progressive disclosure tabs and fixed 95vh height.
+ * Modal clínico para dar de alta un nuevo cliente o marca con retainers y rodajes.
+ * Modularizado bajo SRP ($\le 250$ líneas) cumpliendo con GEMINI.md.
  */
 export default function CreateClientModal({
   isOpen = false,
@@ -39,6 +38,14 @@ export default function CreateClientModal({
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const handleFieldChange = (field, value) => {
+    setClientForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleBatchUpdate = (updates) => {
+    setClientForm((prev) => ({ ...prev, ...updates }));
+  };
 
   const tabsContent = (
     <div className="flex bg-gray-100 p-1 rounded-full border border-gray-200 gap-1">
@@ -90,319 +97,17 @@ export default function CreateClientModal({
     >
       <div className="space-y-4 font-inter">
         {activeTab === "info" ? (
-          <>
-            {/* Bloque 1: Identidad del Cliente */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-1.5">
-                  Nombre del Cliente / Marca *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej. Clínica Aurora"
-                  value={clientForm.nombre || ""}
-                  onChange={(e) => setClientForm({ ...clientForm, nombre: e.target.value })}
-                  className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 bg-gray-50/50 outline-none text-sm text-gray-900 font-medium transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-1.5">
-                  Empresa / Razón Social
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ej. Aurora Health Group S.A."
-                  value={clientForm.empresa || ""}
-                  onChange={(e) => setClientForm({ ...clientForm, empresa: e.target.value })}
-                  className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 bg-gray-50/50 outline-none text-sm text-gray-900 font-medium transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Bloque 2: Contacto y Locación */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-1.5">
-                  Email de Contacto
-                </label>
-                <input
-                  type="email"
-                  placeholder="Ej. contacto@clinicaaurora.com"
-                  value={clientForm.email || ""}
-                  onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })}
-                  className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 bg-gray-50/50 outline-none text-sm text-gray-900 font-medium transition-all"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-1.5 flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                  Locación / Dirección base
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ej. Av. Bonampak SM 4, Cancún"
-                  value={clientForm.locacion_default || ""}
-                  onChange={(e) => setClientForm({ ...clientForm, locacion_default: e.target.value })}
-                  className="w-full h-11 px-4 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 bg-gray-50/50 outline-none text-sm text-gray-900 font-medium transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Paso Siguiente Asistido */}
-            <div className="pt-2 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setActiveTab("retainer")}
-                className="h-10 px-5 rounded-full bg-blue-50 hover:bg-blue-100 text-brand-blue font-sora font-bold text-xs inline-flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98]"
-              >
-                <span>Configurar Retainer y Producción</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </>
+          <CreateClientIdentityTab
+            clientForm={clientForm}
+            onChangeField={handleFieldChange}
+            onNext={() => setActiveTab("retainer")}
+          />
         ) : (
-          <>
-            {/* Fila Operativa: Monto Retainer, Esquema de Pago y Días de Pago */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div>
-                <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-1.5 flex items-center gap-1">
-                  <DollarSign className="w-3.5 h-3.5 text-brand-magenta" />
-                  Retainer Mensual Total ($)
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 font-sora font-bold text-xs">
-                    $
-                  </span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="100"
-                    placeholder="0.00"
-                    value={clientForm.monto_retainer ?? ""}
-                    onChange={(e) =>
-                      setClientForm({ ...clientForm, monto_retainer: e.target.value })
-                    }
-                    className="w-full h-11 pl-7 pr-3 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 bg-gray-50/50 outline-none text-sm text-gray-900 font-semibold transition-all"
-                  />
-                </div>
-                {(clientForm.esquema_pago === "dos_pagos" || clientForm.esquema_pago === "quincenal") && Number(clientForm.monto_retainer) > 0 && (
-                  <p className="text-[11px] font-inter text-gray-500 mt-1">
-                    2 pagos de <strong className="text-gray-800">${(Number(clientForm.monto_retainer) / 2).toLocaleString("es-MX")}</strong>
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-1.5 flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-brand-blue" />
-                  Esquema y Días de Pago
-                </label>
-                <div className="space-y-1.5">
-                  <select
-                    value={
-                      clientForm.esquema_pago === "dos_pagos" || clientForm.esquema_pago === "quincenal"
-                        ? "dos_pagos"
-                        : "mensual"
-                    }
-                    onChange={(e) =>
-                      setClientForm({ ...clientForm, esquema_pago: e.target.value })
-                    }
-                    className="w-full h-11 px-3 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-xs text-gray-900 font-sora font-semibold bg-gray-50/50 transition-all cursor-pointer"
-                  >
-                    <option value="mensual">1 Pago Mensual</option>
-                    <option value="dos_pagos">2 Pagos Mensuales</option>
-                  </select>
-
-                  {clientForm.esquema_pago === "dos_pagos" || clientForm.esquema_pago === "quincenal" ? (
-                    <div className="grid grid-cols-2 gap-1.5">
-                      <div>
-                        <span className="text-[10px] font-sora font-semibold text-gray-500 block mb-0.5">
-                          1er Pago
-                        </span>
-                        <select
-                          value={clientForm.dia_corte_pago ?? 1}
-                          onChange={(e) =>
-                            setClientForm({ ...clientForm, dia_corte_pago: Number(e.target.value) })
-                          }
-                          className="w-full h-9 px-2 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-xs text-gray-900 font-medium bg-gray-50/50 transition-all cursor-pointer"
-                        >
-                          {Array.from({ length: 31 }, (_, i) => i + 1).map((dia) => (
-                            <option key={dia} value={dia}>
-                              Día {dia}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div>
-                        <span className="text-[10px] font-sora font-semibold text-gray-500 block mb-0.5">
-                          2do Pago
-                        </span>
-                        <select
-                          value={clientForm.dia_corte_pago_2 ?? 15}
-                          onChange={(e) =>
-                            setClientForm({ ...clientForm, dia_corte_pago_2: Number(e.target.value) })
-                          }
-                          className="w-full h-9 px-2 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-xs text-gray-900 font-medium bg-gray-50/50 transition-all cursor-pointer"
-                        >
-                          {Array.from({ length: 31 }, (_, i) => i + 1).map((dia) => (
-                            <option key={dia} value={dia}>
-                              Día {dia}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  ) : (
-                    <div>
-                      <span className="text-[10px] font-sora font-semibold text-gray-500 block mb-0.5">
-                        Día de corte mensual
-                      </span>
-                      <select
-                        value={clientForm.dia_corte_pago ?? 1}
-                        onChange={(e) =>
-                          setClientForm({ ...clientForm, dia_corte_pago: Number(e.target.value) })
-                        }
-                        className="w-full h-9 px-2 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-xs text-gray-900 font-medium bg-gray-50/50 transition-all cursor-pointer"
-                      >
-                        {Array.from({ length: 31 }, (_, i) => i + 1).map((dia) => (
-                          <option key={dia} value={dia}>
-                            Día {dia} de cada mes
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* SECCIÓN OPERATIVA: PRODUCCIONES MENSUALES Y TIPO */}
-            <div className="p-3.5 rounded-xl border border-gray-200/80 bg-gray-50/60 space-y-3">
-              <span className="text-[11px] font-sora font-bold text-gray-700 uppercase tracking-wider block">
-                Producción y Rodajes Mensuales
-              </span>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Cuota de Rodajes Pactados */}
-                <div>
-                  <label className="block text-xs font-sora font-semibold text-gray-700 mb-1 flex items-center gap-1">
-                    <Video className="w-3.5 h-3.5 text-brand-magenta" />
-                    Rodajes / Sesiones por Mes
-                  </label>
-                  <select
-                    value={clientForm.producciones_por_mes ?? 1}
-                    onChange={(e) => {
-                      const prods = Number(e.target.value);
-                      const defaultFirstPayment = getDefaultFirstPaymentSessions(prods);
-                      setClientForm({
-                        ...clientForm,
-                        producciones_por_mes: prods,
-                        sesiones_primer_pago: defaultFirstPayment
-                      });
-                    }}
-                    className="w-full h-10 px-3 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-xs text-gray-900 font-sora font-semibold bg-white transition-all cursor-pointer"
-                  >
-                    <option value={0}>0 Sesiones (Sólo Gestión o Asesoría)</option>
-                    <option value={1}>1 Sesión al Mes</option>
-                    <option value={2}>2 Sesiones al Mes</option>
-                    <option value={3}>3 Sesiones al Mes</option>
-                    <option value={4}>4 Sesiones al Mes</option>
-                    <option value={5}>5 Sesiones al Mes</option>
-                    <option value={6}>6 Sesiones al Mes</option>
-                  </select>
-                  <span className="text-[10px] text-gray-400 mt-1 block">
-                    Generará automáticamente estas sesiones en cada ciclo operativo mensual.
-                  </span>
-                </div>
-
-                {/* Tipo de Sesión Predeterminada */}
-                <div>
-                  <label className="block text-xs font-sora font-semibold text-gray-700 mb-1">
-                    Tipo de Sesión Predeterminada
-                  </label>
-                  <select
-                    value={clientForm.tipo_sesion_default || "organica"}
-                    onChange={(e) =>
-                      setClientForm({ ...clientForm, tipo_sesion_default: e.target.value })
-                    }
-                    className="w-full h-10 px-3 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none text-xs text-gray-900 font-sora font-semibold bg-white transition-all cursor-pointer"
-                  >
-                    <option value="organica">Orgánica / Reel Batch (4 hrs)</option>
-                    <option value="profesional">Producción Profesional (6 hrs)</option>
-                  </select>
-                  <span className="text-[10px] text-gray-400 mt-1 block">
-                    Define la duración inicial y estilo de rodaje del cliente.
-                  </span>
-                </div>
-              </div>
-
-              {/* Correlación Pagos <-> Sesiones cuando son 2 pagos y >= 2 sesiones */}
-              {(clientForm.esquema_pago === "dos_pagos" || clientForm.esquema_pago === "quincenal") &&
-                (Number(clientForm.producciones_por_mes) || 1) >= 2 && (
-                  <div className="p-3 rounded-xl border border-blue-100 bg-blue-50/40 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-sora font-bold text-gray-800 flex items-center gap-1.5">
-                        <LockKeyhole className="w-3.5 h-3.5 text-brand-blue" />
-                        Desbloqueo de Sesiones por Pago (2 Pagos)
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                      {getPaymentSplitOptions(Number(clientForm.producciones_por_mes) || 2).map((opt) => {
-                        const currentSplit =
-                          Number(clientForm.sesiones_primer_pago) ||
-                          getDefaultFirstPaymentSessions(Number(clientForm.producciones_por_mes) || 2);
-                        const isSelected = currentSplit === opt.firstPaymentSessions;
-                        return (
-                          <button
-                            key={opt.firstPaymentSessions}
-                            type="button"
-                            onClick={() =>
-                              setClientForm({
-                                ...clientForm,
-                                sesiones_primer_pago: opt.firstPaymentSessions
-                              })
-                            }
-                            className={`py-2 px-3 rounded-full text-[11px] font-sora font-semibold transition-all cursor-pointer border text-center ${
-                              isSelected
-                                ? "bg-gray-900 text-white border-gray-900 shadow-xs"
-                                : "bg-white text-gray-700 border-gray-200 hover:border-brand-blue"
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-            </div>
-
-            {/* Permiso de Descarga en Vista Pública */}
-            <div className="flex items-center justify-between p-3.5 rounded-xl border border-gray-100 bg-gray-50/70 hover:bg-gray-50 transition-colors">
-              <div className="space-y-0.5 pr-3">
-                <Label
-                  htmlFor="permite-descarga-toggle"
-                  className="text-xs font-sora font-bold text-gray-800 cursor-pointer"
-                >
-                  Permitir descarga de archivos en vista pública
-                </Label>
-                <p className="text-[11px] text-gray-500 font-normal leading-relaxed">
-                  Habilita a este cliente descargar fotos y videos desde su calendario.
-                </p>
-              </div>
-              <Switch
-                id="permite-descarga-toggle"
-                checked={Boolean(clientForm.permite_descarga)}
-                onCheckedChange={(checked) =>
-                  setClientForm({ ...clientForm, permite_descarga: checked })
-                }
-              />
-            </div>
-          </>
+          <CreateClientRetainerTab
+            clientForm={clientForm}
+            onChangeField={handleFieldChange}
+            onBatchUpdate={handleBatchUpdate}
+          />
         )}
       </div>
     </BaseFormModal>

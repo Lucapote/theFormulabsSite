@@ -47,12 +47,12 @@ export default async function handler(req, res) {
   }
 
   const clientId = state;
-  const appId = process.env.VITE_META_APP_ID || process.env.META_APP_ID || "1988387095189436";
-  const appSecret = process.env.META_APP_SECRET || process.env.META_SECRET || "";
+  const appId = process.env.META_APP_ID || process.env.VITE_META_APP_ID;
+  const appSecret = process.env.META_APP_SECRET || process.env.META_SECRET;
 
-  if (!appSecret) {
-    console.error("META_APP_SECRET no está configurado en las variables de entorno.");
-    return res.status(500).send("Falta configuración de META_APP_SECRET en el servidor.");
+  if (!appId || !appSecret) {
+    console.error("META_APP_ID o META_APP_SECRET no están configurados en las variables de entorno.");
+    return res.status(500).send("Falta configuración de credenciales de Meta en el servidor.");
   }
 
   const protocol = req.headers["x-forwarded-proto"] || "http";

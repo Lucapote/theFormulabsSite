@@ -3,7 +3,7 @@ import { formatBytes } from "@/utils/mediaCompressor";
 
 /**
  * BookingReceiptDropzone
- * Dropzone unificado de comprobante de pago con soporte para compresión,
+ * Dropzone unificado y compacto de comprobante de pago con soporte para compresión,
  * previsualización de archivo local y estado de comprobante ya registrado.
  */
 export default function BookingReceiptDropzone({
@@ -19,13 +19,13 @@ export default function BookingReceiptDropzone({
   const isRegistered = Boolean(uploadStats?.publicUrl || comprobanteUrl);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <label className="block text-xs font-sora font-bold text-gray-800 uppercase tracking-wider">
+        <label className="block text-[11px] sm:text-xs font-sora font-bold text-gray-800 uppercase tracking-wider">
           COMPROBANTE DE PAGO REQUERIDO
         </label>
         {isRequired && (
-          <span className="text-[11px] font-mono text-[#ef18d6] font-semibold">
+          <span className="text-[10px] sm:text-[11px] font-mono text-[#ef18d6] font-semibold">
             * obligatorio
           </span>
         )}
@@ -41,19 +41,19 @@ export default function BookingReceiptDropzone({
       />
 
       {isRegistered ? (
-        <div className="border border-emerald-300 bg-emerald-50/60 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-emerald-200">
-              <FileCheck2 className="w-5 h-5" />
+        <div className="border border-emerald-300 bg-emerald-50/60 rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 flex items-center justify-between gap-2.5 shadow-2xs">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs shadow-emerald-200">
+              <FileCheck2 className="w-4 h-4" />
             </div>
             <div className="min-w-0">
               <p className="text-xs font-sora font-bold text-emerald-950 truncate">
-                Comprobante registrado en la plataforma
+                Comprobante registrado
               </p>
-              <p className="text-[11px] text-emerald-700">
+              <p className="text-[10px] sm:text-[11px] text-emerald-700 truncate">
                 {uploadStats?.compressedSize
-                  ? `${formatBytes(uploadStats.compressedSize)} • En proceso de validación`
-                  : "En proceso de validación por The Formulab"}
+                  ? `${formatBytes(uploadStats.compressedSize)} • En validación`
+                  : "En validación por The Formulab"}
               </p>
             </div>
           </div>
@@ -61,23 +61,23 @@ export default function BookingReceiptDropzone({
             type="button"
             disabled={disabled || uploading}
             onClick={() => fileInputRef.current?.click()}
-            className="text-xs font-sora font-bold text-gray-600 hover:text-gray-900 bg-white border border-gray-200 px-3.5 py-1.5 rounded-full shadow-2xs hover:bg-gray-50 cursor-pointer shrink-0 active:scale-[0.98] transition-transform"
+            className="text-[11px] font-sora font-bold text-gray-600 hover:text-gray-900 bg-white border border-gray-200 px-3 py-1 rounded-full shadow-2xs hover:bg-gray-50 cursor-pointer shrink-0 active:scale-[0.98] transition-transform"
           >
             Actualizar
           </button>
         </div>
       ) : pendingReceiptFile ? (
-        <div className="border border-sky-300 bg-sky-50/60 rounded-2xl p-4 flex items-center justify-between gap-3 shadow-xs">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-brand-blue text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-200">
-              <FileCheck2 className="w-5 h-5" />
+        <div className="border border-sky-300 bg-sky-50/60 rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 flex items-center justify-between gap-2.5 shadow-2xs">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-brand-blue text-white flex items-center justify-center shrink-0 shadow-xs shadow-blue-200">
+              <FileCheck2 className="w-4 h-4" />
             </div>
             <div className="min-w-0">
               <p className="text-xs font-sora font-bold text-gray-900 truncate">
                 {pendingReceiptFile.name}
               </p>
-              <p className="text-[11px] text-gray-500">
-                {formatBytes(pendingReceiptFile.size)} • Listo para subir y validar
+              <p className="text-[10px] sm:text-[11px] text-gray-500 truncate">
+                {formatBytes(pendingReceiptFile.size)} • Listo para subir
               </p>
             </div>
           </div>
@@ -85,7 +85,7 @@ export default function BookingReceiptDropzone({
             type="button"
             disabled={disabled || uploading}
             onClick={() => fileInputRef.current?.click()}
-            className="text-xs font-sora font-bold text-gray-600 hover:text-gray-900 bg-white border border-gray-200 px-3.5 py-1.5 rounded-full shadow-2xs hover:bg-gray-50 cursor-pointer shrink-0 active:scale-[0.98] transition-transform"
+            className="text-[11px] font-sora font-bold text-gray-600 hover:text-gray-900 bg-white border border-gray-200 px-3 py-1 rounded-full shadow-2xs hover:bg-gray-50 cursor-pointer shrink-0 active:scale-[0.98] transition-transform"
           >
             Cambiar
           </button>
@@ -97,23 +97,23 @@ export default function BookingReceiptDropzone({
               fileInputRef.current?.click();
             }
           }}
-          className="relative border-2 border-dashed border-sky-300 hover:border-sky-400 bg-sky-50/40 hover:bg-sky-50/70 rounded-2xl p-5 text-center transition-all cursor-pointer group"
+          className="relative border-2 border-dashed border-sky-300 hover:border-sky-400 bg-sky-50/40 hover:bg-sky-50/70 rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 text-center transition-all cursor-pointer group active:scale-[0.99]"
         >
-          <div className="flex flex-row justify-center items-center gap-4">
-            <div className="w-11 h-11 rounded-full bg-[#188ff0] text-white flex items-center justify-center shadow-md shadow-blue-200 group-hover:scale-105 transition-transform">
+          <div className="flex flex-row justify-center items-center gap-3">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#188ff0] text-white flex items-center justify-center shadow-md shadow-blue-200 group-hover:scale-105 transition-transform shrink-0">
               {uploading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <Upload className="w-5 h-5" />
+                <Upload className="w-4 h-4" />
               )}
             </div>
-            <div className="text-left">
-              <p className="text-xs sm:text-sm font-sora font-bold text-gray-900 group-hover:text-brand-blue transition-colors">
+            <div className="text-left min-w-0">
+              <p className="text-xs font-sora font-bold text-gray-900 group-hover:text-brand-blue transition-colors truncate">
                 {uploading
-                  ? "Subiendo comprobante a almacenamiento seguro..."
+                  ? "Subiendo comprobante..."
                   : "Subir Comprobante de Pago (Foto o PDF)"}
               </p>
-              <p className="text-[11px] text-gray-500 mt-0.5">
+              <p className="text-[10px] sm:text-[11px] text-gray-500 truncate">
                 Habilita y confirma inmediatamente tu fecha de rodaje
               </p>
             </div>

@@ -5,11 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import TestTube from "@/components/common/TestTube";
 
 const LAB_STAGES = [
-  { pct: 35, text: "Sintetizando activos", color: "#ef18d6" },
-  { pct: 50, text: "Calibrando iluminación en set", color: "#ef18d6" },
-  { pct: 65, text: "Ajustando retención del algoritmo", color: "#188ff0" },
-  { pct: 80, text: "Optimizando micro-formatos", color: "#188ff0" },
-  { pct: 95, text: "Comprimiendo fórmula final", color: "#ef18d6" }
+  { pct: 35, text: "Sintetizando activos", dotClass: "bg-brand-magenta" },
+  { pct: 50, text: "Calibrando iluminación en set", dotClass: "bg-brand-magenta" },
+  { pct: 65, text: "Ajustando retención del algoritmo", dotClass: "bg-brand-blue" },
+  { pct: 80, text: "Optimizando micro-formatos", dotClass: "bg-brand-blue" },
+  { pct: 95, text: "Comprimiendo fórmula final", dotClass: "bg-brand-magenta" }
 ];
 
 /**
@@ -92,8 +92,7 @@ export default function Index() {
                   className="inline-flex items-center gap-2.5 px-3 py-1 rounded-full bg-white border border-gray-200/90 shadow-2xs"
                 >
                   <span
-                    className="w-2 h-2 rounded-full transition-colors duration-500 shrink-0"
-                    style={{ backgroundColor: currentStage.color }}
+                    className={`w-2 h-2 rounded-full transition-colors duration-500 shrink-0 ${currentStage.dotClass}`}
                   />
                   <span className="text-xs font-mono font-bold uppercase tracking-wider text-gray-700">
                     {currentStage.text}

@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { getDefaultFirstPaymentSessions, checkProductionPaymentRisk } from "@/utils/bookingHelpers";
-import CycleClientHeader from "./CycleClientHeader";
+import CycleClientPanel from "./CycleClientPanel";
 import CycleSessionsTrack from "./CycleSessionsTrack";
-import CycleFinanceHub from "./CycleFinanceHub";
 import CreateProductionModal from "./CreateProductionModal";
 
 /**
  * OperationsCycleCard
- * Tarjeta de ciclo mensual operativa modularizada bajo SRP.
- * Ensambla CycleClientHeader, CycleSessionsTrack y CycleFinanceHub.
+ * Tarjeta de ciclo mensual operativa de 2 columnas.
+ * Columna 1 (33.3%): Identidad, Pagos, Finanzas y Calendario.
+ * Columna 2 (66.7%): Mission Control Operativo de Rodajes (Próximo Rodaje y Secundarias).
  */
 export default function OperationsCycleCard({
   ciclo,
@@ -37,7 +37,6 @@ export default function OperationsCycleCard({
     isDosPagos && totalSessions >= 2
       ? Number(cliente.sesiones_primer_pago) || getDefaultFirstPaymentSessions(totalSessions)
       : totalSessions;
-  const secondPaymentSessions = Math.max(0, totalSessions - firstPaymentSessions);
 
   // Comprobantes por tramo
   const comprobante1 = ciclo.comprobante_url || null;
@@ -93,21 +92,32 @@ export default function OperationsCycleCard({
           : "border-gray-200"
       }`}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-        {/* COL 1: Metadata del Cliente & Calendario */}
-        <CycleClientHeader
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        {/* COL 1: Metadata del Cliente, Pagos, Finanzas y Calendario (lg:col-span-4) */}
+        <CycleClientPanel
           cliente={cliente}
           ciclo={ciclo}
           cortesLabel={cortesLabel}
           isDosPagos={isDosPagos}
           firstPaymentSessions={firstPaymentSessions}
-          secondPaymentSessions={secondPaymentSessions}
+          estaCompletamentePagado={estaCompletamentePagado}
+          tieneComprobantePorRevisar={tieneComprobantePorRevisar}
+          isSegundoTramoPendiente={isSegundoTramoPendiente}
+          hasApprovedReceipts={hasApprovedReceipts}
+          isComp1Aprobado={isComp1Aprobado}
+          isComp2Aprobado={isComp2Aprobado}
+          extraApprovedReceipts={extraApprovedReceipts}
+          comprobante1={comprobante1}
+          comprobante2={comprobante2}
           onEditClient={onEditClient}
+          onOpenFinanceModal={onOpenFinanceModal}
+          onOpenReviewReceipt={onOpenReviewReceipt}
+          onStatusUpdated={onStatusUpdated}
           onOpenCreateCalendar={onOpenCreateCalendar}
           onGoToCalendar={onGoToCalendar}
         />
 
-        {/* COL 2: Producciones del Mes & Gatekeeper */}
+        {/* COL 2: Centro de Rodajes - Mission Control Operativo (lg:col-span-8) */}
         <CycleSessionsTrack
           producciones={producciones}
           ciclo={ciclo}
@@ -121,28 +131,6 @@ export default function OperationsCycleCard({
           estaCompletamentePagado={estaCompletamentePagado}
           onOpenProductionModal={onOpenProductionModal}
           onOpenCreateProdModal={() => setShowCreateProdModal(true)}
-        />
-
-        {/* COL 3: Finanzas, Optimistic UI & Hub de Comprobantes */}
-        <CycleFinanceHub
-          ciclo={ciclo}
-          cliente={cliente}
-          isDosPagos={isDosPagos}
-          firstPaymentSessions={firstPaymentSessions}
-          estaCompletamentePagado={estaCompletamentePagado}
-          tieneComprobantePorRevisar={tieneComprobantePorRevisar}
-          isSegundoTramoPendiente={isSegundoTramoPendiente}
-          activeComprobanteUrl={activeComprobanteUrl}
-          hasApprovedReceipts={hasApprovedReceipts}
-          isComp1Aprobado={isComp1Aprobado}
-          isComp2Aprobado={isComp2Aprobado}
-          extraApprovedReceipts={extraApprovedReceipts}
-          comprobante1={comprobante1}
-          comprobante2={comprobante2}
-          producciones={producciones}
-          onOpenFinanceModal={onOpenFinanceModal}
-          onOpenReviewReceipt={onOpenReviewReceipt}
-          onStatusUpdated={onStatusUpdated}
         />
       </div>
 

@@ -24,7 +24,7 @@ export default function CycleClientHeader({
   };
 
   return (
-    <div className="lg:col-span-4 border-b lg:border-b-0 lg:border-r border-gray-100 pb-4 lg:pb-0 lg:pr-4 flex flex-col justify-between space-y-3">
+    <div className="lg:col-span-3 border-b lg:border-b-0 lg:border-r border-gray-100 pb-4 lg:pb-0 lg:pr-4 flex flex-col justify-between space-y-3 font-inter text-left">
       <div className="space-y-2">
         <div className="flex items-center gap-2 flex-wrap">
           <h3 className="font-sora font-extrabold text-base md:text-lg text-gray-900 tracking-tight">

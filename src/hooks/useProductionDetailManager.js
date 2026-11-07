@@ -34,7 +34,8 @@ export function useProductionDetailManager({
     fecha_produccion: "",
     duracion_horas: 4,
     locacion: "",
-    notas_brief: ""
+    notas_brief: "",
+    requerimientos: []
   });
 
   useEffect(() => {
@@ -65,7 +66,8 @@ export function useProductionDetailManager({
         fecha_produccion: formattedDate,
         duracion_horas: produccion.duracion_horas || (produccion.tipo === "profesional" ? 6 : 4),
         locacion: initialLocacion,
-        notas_brief: produccion.notas_brief || ""
+        notas_brief: produccion.notas_brief || "",
+        requerimientos: Array.isArray(produccion.requerimientos) ? produccion.requerimientos : []
       });
     }
   }, [produccion, ciclo, totalSesiones]);
@@ -145,6 +147,7 @@ export function useProductionDetailManager({
       duracion_horas: Number(formData.duracion_horas) || 4,
       locacion: resolvedLocacion,
       notas_brief: formData.notas_brief.trim(),
+      requerimientos: Array.isArray(formData.requerimientos) ? formData.requerimientos : [],
       fecha_produccion: formData.fecha_produccion
         ? new Date(formData.fecha_produccion).toISOString()
         : null
