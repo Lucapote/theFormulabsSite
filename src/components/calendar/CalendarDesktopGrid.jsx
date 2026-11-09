@@ -1,6 +1,6 @@
-import { Video as VideoIcon, Layers, Plus, Play } from "lucide-react";
+import { Video as VideoIcon, Layers, Plus, Play, Smartphone } from "lucide-react";
 import { formatTimeHHMM } from "./CalendarGridView";
-import { getPostStatusMeta, POST_STATUS_LIST } from "@/utils/postStatusHelpers";
+import { getPostStatusMeta, getPostFormatMeta, POST_STATUS_LIST } from "@/utils/postStatusHelpers";
 
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
@@ -113,58 +113,70 @@ export default function CalendarDesktopGrid({
               {/* Posts Cards inside Cell */}
               <div className="space-y-1 flex-1 overflow-y-auto max-h-[58px] xl:max-h-[68px] mt-1 pr-0.5 no-scrollbar">
                 {dayPosts.map((post) => {
-                  const firstFile = post.archivos && post.archivos.length > 0 ? post.archivos[0] : null;
+                  const files = Array.isArray(post.archivos) ? post.archivos : [];
+                  const firstFile = files.length > 0 ? files[0] : null;
                   const statusMeta = getPostStatusMeta(post.estado);
+                  const formatMeta = getPostFormatMeta(post.tipo_post, files.length);
 
                   return (
                     <div
                       key={post.id}
                       onClick={(e) => handlePostCardClick(post, e)}
-                      className="p-1 rounded-lg text-left transition-all cursor-pointer flex items-center gap-1.5 bg-black/30 hover:bg-black/50 text-white backdrop-blur-xs border border-white/20 shadow-2xs"
+                      className={`p-1 rounded-lg text-left transition-all cursor-pointer flex items-center gap-1.5 bg-black/30 hover:bg-black/50 text-white backdrop-blur-xs border shadow-2xs ${
+                        formatMeta.isStory ? "border-pink-500/50" : "border-white/20"
+                      }`}
                     >
                       {/* Thumbnail or Icon */}
-                      <div className="w-5 h-5 rounded-md overflow-hidden bg-gray-900 shrink-0 relative">
-                        {firstFile ? (
-                          firstFile.tipo === "video" ? (
-                            <div className="w-full h-full relative bg-gray-950 flex items-center justify-center">
-                              {firstFile.thumbnail_url ? (
-                                <img
-                                  src={firstFile.thumbnail_url}
-                                  alt="Video thumbnail"
-                                  loading="lazy"
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-950 flex items-center justify-center">
-                                  <VideoIcon className="w-2.5 h-2.5 text-brand-magenta" />
-                                </div>
-                              )}
-                              <Play className="w-2.5 h-2.5 text-white absolute fill-current drop-shadow-xs" />
-                            </div>
-                          ) : (
-                            <img
-                              src={firstFile.url}
-                              alt="Media"
-                              loading="lazy"
-                              className="w-full h-full object-cover"
-                            />
-                          )
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-white">
-                            {post.tipo_post === "reel" ? (
-                              <VideoIcon className="w-2.5 h-2.5 text-white" />
+                      <div
+                        className={`w-5 h-5 shrink-0 relative ${
+                          formatMeta.isStory ? formatMeta.ringClass : "rounded-md bg-gray-900 overflow-hidden"
+                        }`}
+                      >
+                        <div className="w-full h-full rounded-[inherit] overflow-hidden bg-gray-900 flex items-center justify-center">
+                          {firstFile ? (
+                            firstFile.tipo === "video" ? (
+                              <div className="w-full h-full relative bg-gray-950 flex items-center justify-center">
+                                {firstFile.thumbnail_url ? (
+                                  <img
+                                    src={firstFile.thumbnail_url}
+                                    alt="Video thumbnail"
+                                    loading="lazy"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-950 flex items-center justify-center">
+                                    <VideoIcon className="w-2.5 h-2.5 text-brand-magenta" />
+                                  </div>
+                                )}
+                                <Play className="w-2.5 h-2.5 text-white absolute fill-current drop-shadow-xs" />
+                              </div>
                             ) : (
-                              <Layers className="w-2.5 h-2.5 text-white" />
-                            )}
-                          </div>
-                        )}
+                              <img
+                                src={firstFile.url}
+                                alt="Media"
+                                loading="lazy"
+                                className="w-full h-full object-cover"
+                              />
+                            )
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-white">
+                              {post.tipo_post === "reel" ? (
+                                <VideoIcon className="w-2.5 h-2.5 text-white" />
+                              ) : formatMeta.isStory ? (
+                                <Smartphone className="w-2.5 h-2.5 text-brand-magenta" />
+                              ) : (
+                                <Layers className="w-2.5 h-2.5 text-white" />
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Format, Time & Status Dot */}
                       <div className="min-w-0 flex-1 leading-none flex items-center justify-between gap-1">
                         <div className="min-w-0 flex-1">
                           <span className="font-sora font-extrabold text-[9px] truncate block text-white">
-                            {post.tipo_post === "reel" ? "Reel" : "Carrusel"}
+                            {formatMeta.label}
                           </span>
                           <span className="text-[8px] font-mono text-white/90 font-semibold">
                             {formatTimeHHMM(post.hora_programada)}

@@ -124,6 +124,7 @@ export default async function handler(req, res) {
       console.error("Error consultando posts en procesamiento:", procErr);
     } else if (processingPosts && processingPosts.length > 0) {
       for (const post of processingPosts) {
+        if (post.tipo_post === "historia" || post.tipo_post === "story") continue;
         results.checkedContainers++;
         const cliente = post.calendarios?.clientes;
         const pageToken = cliente?.fb_page_access_token;
@@ -262,8 +263,9 @@ export default async function handler(req, res) {
       console.error("Error consultando posts candidatos:", candErr);
       results.errors.push({ error: `Query candidatos: ${candErr.message}` });
     } else if (candidates && candidates.length > 0) {
-      // Filtrar aquellos que realmente hayan llegado a su hora
+      // Filtrar aquellos que realmente hayan llegado a su hora (omitiendo historias que son de publicación manual)
       const duePosts = candidates.filter((p) => {
+        if (p.tipo_post === "historia" || p.tipo_post === "story") return false;
         const cliente = p.calendarios?.clientes;
         if (!cliente?.fb_page_access_token || !cliente?.ig_business_account_id) return false;
 

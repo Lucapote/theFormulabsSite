@@ -6,6 +6,68 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ---
 
+## [2026-11-07] — Intercepción del Botón Atrás en Móviles (Pila LIFO) y Persistencia de Pestañas en Dashboard
+
+### Agregado
+- **Hook de Intercepción Móvil de Historial (`useModalHistoryBack.js`)**:
+  - Pila LIFO en memoria combinada con `window.history.pushState` al abrir cualquier modal.
+  - Al pulsar el botón físico o gesto de Atrás en dispositivos móviles (Android/iOS), el navegador intercepta el `popstate` y cierra el modal más reciente en vez de navegar fuera de la aplicación o al login.
+  - Soporte de cierre ordenado por capas en diálogos superpuestos (ej. confirmación sobre modal).
+  - Manejo de cierre programático marcado (`history.back()` silencioso) cuando el usuario pulsa la "X", "Cancelar" o el backdrop.
+- **Integración Universal en Modales (`BaseFormModal.jsx` e `InstagramPostPreviewModal.jsx`)**:
+  - Cobertura automática para todos los modales administrativos del Dashboard y para el visor full-screen de publicaciones y stories.
+
+### Modificado
+- **Eliminación de la Pantalla de Login del Historial (`Login.jsx`)**:
+  - Redirección con `navigate("/dashboard", { replace: true })` para sustituir `/login` en el historial del navegador.
+- **Persistencia de Pestañas Activas en URL (`Dashboard.jsx`)**:
+  - Sincronización bidireccional con `useSearchParams` (`?tab=...`) usando `{ replace: true }`, manteniendo la vista activa tras recargar o navegar.
+  - Cumplimiento estricto de límites de código ($\le 200$ líneas en `Dashboard.jsx` y $\le 250$ líneas en componentes).
+
+---
+
+## [2026-11-07] — Corrección del Selector de Clientes en Creación de Calendarios y Limpieza de Cabecera
+
+### Modificado / Corregido
+- **Eliminación del Botón Superior "Nuevo Calendario" (`ClientsCalendarHeaderCard.jsx`)**:
+  - Se removió el botón redundante de la barra superior para que quede únicamente `[Nuevo Cliente]` y recarga.
+- **Corrección de Event Leak en Creación de Calendarios (`ClientCalendarsGrid.jsx` y `useClientsCalendarManager.js`)**:
+  - Al pulsar `+ Crear Calendario` o `+ Crear Primer Calendario`, el evento de clic de React (`SyntheticMouseEvent`) se propagaba hacia la función `openNewCalendarModal(clienteOverride)`.
+  - Esto provocaba que el estado de `selectedCliente` fuera sobrescrito por un objeto evento que carecía de `id` y `nombre`, mostrando `Cliente: undefined` y arrojando el error `Cliente no seleccionado`.
+  - Se corrigió garantizando que solo se invoque `() => onOpenCalendarModal?.(selectedCliente)` y protegiendo el hook `useClientsCalendarManager` mediante una validación estricta `isClientObject` con chequeo de propiedad `id`.
+  - Ahora cada cliente seleccionado abre inmediatamente el modal de creación preconfigurado con su nombre, mes, año y slug inteligente.
+
+---
+
+## [2026-11-07] — Paquete de Historias de Instagram (Stories Pack) y Simulador Interactivo
+
+### Agregado
+- **Formato Historias (Pack) en Modal de Publicación (`PostModalScheduleFields.jsx`)**:
+  - Incorporación del 3er formato de publicación (`Reel (1 Video)`, `Carrusel (Múltiple)`, `Historias (Pack)` con icono de `Smartphone`).
+  - Campo de texto dinámico en `PostModal.jsx` que conmuta automáticamente a *"Instrucciones de la Historia / Secuencia"* con placeholder para stickers, enlaces, encuestas y música.
+- **Simulador Interactivo de Instagram Stories (`InstagramStoryViewerModal.jsx`)**:
+  - Renderizado vertical en proporción exacta 9:16 de dispositivo móvil.
+  - Barras segmentadas de progreso superior calculadas en tiempo real ($N$ barras para $N$ diapositivas/historias).
+  - Navegación táctil bilateral: toques al 35% izquierdo para retroceder, 65% derecho para avanzar.
+  - Interacción táctil de pausa: `onMouseDown` / `onTouchStart` pausa el temporizador de la historia activa.
+  - Cajón deslizable de instrucciones (`StoryInstructionsDrawer.jsx`): Permite visualizar el desglose del copywriter, copiar las instrucciones al portapapeles con 1 clic y descargar individualmente cada elemento multimedia.
+- **Delegación Unificada en Previsualizador (`InstagramPostPreviewModal.jsx`)**:
+  - Detecta automáticamente `tipo_post === "historia"` y delega al simulador de stories, garantizando paridad en el Dashboard administrativo y en el Calendario Público del Cliente.
+- **Distinción Visual en Cuadrículas de Calendario**:
+  - `CalendarDesktopGrid.jsx`: Anillo gradiente oficial Instagram / The Formulab (`#ef18d6` a `#188ff0`), icono `Smartphone` y contador `Historias (N)`.
+  - `CalendarMobileView.jsx`: Miniatura con anillo gradiente y badge en la agenda drawer.
+  - `postStatusHelpers.js`: Función `getPostFormatMeta` para normalización de metadatos de formato.
+- **Subcomponente Modular de Acciones (`PostCardItemActions.jsx`)**:
+  - Extracción atómica de la barra de acciones de la tarjeta para reducir `PostCardItem.jsx` de 321 a 240 líneas ($\le 250$).
+
+### Modificado / Protegido (Publicación Manual de Historias)
+- **Aislamiento en Cron y APIs Serverless (`api/cron-publish.js` y `api/publish-now.js`)**:
+  - Se añadieron filtros estrictos para ignorar publicaciones con `tipo_post === "historia"`.
+  - La API rechaza llamadas de auto-publicación para historias, garantizando que el workflow sea guiado manualmente (dado que Meta Graph API no soporta stickers interactivos ni enlaces nativos).
+  - Ocultación automática del botón *"Publicar Ahora"* en la tarjeta de historias.
+
+---
+
 ## [2026-11-06] — Modularización de Componentes Extensos (Opción B — Sprint 1)
 
 ### Modificado / Refactorizado bajo SRP (Regla 5 de GEMINI.md)

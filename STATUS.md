@@ -1,61 +1,61 @@
 # Estado del Proyecto — The Formulab (STATUS.md)
 
-**Última actualización:** 2026-11-06  
-**Fase actual:** Arquitectura de 2 Columnas (Administración/Finanzas + Mission Control Rodajes).
+**Última actualización:** 2026-11-07  
+**Fase actual:** Intercepción del Botón Atrás en Móviles (Pila LIFO) y Persistencia de Pestañas en Dashboard.
 
 ---
 
 ## 📸 Foto de Hoy (Contexto Operativo)
 
-1. **Modularización Progresiva de Componentes Extensos (Opción B — Sprint 1)**:
-   - **`NotificationCenterPopover.jsx` (438 $\rightarrow$ 200 líneas)**: Modularizado extrayendo `FailedPostNotificationCard.jsx` (94 lín), `PreReservaNotificationCard.jsx` (48 lín), `FeedbackNotificationCard.jsx` (59 lín) y `NotificationZeroInboxCard.jsx` (19 lín).
-   - **`FinanceCostModal.jsx` (412 $\rightarrow$ 222 líneas)**: Modularizado extrayendo `ReceiptUploaderField.jsx` (89 lín), `FinanceAmountsFormFields.jsx` (75 lín) y `FinanceMarginSummaryCard.jsx` (26 lín).
-   - **`CreateClientModal.jsx` (411 $\rightarrow$ 115 líneas)**: Modularizado extrayendo `CreateClientIdentityTab.jsx` (87 lín) y `CreateClientRetainerTab.jsx` (238 lín).
-   - **`PostCopyBottomSheet.jsx` (377 $\rightarrow$ 248 líneas)**: Modularizado extrayendo `PostCopyBottomSheetActions.jsx` (172 lín).
-   - **Todos cumplen estrictamente $\le 250$ líneas** bajo el Principio de Responsabilidad Única (SRP) de [GEMINI.md](file:///c:/Users/ASUS/OneDrive/Escritorio/Proyectos/theFormulabsSite/GEMINI.md).
-
-2. **Resolución de Quick-Wins de Cumplimiento GEMINI.md (Opción A)**:
-   - **Eliminación de Estilos Inline en Checklist (`BookingChecklistSection.jsx`)**: Se sustituyó `style={{ width: `${porcentaje}%` }}` por clases utilitarias dinámicas de Tailwind (`w-full`, `w-3/4`, etc.) para un diseño 100% utilitario.
-   - **Eliminación de Estilo Inline en Portada (`Index.jsx`)**: Se reemplazó el color de fondo inline en el indicador de etapas por clases de color oficiales de Tailwind (`bg-brand-magenta` y `bg-brand-blue`).
-   - **Eliminación de Fallback Literal en API (`api/meta-callback.js`)**: Se removió el ID de Meta quemado como fallback (`"1988387095189436"`), requiriendo validación explícita de `META_APP_ID` y `META_APP_SECRET`.
-
-2. **Reestructuración a 2 Columnas en `OperationsCycleCard.jsx`**:
-   - **Columna 1 (33.3%, `lg:col-span-4`) — [`CycleClientPanel.jsx`](file:///c:/Users/ASUS/OneDrive/Escritorio/Proyectos/theFormulabsSite/src/components/dashboard/operations/CycleClientPanel.jsx)**:
-     - Cabecera: Nombre de la empresa con icono de configuración y botón de desglose `[$ Costos]`.
-     - Datos ordenados sin repetición: `Corte: Día X` y `Orgánica (4h)` / `Profesional (6h)`.
-     - Se eliminó la etiqueta incomprensible `"Pagos: 1 + 1 ses."` y la repetición de fechas de corte.
-     - Selector de estado de pago integrado con botón de validación ágil (`[Acreditar Pago]` / `[Validar 1er Abono]` / `[Aprobar / Rechazar Comprobante]`).
-     - Insignias de comprobantes aprobados.
-     - Pie con métricas discretas (`Cobrado: $X · Costo Op: $Y`) y acceso al calendario mensual.
-   - **Columna 2 (66.7%, `lg:col-span-8`) — [`CycleSessionsTrack.jsx`](file:///c:/Users/ASUS/OneDrive/Escritorio/Proyectos/theFormulabsSite/src/components/dashboard/operations/CycleSessionsTrack.jsx)**:
-     - Máximo protagonismo y amplitud para el centro de rodajes.
-     - Spotlight del próximo rodaje con borde rosa de marca de 2px (`border-2 border-[#ef18d6]`), fecha, locación, checklist de requerimientos y copiado de enlace.
-     - Fila inferior compacta para el resto de sesiones del mes y botón `+ Agregar Rodaje`.
+1. **Intercepción del Botón Atrás en Celulares (`useModalHistoryBack.js`) — [100% COMPLETADO]**:
+   - **Gestión LIFO de Modales**: Se implementó una pila global en memoria de callbacks de cierre combinada con `window.history.pushState` al abrir cualquier modal.
+   - Al presionar el botón físico o gesto de "Atrás" en móviles (Android/iOS), el navegador ya no abandona el Dashboard ni redirige al login: intercepta el `popstate` y **cierra el modal superior** suavemente.
+   - Si existen modales anidados (ej. diálogo de confirmación sobre un modal), el primer toque de Atrás cierra el diálogo superior y el segundo toque cierra el modal base.
+   - **Cierre por UI Silencioso**: Si el usuario cierra el modal mediante la "X", "Cancelar" o clic en el backdrop, el hook ejecuta un `history.back()` programático marcado, limpiando la entrada sintética sin disparar eventos redundantes.
+   - **Integración Universal en `BaseFormModal.jsx`**: Protege de forma automática a más del 90% de los modales de la plataforma sin duplicar lógica en cada vista.
+   - **Integración en Visor de Medios (`InstagramPostPreviewModal.jsx`)**: El lightbox de publicaciones y el visor de stories también se cierran suavemente con el botón Atrás.
+2. **Eliminación de la Pantalla de Login del Historial (`Login.jsx`) — [100% COMPLETADO]**:
+   - Al iniciar sesión exitosamente, se utiliza `navigate("/dashboard", { replace: true })`, eliminando `/login` de la pila de historial del navegador para que nunca se vuelva a ella por retroceso.
+3. **Persistencia de Pestaña Activa en URL (`Dashboard.jsx`) — [100% COMPLETADO]**:
+   - Sincronización bidireccional mediante `useSearchParams` (`?tab=operaciones`, `?tab=calendars`, `?tab=proposals`, `?tab=diagnostics`) usando `{ replace: true }`.
+   - Permite que el usuario permanezca exactamente en la pestaña donde estaba tras recargar la página o navegar con el botón Atrás.
 
 ---
 
 ## ✅ Resuelto Recientemente
 
-1. **Arquitectura de 2 Columnas en Tarjetas de Ciclo — [COMPLETADO]**:
-   - `OperationsCycleCard.jsx` (149 líneas) ensambla el layout 4/8.
-   - `CycleClientPanel.jsx` (216 líneas) y `CyclePaymentVerificationBlock.jsx` (123 líneas) modularizados bajo SRP ($\le 250$ líneas).
-   - `CycleSessionsTrack.jsx` (86 líneas) ampliado al 66.7% sin bordes laterales redundantes.
-2. **Refinamiento Visual Spotlight & Limpieza de Altura — [COMPLETADO]**:
-   - `UpcomingProductionSpotlight.jsx` (246 líneas) con borde 2px rosa `#ef18d6`, sin barra degradé y sin inline styles.
-   - `CycleSessionsTrack.jsx` (86 líneas) sin alerta redundante de reserva bloqueada.
-2. **Mission Control Operativo en Ciclos — [COMPLETADO]**:
-   - Helper `getClosestUpcomingSession` en `bookingHelpers.js`.
-   - Nuevos componentes modulares `UpcomingProductionSpotlight.jsx` (241 líneas) y `SecondarySessionsList.jsx` (63 líneas).
-   - `CycleApprovedReceiptsBadges.jsx` (59 líneas) extraído para mantener `CycleFinanceHub.jsx` en 248 líneas ($\le 250$).
-   - Layout 3-6-3 en `OperationsCycleCard.jsx` (161 líneas).
-2. **Cuadro Multilínea con Salto de Línea en Gestor de Requerimientos — [COMPLETADO]**:
-   - `ProductionChecklistManager.jsx` actualizado con textarea multilínea, salto de línea en `Enter` y pegado masivo con limpieza de viñetas.
-3. **Flujo de 3 Pasos en Reserva de Producción — [COMPLETADO]**:
-   - `[ Comprobante ] [ Reserva ] [ Requerimientos ]` en contenedor unificado de ancho idéntico.
+1. **Intercepción Móvil de Botón Atrás y Pestañas en Dashboard — [COMPLETADO]**:
+   - `useModalHistoryBack.js` (96 líneas).
+   - `BaseFormModal.jsx` (208 líneas).
+   - `InstagramPostPreviewModal.jsx` (207 líneas).
+   - `Login.jsx` (123 líneas).
+   - `Dashboard.jsx` (194 líneas).
+2. **Flujo de Creación de Calendarios por Cliente — [COMPLETADO]**:
+   - `ClientsCalendarHeaderCard.jsx` (53 líneas): Sin botón de nuevo calendario en cabecera superior.
+   - `ClientsCalendarSection.jsx` (231 líneas): Props depuradas sin parámetros huérfanos.
+   - `ClientCalendarsGrid.jsx` (235 líneas): Invocación segura sin paso de eventos del DOM.
+   - `useClientsCalendarManager.js`: Validación `isClientObject` con protección defensiva.
+2. **Paquete de Historias de Instagram (Stories Pack) — [COMPLETADO]**:
+   - `getPostFormatMeta` en `postStatusHelpers.js`.
+   - `PostModalScheduleFields.jsx` (135 líneas) y `PostModal.jsx` (250 líneas).
+   - `InstagramStoryViewerModal.jsx` (239 líneas) y `StoryInstructionsDrawer.jsx` (161 líneas).
+   - `InstagramPostPreviewModal.jsx` (204 líneas).
+   - `CalendarDesktopGrid.jsx` (219 líneas) y `CalendarMobileView.jsx` (246 líneas).
+   - `PostCardItem.jsx` (240 líneas) y `PostCardItemActions.jsx` (134 líneas).
+   - `api/cron-publish.js` y `api/publish-now.js` con exclusión segura de historias.
+2. **Modularización Progresiva de Componentes Extensos (Opción B — Sprint 1) — [COMPLETADO]**:
+   - `NotificationCenterPopover.jsx` (200 líneas).
+   - `FinanceCostModal.jsx` (222 líneas).
+   - `CreateClientModal.jsx` (115 líneas).
+   - `PostCopyBottomSheet.jsx` (248 líneas).
+3. **Arquitectura de 2 Columnas en Tarjetas de Ciclo — [COMPLETADO]**:
+   - `OperationsCycleCard.jsx` (149 líneas) ensambla el layout 4/8 con Columna 1 de Administración/Finanzas y Columna 2 de Mission Control Rodajes.
+4. **Spotlight Próximo Rodaje & Requerimientos de Producción — [COMPLETADO]**:
+   - Borde rosa 2px (`border-2 border-[#ef18d6]`), cuadro multilínea en checklist con auto-limpieza de viñetas y flujo de 3 pasos en auto-reserva.
 
 ---
 
 ## ⏳ Próximos Pasos Disponibles
 
-- Recargar el navegador para visualizar el nuevo layout Mission Control de las tarjetas operativas en el Dashboard.
-- Ejecutar la migración SQL `20261106_requerimientos_produccion_checklist.sql` en Supabase para persistir permanentemente los requerimientos.
+- Recargar el navegador para disfrutar del nuevo botón de **Historias (Pack)** en el modal de publicaciones y del simulador interactivo de Instagram Stories en el calendario y vista previa.
+- Ejecutar la migración SQL `20261106_requerimientos_produccion_checklist.sql` en Supabase para persistir permanentemente los requerimientos si aún no se aplicó.

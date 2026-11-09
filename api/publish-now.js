@@ -90,6 +90,13 @@ export default async function handler(req, res) {
       return res.status(404).json({ success: false, error: "Post no encontrado." });
     }
 
+    if (post.tipo_post === "historia" || post.tipo_post === "story") {
+      return res.status(400).json({
+        success: false,
+        error: "Las historias de Instagram deben publicarse manualmente debido a limitaciones de Meta Graph API con stickers y enlaces."
+      });
+    }
+
     const cliente = post.calendarios?.clientes;
     const pageToken = cliente?.fb_page_access_token;
     const igUserId = cliente?.ig_business_account_id;

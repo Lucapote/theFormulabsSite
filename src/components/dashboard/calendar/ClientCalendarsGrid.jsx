@@ -107,7 +107,7 @@ export default function ClientCalendarsGrid({
 
             <button
               type="button"
-              onClick={onOpenCalendarModal}
+              onClick={() => onOpenCalendarModal?.(selectedCliente)}
               className="h-10 px-5 bg-brand-magenta hover:opacity-90 text-white font-sora font-bold text-xs rounded-full shadow-md shadow-pink-500/20 transition-all active:scale-[0.98] inline-flex items-center gap-2 cursor-pointer self-start sm:self-auto"
             >
               <Plus className="w-4 h-4" /> Crear Calendario
@@ -137,7 +137,7 @@ export default function ClientCalendarsGrid({
                 </p>
                 <button
                   type="button"
-                  onClick={onOpenCalendarModal}
+                  onClick={() => onOpenCalendarModal?.(selectedCliente)}
                   className="h-10 px-6 bg-brand-magenta hover:opacity-90 text-white font-sora font-bold text-xs rounded-full shadow-md shadow-pink-500/20 inline-flex items-center gap-2 cursor-pointer active:scale-[0.98]"
                 >
                   <Plus className="w-4 h-4" /> Crear Primer Calendario

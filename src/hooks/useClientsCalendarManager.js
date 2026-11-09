@@ -92,12 +92,15 @@ export function useClientsCalendarManager({
   };
 
   const openNewCalendarModal = (clienteOverride = null) => {
-    const target = clienteOverride || selectedCliente;
-    if (!target) {
+    // Validar si es un objeto cliente válido con id (evita que eventos de React/DOM pisen el estado)
+    const isClientObject = clienteOverride && typeof clienteOverride === "object" && Boolean(clienteOverride.id);
+    const target = isClientObject ? clienteOverride : selectedCliente;
+
+    if (!target || !target.id) {
       toast.error("Por favor crea o selecciona un cliente primero.");
       return;
     }
-    if (clienteOverride) {
+    if (isClientObject && selectedCliente?.id !== clienteOverride.id) {
       setSelectedCliente(clienteOverride);
     }
     setCalendarForm({ ...DEFAULT_CALENDAR_FORM });

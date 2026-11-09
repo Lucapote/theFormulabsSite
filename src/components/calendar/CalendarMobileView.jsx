@@ -1,21 +1,12 @@
-import {
-  Video as VideoIcon,
-  Layers,
-  Plus,
-  Clock,
-  Calendar as CalendarIcon,
-  Play,
-  Edit2
-} from "lucide-react";
+import { Video as VideoIcon, Layers, Plus, Clock, Calendar as CalendarIcon, Play, Edit2, Smartphone } from "lucide-react";
 import { formatTimeHHMM } from "./CalendarGridView";
-import { getPostStatusMeta, POST_STATUS_LIST } from "@/utils/postStatusHelpers";
+import { getPostStatusMeta, getPostFormatMeta, POST_STATUS_LIST } from "@/utils/postStatusHelpers";
 
 const WEEKDAYS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
 /**
  * CalendarMobileView
  * Mobile view component featuring native agenda drawer and compact monthly grid.
- * En mobile el click en un día solo actualiza la agenda superior sin abrir el modal.
  */
 export default function CalendarMobileView({
   gridCells = [],
@@ -66,8 +57,10 @@ export default function CalendarMobileView({
           ) : (
             <div className="space-y-2.5 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-3">
               {activeDayPosts.map((post) => {
-                const firstFile = post.archivos && post.archivos.length > 0 ? post.archivos[0] : null;
+                const files = Array.isArray(post.archivos) ? post.archivos : [];
+                const firstFile = files.length > 0 ? files[0] : null;
                 const statusMeta = getPostStatusMeta(post.estado);
+                const formatMeta = getPostFormatMeta(post.tipo_post, files.length);
 
                 return (
                   <div
@@ -77,41 +70,49 @@ export default function CalendarMobileView({
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       {/* Thumbnail */}
-                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-900 shrink-0 relative border border-gray-200">
-                        {firstFile ? (
-                          firstFile.tipo === "video" ? (
-                            <div className="w-full h-full relative bg-gray-950 flex items-center justify-center">
-                              {firstFile.thumbnail_url ? (
-                                <img
-                                  src={firstFile.thumbnail_url}
-                                  alt="Video thumbnail"
-                                  loading="lazy"
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-950 flex items-center justify-center">
-                                  <VideoIcon className="w-4 h-4 text-brand-magenta" />
-                                </div>
-                              )}
-                              <Play className="w-3 h-3 text-white absolute fill-current drop-shadow-xs" />
-                            </div>
-                          ) : (
-                            <img
-                              src={firstFile.url}
-                              alt="Media"
-                              loading="lazy"
-                              className="w-full h-full object-cover"
-                            />
-                          )
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-white">
-                            {post.tipo_post === "reel" ? (
-                              <VideoIcon className="w-4 h-4 text-brand-magenta" />
+                      <div
+                        className={`w-12 h-12 shrink-0 relative ${
+                          formatMeta.isStory ? formatMeta.ringClass : "rounded-xl bg-gray-900 overflow-hidden border border-gray-200"
+                        }`}
+                      >
+                        <div className="w-full h-full rounded-[inherit] overflow-hidden bg-gray-900 flex items-center justify-center">
+                          {firstFile ? (
+                            firstFile.tipo === "video" ? (
+                              <div className="w-full h-full relative bg-gray-950 flex items-center justify-center">
+                                {firstFile.thumbnail_url ? (
+                                  <img
+                                    src={firstFile.thumbnail_url}
+                                    alt="Video thumbnail"
+                                    loading="lazy"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gradient-to-br from-gray-900 to-gray-950 flex items-center justify-center">
+                                    <VideoIcon className="w-4 h-4 text-brand-magenta" />
+                                  </div>
+                                )}
+                                <Play className="w-3 h-3 text-white absolute fill-current drop-shadow-xs" />
+                              </div>
                             ) : (
-                              <Layers className="w-4 h-4 text-brand-blue" />
-                            )}
-                          </div>
-                        )}
+                              <img
+                                src={firstFile.url}
+                                alt="Media"
+                                loading="lazy"
+                                className="w-full h-full object-cover"
+                              />
+                            )
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-white">
+                              {post.tipo_post === "reel" ? (
+                                <VideoIcon className="w-4 h-4 text-brand-magenta" />
+                              ) : formatMeta.isStory ? (
+                                <Smartphone className="w-4 h-4 text-brand-magenta" />
+                              ) : (
+                                <Layers className="w-4 h-4 text-brand-blue" />
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Info & Badges */}
@@ -119,12 +120,14 @@ export default function CalendarMobileView({
                         <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                           <span
                             className={`text-[9px] font-sora font-extrabold uppercase px-2 py-0.5 rounded-full ${
-                              post.tipo_post === "reel"
+                              formatMeta.isStory
+                                ? "bg-gradient-to-r from-pink-50 to-blue-50 text-brand-magenta border border-pink-200"
+                                : post.tipo_post === "reel"
                                 ? "bg-pink-50 text-brand-magenta border border-pink-100"
                                 : "bg-blue-50 text-brand-blue border border-blue-100"
                             }`}
                           >
-                            {post.tipo_post === "reel" ? "Reel" : "Carrusel"}
+                            {formatMeta.label}
                           </span>
 
                           <span className="text-[10px] font-mono text-gray-500 font-semibold flex items-center gap-1">

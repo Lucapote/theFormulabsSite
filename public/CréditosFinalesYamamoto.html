@@ -1,0 +1,762 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Créditos Finales Yamamoto</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Jost:wght@300;400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: una sala de cine. Columna editorial centrada, secciones como "escenas", créditos que suben al final. Tema único oscuro, deliberado. */
+:root{
+  --bg:#13110f;          /* sala a oscuras */
+  --surface:#1b1815;     /* butaca */
+  --surface-2:#231f1b;
+  --line:rgba(236,228,215,.13);
+  --fg:#ece4d7;          /* luz de proyector */
+  --muted:#a0968a;
+  --toro:#e2a08b;        /* rosa otoro, el acento */
+  --toro-dim:rgba(226,160,139,.14);
+  --font-display:"Bodoni Moda","Didot","Bodoni 72",Georgia,serif;
+  --font-body:"Jost","Futura","Avenir Next","Helvetica Neue",Arial,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-weight:300;font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:880px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--font-display);font-weight:400;text-wrap:balance;margin:0;line-height:1.08}
+p{margin:0}
+.mono{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--toro)}
+.ph{background:var(--toro-dim);color:var(--toro);border-radius:3px;padding:0 .3em;white-space:nowrap;font-style:normal}
+a{color:var(--toro)}
+:focus-visible{outline:2px solid var(--toro);outline-offset:3px}
+
+/* Portada */
+.cover{padding-block:72px 64px;text-align:center;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
+.cover::after{content:"";position:absolute;left:50%;top:-30%;width:120%;height:90%;transform:translateX(-50%);background:radial-gradient(ellipse at center,rgba(226,160,139,.10),transparent 62%);pointer-events:none}
+.presenta{font-family:var(--font-body);font-size:12px;letter-spacing:.42em;text-transform:uppercase;color:var(--muted)}
+.cover h1{font-size:clamp(48px,13vw,112px);font-style:italic;margin-top:28px;letter-spacing:-.01em}
+.cover .sub{font-family:var(--font-body);font-size:13px;letter-spacing:.32em;text-transform:uppercase;margin-top:22px}
+.cover .line{font-family:var(--font-display);font-size:clamp(19px,3.6vw,24px);max-width:30ch;margin:34px auto 0;color:var(--fg)}
+.slate{display:flex;justify-content:center;gap:22px;flex-wrap:wrap;margin-top:44px}
+.slate span{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.slate b{color:var(--fg);font-weight:500}
+@media (prefers-reduced-motion:no-preference){
+  .cover .presenta,.cover h1,.cover .sub,.cover .line{animation:rise 1.4s cubic-bezier(.2,.7,.2,1) both}
+  .cover h1{animation-delay:.15s}.cover .sub{animation-delay:.3s}.cover .line{animation-delay:.45s}
+}
+@keyframes rise{from{transform:translateY(14px);filter:blur(3px)}to{transform:none;filter:none}}
+
+/* Escenas */
+section.scene{padding-block:72px;border-bottom:1px solid var(--line)}
+.scene-head{display:flex;flex-direction:column;gap:14px;margin-bottom:34px}
+.scene-head h2{font-size:clamp(34px,7vw,56px)}
+.lead{font-family:var(--font-display);font-size:clamp(21px,3.8vw,27px);line-height:1.38;max-width:34ch}
+.body-text{max-width:62ch;color:var(--fg);display:flex;flex-direction:column;gap:16px}
+.body-text p{color:#d7cebf}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:28px 36px}
+.point{display:flex;flex-direction:column;gap:8px;min-width:0}
+.point h3{font-size:22px;font-style:italic}
+.point p{color:#cfc6b8;font-size:15px}
+.quote{font-family:var(--font-display);font-style:italic;font-size:clamp(24px,5vw,36px);line-height:1.25;max-width:24ch;margin:44px 0 0;color:var(--fg)}
+.quote small{display:block;font-family:var(--font-mono);font-style:normal;font-size:11px;letter-spacing:.14em;color:var(--muted);margin-top:14px;text-transform:uppercase}
+
+/* Arco */
+.arc{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-top:40px;border-top:1px solid var(--line)}
+.arc div{padding:18px 14px 0 0;display:flex;flex-direction:column;gap:6px;min-width:0}
+.arc div+div{padding-left:14px;border-left:1px solid var(--line)}
+.arc h3{font-size:19px;font-style:italic}
+.arc p{font-size:13px;color:var(--muted)}
+@media (max-width:620px){.arc{grid-template-columns:1fr 1fr}.arc div:nth-child(3){border-left:0;padding-left:0}.arc div:nth-child(n+3){padding-top:22px}}
+
+/* Look & feel */
+.swatches{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.sw{display:flex;flex-direction:column;gap:8px;width:118px}
+.sw i{display:block;height:64px;border-radius:2px;border:1px solid var(--line)}
+.sw span{font-size:13px}
+.sw small{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:.08em}
+.typespec{display:flex;flex-direction:column;gap:18px;margin-top:8px}
+.typespec .t1{font-family:var(--font-display);font-style:italic;font-size:40px;line-height:1}
+.typespec .t2{font-family:var(--font-body);font-size:13px;letter-spacing:.38em;text-transform:uppercase}
+.rules{list-style:none;padding:0;margin:0;display:flex;flex-direction:column}
+.rules li{padding:14px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:112px 1fr;gap:16px;font-size:15px;color:#d7cebf}
+.rules li b{font-family:var(--font-mono);font-weight:400;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--toro);padding-top:3px}
+@media (max-width:520px){.rules li{grid-template-columns:1fr;gap:4px}}
+
+/* Créditos de muestra */
+.credit-demo{margin-top:40px;background:#0c0b0a;border:1px solid var(--line);aspect-ratio:9/16;max-width:300px;max-height:520px;width:100%;border-radius:4px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:22px;padding:28px;position:relative;overflow:hidden}
+.credit-demo .role{font-family:var(--font-display);font-style:italic;font-size:18px;color:var(--muted)}
+.credit-demo .name{font-family:var(--font-body);font-size:15px;letter-spacing:.34em;text-transform:uppercase}
+.credit-demo .tc{position:absolute;top:12px;left:14px;font-family:var(--font-mono);font-size:9px;color:var(--muted);letter-spacing:.1em}
+.lookrow{display:grid;grid-template-columns:1fr auto;gap:40px;align-items:start}
+@media (max-width:700px){.lookrow{grid-template-columns:1fr}.credit-demo{margin-inline:auto}}
+
+/* Contenido */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding-block:12px;z-index:5}
+.filters button{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;background:transparent;color:var(--muted);border:1px solid var(--line);padding:9px 16px;border-radius:999px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.pieces{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+details.piece{border-bottom:1px solid var(--line)}
+details.piece summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:62px 1fr auto;gap:16px;align-items:baseline;padding:22px 0}
+details.piece summary::-webkit-details-marker{display:none}
+.code{font-family:var(--font-mono);font-size:12px;color:var(--toro);letter-spacing:.08em}
+.ptitle{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ptitle strong{font-family:var(--font-display);font-weight:400;font-size:clamp(20px,4vw,26px);line-height:1.15}
+.ptitle span{font-size:13px;color:var(--muted)}
+.pdate{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:.08em;text-align:right;white-space:nowrap}
+.pdate::after{content:"+";display:block;font-size:18px;color:var(--fg);margin-top:4px;transition:transform .3s}
+details[open] .pdate::after{transform:rotate(45deg)}
+.pbody{padding:0 0 34px 78px;display:flex;flex-direction:column;gap:26px;min-width:0}
+@media (max-width:560px){details.piece summary{grid-template-columns:44px 1fr auto;gap:10px}.pbody{padding-left:0}}
+.hooks{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.hooks div{background:var(--surface);padding:16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.hooks p{font-size:15px}
+.hooks .said{font-family:var(--font-display);font-style:italic;font-size:19px;line-height:1.3}
+@media (max-width:560px){.hooks{grid-template-columns:1fr}}
+.blk{display:flex;flex-direction:column;gap:10px;min-width:0}
+.shots{list-style:none;padding:0;margin:0;counter-reset:s;display:flex;flex-direction:column}
+.shots li{display:grid;grid-template-columns:54px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:15px;color:#d7cebf}
+.shots li::before{content:attr(data-tc);font-family:var(--font-mono);font-size:11px;color:var(--muted);padding-top:3px}
+.shots em{display:block;font-style:normal;font-family:var(--font-display);font-style:italic;color:var(--fg);font-size:16px;margin-top:3px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px 26px}
+.meta p{font-size:14px;color:#cfc6b8}
+.copybox{background:var(--surface);border-left:2px solid var(--toro);padding:16px 18px;font-size:15px;color:#e2d9cb;display:flex;flex-direction:column;gap:10px}
+.copybox .cta{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--toro)}
+.tag{display:inline-block;font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line);padding:4px 9px;border-radius:999px;color:var(--fg)}
+
+/* Mini-slides */
+.slides{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:10px;-webkit-overflow-scrolling:touch}
+.slide{flex:0 0 210px;aspect-ratio:4/5;scroll-snap-align:start;background:#0c0b0a;border:1px solid var(--line);border-radius:3px;padding:16px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-width:0}
+.slide .n{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:.1em}
+.slide h4{font-family:var(--font-display);font-weight:400;font-style:italic;font-size:21px;line-height:1.15;margin:0}
+.slide p{font-size:13px;color:#cfc6b8;line-height:1.45}
+.slide .vis{font-family:var(--font-mono);font-size:10px;color:var(--toro);letter-spacing:.06em;line-height:1.5}
+.swipe{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:.12em}
+
+/* Stories */
+.stories{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:30px}
+.stories div{background:var(--bg);padding:20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.stories h3{font-size:22px;font-style:italic}
+.stories ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.stories li{font-size:14px;color:#cfc6b8;display:grid;grid-template-columns:52px 1fr;gap:8px}
+.stories li span{font-family:var(--font-mono);font-size:11px;color:var(--toro);padding-top:2px}
+
+/* Calendario */
+.cal-wrap{overflow-x:auto}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);min-width:330px}
+.cal .dow{background:var(--surface);font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;color:var(--muted);text-align:center;padding:8px 0}
+.cal .day{background:var(--bg);min-height:76px;padding:6px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.cal .day .d{font-family:var(--font-mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.cal .day.month .d{color:var(--fg)}
+.cal .day.out{background:#100e0c}
+.cal .chip{font-family:var(--font-mono);font-size:10px;padding:3px 5px;border-radius:2px;background:var(--surface-2);color:var(--fg);letter-spacing:.04em;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal .chip.r{border-left:2px solid var(--toro)}
+.cal .chip.c{border-left:2px solid var(--fg)}
+.cal .chip.e{background:var(--toro);color:#1a1310}
+.cal .chip.s{background:transparent;border:1px dashed var(--line);color:var(--muted)}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px}
+.legend span{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:.1em;display:flex;align-items:center;gap:6px;text-transform:uppercase}
+.legend i{width:12px;height:12px;display:inline-block;border-radius:2px}
+.callist{margin-top:34px;display:flex;flex-direction:column}
+.callist div{display:grid;grid-template-columns:96px 52px 1fr;gap:12px;padding:12px 0;border-top:1px solid var(--line);font-size:15px;align-items:baseline}
+.callist .dt{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:.06em}
+.callist .cd{font-family:var(--font-mono);font-size:11px;color:var(--toro)}
+.callist .ph-arc{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;padding-top:22px;border-top:0}
+@media (max-width:520px){.callist div{grid-template-columns:72px 40px 1fr;gap:8px;font-size:14px}}
+
+/* Producción */
+.callsheet{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.callsheet .row{display:grid;grid-template-columns:110px 1fr;gap:18px;padding:18px 0;border-bottom:1px solid var(--line)}
+.callsheet .time{font-family:var(--font-mono);font-size:12px;color:var(--toro);letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.callsheet h3{font-size:21px;font-style:italic;margin-bottom:6px}
+.callsheet p{font-size:14px;color:#cfc6b8}
+.callsheet .for{font-family:var(--font-mono);font-size:10px;color:var(--muted);letter-spacing:.1em;margin-top:8px;text-transform:uppercase}
+@media (max-width:520px){.callsheet .row{grid-template-columns:1fr;gap:6px}}
+.lists{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:30px;margin-top:44px}
+.lists ul{margin:12px 0 0;padding:0;list-style:none;display:flex;flex-direction:column}
+.lists li{font-size:14px;color:#d7cebf;padding:9px 0;border-top:1px solid var(--line)}
+.flag{margin-top:34px;padding:18px 20px;border:1px solid var(--toro);border-radius:3px;display:flex;flex-direction:column;gap:8px}
+.flag p{font-size:14px;color:#e2d9cb}
+
+/* Cierre */
+.finale{text-align:center;padding-block:80px 40px}
+.finale .totals{display:flex;justify-content:center;gap:clamp(24px,7vw,64px);flex-wrap:wrap;margin:30px 0 10px}
+.finale .totals div{display:flex;flex-direction:column;gap:4px}
+.finale .totals b{font-family:var(--font-display);font-weight:400;font-size:clamp(56px,13vw,88px);line-height:1;font-variant-numeric:tabular-nums}
+.roll{height:340px;overflow:hidden;position:relative;margin:50px auto 0;max-width:420px;-webkit-mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent);mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent)}
+.roll-inner{display:flex;flex-direction:column;gap:26px;padding-block:40px}
+@media (prefers-reduced-motion:no-preference){.roll-inner{animation:roll 28s linear infinite}}
+@media (prefers-reduced-motion:reduce){.roll{height:auto;-webkit-mask-image:none;mask-image:none}}
+@keyframes roll{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+.roll .r{display:flex;flex-direction:column;gap:6px}
+.roll .r span{font-family:var(--font-display);font-style:italic;color:var(--muted);font-size:16px}
+.roll .r b{font-weight:400;letter-spacing:.32em;text-transform:uppercase;font-size:14px}
+.next{text-align:left;max-width:600px;margin:60px auto 0;display:flex;flex-direction:column}
+.next li{list-style:none;display:grid;grid-template-columns:30px 1fr;gap:12px;padding:14px 0;border-top:1px solid var(--line);font-size:15px;color:#d7cebf}
+.next li span{font-family:var(--font-mono);font-size:11px;color:var(--toro);padding-top:3px}
+.next ol{padding:0;margin:0}
+footer{padding-block:40px 56px;text-align:center}
+footer p{font-family:var(--font-mono);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted)}
+
+/* Tabs */
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:8;background:var(--bg);border-bottom:1px solid var(--line)}
+.tabs-in{display:flex;gap:4px}
+.tabs a{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);text-decoration:none;padding:15px 12px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs a[aria-current="page"]{color:var(--fg);border-bottom-color:var(--toro)}
+.filters{top:calc(env(safe-area-inset-top,0px) + 46px)}
+.golist{font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+/* Callsheet por día */
+.csday{margin-bottom:56px}
+.csday-head{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.csday-head h3{font-size:clamp(24px,5vw,32px);font-style:italic}
+.csday-head p{font-size:14px;color:var(--muted)}
+.callsheet .who{font-family:var(--font-mono);font-size:10px;color:var(--toro);letter-spacing:.1em;margin-top:6px;text-transform:uppercase}
+/* Shot list */
+.sl-top{position:sticky;top:calc(env(safe-area-inset-top,0px) + 46px);z-index:6;background:var(--bg);border-bottom:1px solid var(--line)}
+.sl-top-in{display:flex;flex-direction:column;gap:10px;padding-block:16px}
+.sl-count{font-family:var(--font-display);font-size:24px;margin-top:4px}
+.sl-count b{font-weight:400;color:var(--toro);font-variant-numeric:tabular-nums}
+.sl-bar{height:3px;background:var(--surface-2);border-radius:2px;overflow:hidden}
+.sl-bar i{display:block;height:100%;width:0;background:var(--toro);transition:width .3s}
+.sl-wrap{padding-block:24px 40px}
+.sl-days{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.sl-days button{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:transparent;color:var(--muted);border:1px solid var(--line);padding:9px 14px;border-radius:999px;cursor:pointer}
+.sl-days button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.sl-block{border-top:1px solid var(--line);padding-block:20px 8px}
+.sl-bh{display:grid;grid-template-columns:96px 1fr auto;gap:12px;align-items:baseline;margin-bottom:8px}
+.sl-bh .time{font-family:var(--font-mono);font-size:12px;color:var(--toro);font-variant-numeric:tabular-nums}
+.sl-bh h3{font-size:22px;font-style:italic}
+.sl-bh .n{font-family:var(--font-mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sl-bh .who{grid-column:2/4;font-family:var(--font-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.sl-note{font-size:14px;color:#cfc6b8;margin:0 0 8px 108px}
+.sl-item{display:grid;grid-template-columns:24px 1fr auto;gap:12px;align-items:start;padding:12px 0 12px 108px;border-top:1px solid rgba(236,228,215,.06);cursor:pointer}
+.sl-item input{appearance:none;-webkit-appearance:none;width:22px;height:22px;border:1.5px solid var(--muted);border-radius:4px;margin:1px 0 0;display:grid;place-content:center;cursor:pointer;background:transparent}
+.sl-item input:checked{background:var(--toro);border-color:var(--toro)}
+.sl-item input:checked::after{content:"";width:10px;height:6px;border-left:2px solid #1a1310;border-bottom:2px solid #1a1310;transform:rotate(-45deg) translate(1px,-1px)}
+.sl-item span.txt{font-size:15px;color:#e2d9cb;line-height:1.45}
+.sl-item input:checked ~ span.txt{text-decoration:line-through;color:var(--muted)}
+.sl-tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.sl-tags span{font-family:var(--font-mono);font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 7px;white-space:nowrap}
+.sl-tags span.b{color:var(--toro);border-color:rgba(226,160,139,.4)}
+@media (max-width:560px){.sl-bh{grid-template-columns:1fr auto}.sl-bh .time{grid-column:1/3}.sl-bh .who{grid-column:1/3}.sl-note{margin-left:0}.sl-item{padding-left:0}}
+.sl-foot{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-top:28px;padding-top:20px;border-top:1px solid var(--line)}
+.sl-foot button{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:transparent;color:var(--fg);border:1px solid var(--line);padding:9px 14px;border-radius:999px;cursor:pointer}
+.sl-foot button.warn{border-color:var(--toro);color:var(--toro)}
+</style>
+
+<nav class="tabs" aria-label="Secciones"><div class="wrap tabs-in"><a href="#propuesta" id="tab-propuesta">Propuesta</a><a href="#shotlist" id="tab-shotlist">Shot list</a></div></nav>
+<div id="view-propuesta">
+<header class="cover">
+  <div class="wrap">
+    <p class="presenta">Yamamoto Cancún presenta</p>
+    <h1>Créditos Finales</h1>
+    <p class="sub">Diciembre 2026</p>
+    <p class="line">Toda gran película tiene un equipo detrás. La nuestra lleva 37 años en cartelera.</p>
+    <div class="slate">
+      <span>Temporada <b>37</b></span>
+      <span>Reels <b>10</b></span>
+      <span>Carruseles <b>04</b></span>
+      <span>Rodaje <b>2 días</b></span>
+    </div>
+  </div>
+</header>
+
+<main>
+<section class="scene" id="idea">
+  <div class="wrap">
+    <div class="scene-head"><p class="eyebrow">Escena 01 · La idea</p><h2>Diciembre es el final de la película.</h2></div>
+    <div class="body-text">
+      <p class="lead">Y cuando una película termina, la sala se queda a ver los créditos: los nombres de todos los que la hicieron posible.</p>
+      <p>Este diciembre, Yamamoto usa sus redes para darle crédito a quien nunca sale en cámara. Al valet que acomoda tu camioneta bajo el sol como si fuera Tetris. A quien deja cada vaso de la barra brillando y saca las comandas antes de que termines de pedir. A quien prepara los nopalitos y chiles toreados que te reciben en la mesa. Y al equipo que, antes de abrir, repasa quién viene hoy y qué celebra.</p>
+      <p>No les ponemos la cámara en la cara ni les pedimos actuar. Los grabamos en su hábitat, haciendo lo que hacen todos los días: sus manos, su trabajo y lo que sale de ahí, en macro, con luz cálida y en cámara lenta. Al final de cada video la pantalla se oscurece y suben los créditos, como en el cine: su nombre y un dato real de su historia.</p>
+      <p>El ronqueo y el omakase entran como lo que son: funciones especiales. Y el 31 de diciembre cerramos el año con los créditos completos de las 37 temporadas de Yamamoto.</p>
+    </div>
+    <p class="quote">"Detrás de cada plato hay alguien. Este mes, por fin, le ponemos nombre."<small>La idea en una línea</small></p>
+  </div>
+</section>
+
+<section class="scene" id="porque">
+  <div class="wrap">
+    <div class="scene-head"><p class="eyebrow">Escena 02 · Por qué funciona</p><h2>Emoción real, sin pedirle a nadie que actúe.</h2></div>
+    <div class="grid2">
+      <div class="point"><h3>El insight</h3><p>Diciembre es el mes en que todos nos ponemos sentimentales y damos las gracias. Pero nadie le da las gracias a quien trabaja para que los demás celebren: el que está afuera en el calor, el que llega antes a limpiar, el que te consiente antes de que pidas. Esa gratitud que falta es lo que hace que la gente sienta algo y lo comparta.</p></div>
+      <div class="point"><h3>El momento</h3><p>Todas las marcas llenan diciembre de Santa, esferas y "felices fiestas". Un tono de cine, sobrio y cálido, se distingue de inmediato en el feed. Además, los tráilers y los créditos de película son formatos que la gente ya reconoce y comparte en Reels y TikTok.</p></div>
+      <div class="point"><h3>El negocio</h3><p>La serie lleva gente a dos funciones con cupo limitado, el ronqueo del 1 y el omakase del 15, sin hacer promociones ni descuentos. También pone a Yamamoto en la mente para cenas de grupo, posadas y fin de año.</p></div>
+      <div class="point"><h3>La marca</h3><p>Yamamoto tiene algo que ningún restaurante nuevo puede copiar: 37 años de historia y un equipo que lleva décadas ahí. Esta idea convierte esa trayectoria en contenido, con respeto, sin bailes y sin modelos.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="scene" id="mecanica">
+  <div class="wrap">
+    <div class="scene-head"><p class="eyebrow">Escena 03 · Cómo se vive</p><h2>Una película en cuatro actos.</h2></div>
+    <div class="body-text"><p>Cada pieza le da crédito a una parte del equipo o del proceso. Los reels de la serie se numeran como capítulos para que la gente quiera ver el siguiente. Los tráilers anuncian las funciones especiales y los carruseles funcionan como el programa de mano que te dan al entrar al cine.</p></div>
+    <div class="arc">
+      <div><p class="mono">20 nov – 30 nov</p><h3>Próximamente</h3><p>Tráiler del mes y función especial del ronqueo.</p></div>
+      <div><p class="mono">1 dic – 13 dic</p><h3>Los créditos</h3><p>Ronqueo, tráiler del omakase y capítulos del valet y la barra.</p></div>
+      <div><p class="mono">15 dic – 21 dic</p><h3>La función</h3><p>Omakase del 15, capítulos de los nopalitos, la mesa y el briefing antes de abrir.</p></div>
+      <div><p class="mono">25 dic – 31 dic</p><h3>Créditos finales</h3><p>Navidad, la taquilla del año y los créditos de 2026.</p></div>
+    </div>
+
+    <div style="margin-top:64px" class="lookrow">
+      <div style="display:flex;flex-direction:column;gap:36px;min-width:0">
+        <div class="blk"><p class="eyebrow">Paleta</p>
+          <div class="swatches">
+            <div class="sw"><i style="background:#13110f"></i><span>Sala oscura</span><small>Fondo de créditos</small></div>
+            <div class="sw"><i style="background:#ece4d7"></i><span>Luz de proyector</span><small>Texto y créditos</small></div>
+            <div class="sw"><i style="background:#e2a08b"></i><span>Otoro</span><small>Acento, una vez por pieza</small></div>
+            <div class="sw"><i style="background:#c98a4a"></i><span>Tungsteno</span><small>Luz cálida en tomas</small></div>
+          </div>
+        </div>
+        <div class="blk"><p class="eyebrow">Tipografía</p>
+          <div class="typespec"><span class="t1">Dirigido por Rich</span><span class="t2">Valet por · Barra por · Mesa por</span></div>
+          <p style="font-size:14px;color:var(--muted)">Serif fina en cursiva para el rol, mayúsculas espaciadas para el nombre. Como en los créditos clásicos de cine.</p>
+        </div>
+      </div>
+      <div class="credit-demo" aria-label="Ejemplo de pantalla de créditos">
+        <span class="tc">TC 00:00:21:04</span>
+        <span class="role">Valet por</span>
+        <span class="name">Nombre Apellido</span>
+        <span class="role" style="font-size:14px">Bajo el sol de Cancún, desde 2004</span>
+      </div>
+    </div>
+
+    <div style="margin-top:56px" class="blk">
+      <p class="eyebrow">Reglas de la serie</p>
+      <ul class="rules">
+        <li><b>Personas</b>Cero caras a cámara. Se graba el trabajo real, en su horario real: manos, espaldas y siluetas. Nadie tiene que actuar ni repetir nada.</li>
+        <li><b>Comida</b>Macro, vapor, cortes, brillo. Luz cálida lateral y cámara lenta. El antojo va primero, el crédito después.</li>
+        <li><b>Duración</b>Cada reel dura entre 30 y 45 segundos. El hook resuelve en los primeros 3 segundos y los créditos siempre ocupan los últimos 6 a 9.</li>
+        <li><b>Sonido</b>Audio real de cocina (vapor, sizzle, cuchillo) en los primeros segundos. Después, piano o cuerdas instrumentales con licencia libre. Nunca música de películas reales.</li>
+        <li><b>Créditos</b>Pantalla que se oscurece y texto que sube despacio. Siempre un dato real: años en Yamamoto, a qué hora llega, cuántos autos acomoda o cuántos platitos sirve al día.</li>
+        <li><b>Tono</b>Sobrio, cálido y agradecido. Nada de "ven y disfruta" ni "felices fiestas".</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="scene" id="contenido">
+  <div class="wrap">
+    <div class="scene-head"><p class="eyebrow">Escena 04 · El contenido</p><h2>10 reels y 4 carruseles.</h2><p style="color:var(--muted);font-size:15px">Toca cualquier pieza para ver el guion completo.</p></div>
+    <div class="filters" role="group" aria-label="Filtrar piezas">
+      <button id="f-all" data-f="all" aria-pressed="true">Todo</button>
+      <button id="f-reel" data-f="reel" aria-pressed="false">Reels</button>
+      <button id="f-carr" data-f="carr" aria-pressed="false">Carruseles</button>
+    </div>
+    <div class="pieces" id="pieces"></div>
+
+    <div style="margin-top:70px">
+      <p class="eyebrow">Stories · días clave</p>
+      <h3 style="font-size:clamp(26px,5vw,36px);margin-top:12px;font-style:italic">Las funciones especiales se viven en stories.</h3>
+      <p style="color:var(--muted);font-size:15px;margin-top:12px;max-width:60ch">El material vertical se graba de forma orgánica con celular, en paralelo a los dos rodajes. El ronqueo y el omakase se cubren en vivo esas noches.</p>
+      <div class="stories">
+        <div><h3>El Ronqueo</h3><ul>
+          <li><span>28 nov</span>Sticker de cuenta regresiva: "Función especial · 1 de diciembre".</li>
+          <li><span>30 nov</span>Encuesta: "¿Has visto cortar un atún completo?" Sí / Todavía no.</li>
+          <li><span>1 dic</span>En vivo desde el celular: llegada del atún, primeros cortes, el sonido del cuchillo. Rótulo: "Función en curso".</li>
+          <li><span>2 dic</span>Escenas de la función: los mejores 4 momentos y "Gracias por venir".</li>
+        </ul></div>
+        <div><h3>El Omakase</h3><ul>
+          <li><span>2 dic</span>"Butacas abiertas": se anuncia junto con el tráiler, un día después del ronqueo.</li>
+          <li><span>6 dic</span>Sticker de cuenta regresiva: "Dirigido por Rich · 15 de diciembre".</li>
+          <li><span>10 dic</span>Caja de preguntas: "Pregúntale al director". Rich responde con texto sobre fotos de sus manos.</li>
+          <li><span>12 dic</span>"Butacas disponibles: <i class="ph">X</i>". Urgencia real, sin descuento.</li>
+          <li><span>14 dic</span>"Última llamada": quedan pocas butacas.</li>
+          <li><span>15 dic</span>Noche de la función: montaje de la barra, primer tiempo servido.</li>
+          <li><span>16 dic</span>Escenas de la función y gracias a los asistentes.</li>
+        </ul></div>
+        <div><h3>Navidad y 31</h3><ul>
+          <li><span>24 dic</span>"Hoy el elenco somos todos": horario del día y foto de la mesa del equipo antes del servicio (manos, sin caras).</li>
+          <li><span>25 dic</span>Repost del reel de Navidad con sticker "Mándalo a tu elenco".</li>
+          <li><span>31 dic</span>"Último servicio de 2026": horario y cuenta regresiva al reel de créditos.</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="scene" id="calendario">
+  <div class="wrap">
+    <div class="scene-head"><p class="eyebrow">Escena 05 · Calendario</p><h2>Del 22 de noviembre al 31 de diciembre.</h2><p style="color:var(--muted);font-size:15px">La campaña arranca en noviembre para darle tiempo al ronqueo.</p></div>
+    <div class="cal-wrap"><div class="cal" id="cal"></div></div>
+    <div class="legend">
+      <span><i style="border-left:2px solid var(--toro);background:var(--surface-2)"></i>Reel</span>
+      <span><i style="border-left:2px solid var(--fg);background:var(--surface-2)"></i>Carrusel</span>
+      <span><i style="background:var(--toro)"></i>Fecha clave</span>
+      <span><i style="border:1px dashed var(--line)"></i>Rodaje</span>
+    </div>
+    <div class="callist" id="callist"></div>
+  </div>
+</section>
+
+<section class="scene" id="produccion">
+  <div class="wrap">
+    <div class="scene-head"><p class="eyebrow">Escena 06 · Producción</p><h2>Dos días de rodaje.</h2><p class="lead" style="font-size:20px">Grabamos al equipo en su horario real, sin pedirle a nadie que actúe ni que repita. Lo único que va en un segundo día es Rich preparando el ronqueo y el omakase, porque depende del menú.</p></div>
+    <div id="callsheets"></div>
+
+    <div class="lists">
+      <div><p class="eyebrow">Equipo The Formulab</p><ul>
+        <li>Pau: dirección, shot list y celular para stories en paralelo.</li>
+        <li>Brian y Luca: cámara A y cámara B.</li>
+        <li>Llegada 10:15 para montar y repasar el día.</li>
+      </ul></div>
+      <div><p class="eyebrow">Equipo Yamamoto</p><ul>
+        <li>Rich: bloque de pescado, nigiri y mesa larga (10:50–13:10).</li>
+        <li>Cocinero de nopalitos y chiles toreados (11:40).</li>
+        <li>Irving, capitán, meseros y garroteros (13:20).</li>
+        <li>Valet (13:20) y bartender (14:00).</li>
+      </ul></div>
+      <div><p class="eyebrow">Props y decoración</p><ul>
+        <li>Mantel largo, 12 lugares con vajilla, palillos y copas.</li>
+        <li>Velas y ornamento navideño sobrio: ramas de pino, follaje verde, frutos rojos.</li>
+        <li>Tapa o cloche para el plato de "quien no vino".</li>
+        <li>Platos negros, cuchillos y hielo para el rodaje 2 con Rich.</li>
+      </ul></div>
+    </div>
+
+    <div class="flag">
+      <p class="eyebrow">Lo que necesitamos de Yamamoto</p>
+      <p>Nombre, puesto, años en Yamamoto y un dato real del valet, bartender, quien hace los nopalitos, capitán, meseros y garroteros, con su permiso para aparecer con nombre en pantalla. Acceso a una azotea o punto alto para la toma del estacionamiento, horario y precio del ronqueo, tiempos, precio y cupo del omakase, y horarios del 24 y 31.</p>
+    </div>
+    <p style="margin-top:28px"><a href="#shotlist" class="golist">Abrir el shot list del rodaje →</a></p>
+  </div>
+</section>
+
+<section class="finale" id="cierre">
+  <div class="wrap">
+    <p class="eyebrow">Escena 07 · Cierre</p>
+    <h2 style="font-size:clamp(36px,8vw,60px);font-style:italic;margin-top:14px">Fin de la temporada 37.</h2>
+    <div class="totals">
+      <div><b>10</b><span class="mono">Reels</span></div>
+      <div><b>4</b><span class="mono">Carruseles</span></div>
+      <div><b>3</b><span class="mono">Secuencias de stories</span></div>
+    </div>
+    <div class="roll" aria-label="Créditos finales">
+      <div class="roll-inner" id="roll"></div>
+    </div>
+    <ol class="next">
+      <li><span>01</span>Aprobación de la idea y del calendario.</li>
+      <li><span>02</span>Yamamoto nos comparte los datos del equipo, ronqueo y omakase.</li>
+      <li><span>03</span>Rodaje 1: martes 10 de noviembre, 10:30 a 16:30.</li>
+      <li><span>04</span>Rodaje 2 (ronqueo y omakase): semana del 16 de noviembre, en cuanto Rich tenga el menú.</li>
+      <li><span>05</span>Edición y entrega del tráiler para publicar el 22 de noviembre.</li>
+    </ol>
+  </div>
+</section>
+</main>
+
+<footer><p>Presentado por The Formulab</p></footer>
+</div>
+
+<div id="view-shotlist" hidden>
+  <div class="sl-top"><div class="wrap sl-top-in">
+    <div><p class="eyebrow">Shot list · Créditos Finales</p><p class="sl-count"><b id="sl-done">0</b> de <span id="sl-total">0</span> tomas</p></div>
+    <div class="sl-bar"><i id="sl-fill"></i></div>
+  </div></div>
+  <div class="wrap sl-wrap">
+    <div class="sl-days" role="group" aria-label="Día de rodaje" id="sl-days"></div>
+    <div id="sl-list"></div>
+    <div class="sl-foot">
+      <p class="mono">Las marcas se guardan en este dispositivo.</p>
+      <button type="button" id="sl-reset">Desmarcar todo</button>
+    </div>
+  </div>
+  <footer><p>Presentado por The Formulab</p></footer>
+</div>
+
+<script>
+const P = [
+{id:"R1",t:"reel",title:"Próximamente",role:"Tráiler del mes · Apertura",date:"Dom 22 nov",
+ hv:"Pantalla negra con sonido de proyector. Se enciende una sola luz sobre la barra vacía.",
+ ht:"Este diciembre, Yamamoto estrena.",
+ dur:"40 s",shots:[["0–2", "Negro total con el zumbido de un proyector.", "Después de 37 años en cartelera…"], ["2–5", "Macro: un cuchillo que se desliza fuera de su funda de tela.", "…por fin vamos a nombrar a quien hace la película."], ["5–10", "Las luces de la cocina se encienden una por una. Afuera apenas amanece.", "Antes de abrir, la función ya empezó."], ["10–16", "Cortes de un segundo: llaves que cambian de mano, una comanda saliendo de la impresora, chiles en la plancha, una servilleta doblándose, el briefing antes de abrir, la puerta que se abre.", ""], ["16–19", "Cartela con golpe de percusión suave.", "Un ronqueo."], ["19–23", "Hielo cayendo sobre una tabla larga, cuchillos en fila.", ""], ["23–26", "Cartela.", "Un omakase."], ["26–30", "Pincel de salsa sobre un plato negro, en cámara lenta.", ""], ["30–33", "Cartela sobre velas que se encienden en una mesa larga.", "Una Navidad."], ["33–37", "Cartela sobre las luces del restaurante que se apagan.", "Un año que termina."], ["37–40", "Negro y logo de Yamamoto.", "Créditos Finales · Diciembre"]],
+ audio:"Música instrumental tipo tráiler con licencia libre. Golpes suaves entre cartelas y silencio total antes del logo.",
+ copy:"Toda gran película tiene un equipo detrás. La nuestra lleva 37 años en cartelera, y este diciembre por fin le damos crédito a quien se lo merece. Próximamente.",
+ cta:"Activa notificaciones para no perderte el estreno",
+ mech:"Serializable",why:"Abre una serie y genera expectativa por lo que viene. El formato tráiler se reconoce en un segundo y se ve distinto a todo el contenido navideño del feed.",
+ prod:"Se arma con tomas de los dos rodajes (10 de noviembre y semana del 16). Las luces que se apagan son las del 10 de noviembre en reversa. Cartelas y negro en edición."},
+{id:"R2",t:"reel",title:"Función especial: El Ronqueo",role:"Tráiler · Primera función especial",date:"Vie 27 nov",
+ hv:"Macro extremo de un cuchillo largo afilándose, chispa de luz en el filo.",
+ ht:"Una sola función. Un solo atún.",
+ dur:"35 s",shots:[["0–3", "Afilado en macro con sonido real, sin música.", "Una sola función."], ["3–7", "Hielo cayendo sobre una tabla larga y vacía.", "Un solo atún."], ["7–12", "Las manos de Rich acomodan los cuchillos en orden, del más corto al más largo.", "Cortado frente a ti, pieza por pieza."], ["12–18", "Plano cenital de la tabla lista, esperando. Texto que explica.", "Ronqueo: el arte de despiezar un atún completo."], ["18–24", "Macro de cortes de atún de la barra brillando con luz lateral: akami, chutoro, otoro.", "Cada parte del atún sabe distinto. Esa noche las pruebas todas."], ["24–28", "Rich limpia la hoja con un trapo, lento.", "Martes 1 de diciembre."], ["28–32", "Pantalla negra, cartela de cine.", "FUNCIÓN ESPECIAL · EL RONQUEO · Dirigido por Rich"], ["32–35", "Última cartela.", "Cupo limitado. Reserva por mensaje directo."]],
+ audio:"ASMR puro: afilado y hielo. Entra un solo acorde de cuerdas en la cartela final.",
+ copy:"Hay películas que solo se proyectan una vez. El martes 1 de diciembre, Rich corta un atún completo frente a ti, pieza por pieza, y cada corte llega a tu mesa.",
+ cta:"Reserva tu lugar por mensaje directo",
+ mech:"Compartible",why:"Es un plan para mandarle a alguien: \"vamos a esta\". La idea de una sola función crea urgencia sin necesidad de promoción.",
+ prod:"Rodaje 2, semana del 16 de noviembre. El atún llega el mismo día del ronqueo, así que el tráiler se hace con cuchillos, hielo, la tabla vacía y cortes de atún de la barra. Pendiente: hora y precio para la cartela."},
+{id:"C1",t:"carr",title:"El Reparto",role:"Carrusel · Presentación del elenco",date:"Dom 29 nov",
+ slides:[
+  ["Portada","El Reparto","Yamamoto · 37 años en cartelera","Foto: la barra vacía con luz cálida"],
+  ["02","El valet","Acomoda tu camioneta como Tetris, bajo el sol. Nombre · años en Yamamoto.","Foto: llaves en el tablero"],
+  ["03","La barra","Saca la comanda antes de que termines de pedir.","Foto: vasos brillando a contraluz"],
+  ["04","Quien hace los nopalitos","Lo primero que pruebas en Yamamoto.","Foto: platito de nopalitos y chiles toreados"],
+  ["05","Quien pone la mesa","Cada servilleta, una por una.","Foto: manos doblando servilletas"],
+  ["06","Quien repasa tu reservación","Antes de abrir, ya sabe que vienes.","Foto: libreta de reservaciones (nombres fuera de foco)"],
+  ["07","El director","Rich · Head chef","Foto: manos de Rich emplatando"],
+  ["08","Y tú","El papel más importante. Guarda este reparto: te los vas a encontrar todo diciembre.","Fondo negro, texto centrado"]
+ ],
+ copy:"No los vas a ver a cámara; son más de trabajo que de reflectores. Pero sin ellos no hay película. Este es nuestro reparto.",
+ cta:"¿A quién del reparto conoces? Cuéntanos en comentarios",
+ mech:"Guardable + comentable",why:"Presenta a los personajes de la serie sin mostrar caras. Los clientes de años conocen al equipo y van a comentar sus nombres.",
+ prod:"Fotos fijas de cada bloque del rodaje del 10 de noviembre. Nombres y años los confirma Yamamoto."},
+{id:"R3",t:"reel",title:"Tráiler: Dirigido por Rich",role:"Tráiler · Segunda función especial",date:"Mié 2 dic",
+ hv:"Las manos de Rich colocan un solo nigiri en un plato negro. Silencio total.",
+ ht:"Una noche. Un solo menú. Tú no eliges.",
+ dur:"40 s",shots:[["0–3", "Plato negro con un solo bocado. Silencio total.", "Una noche."], ["3–6", "Pincel de salsa en macro.", "Un solo menú."], ["6–9", "Soplete sobre el pescado; la grasa brilla.", "Tú no eliges."], ["9–15", "Manos de Rich trabajando en la barra, cámara lenta. Texto que explica.", "Omakase significa \"lo dejo en tus manos\"."], ["15–22", "Tres tiempos emplatándose, con un golpe suave entre cada uno.", "Tiempo uno. Tiempo dos. Tiempo tres…"], ["22–27", "La cámara recorre la barra con los lugares puestos.", "Solo X butacas."], ["27–32", "Una flor colocada con pinzas, el gesto final.", "El resto se revela en función."], ["32–36", "Cartela.", "15 de diciembre"], ["36–40", "Cartela final, pantalla negra.", "OMAKASE · Dirigido por Rich · Butacas limitadas"]],
+ audio:"Silencio dramático al inicio, después cuerdas que crecen hacia la cartela final.",
+ copy:"Omakase quiere decir \"lo dejo en tus manos\". El 15 de diciembre, la película la dirige Rich, tiempo por tiempo. Tú solo llegas.",
+ cta:"Butacas limitadas. Reserva por mensaje directo",
+ mech:"Compartible",why:"Funciona como plan y como regalo de Navidad: \"regálale una noche\". El formato tráiler hace que una cena se sienta como un estreno.",
+ prod:"Rodaje 2, semana del 16 de noviembre. Rich necesita tener definidos al menos 3 o 4 tiempos para ese día. Pendiente: número de tiempos y cupo."},
+{id:"R4",
+ t:"reel",
+ title:"Créditos: El valet",
+ role:"Capítulo 1 de la serie",
+ date:"Vie 4 dic",
+ hv:"Toma alta del estacionamiento: una camioneta entra en un hueco donde parece imposible que quepa.",
+ ht:"Aquí afuera alguien juega Tetris con tu camioneta. Y nunca pierde.",
+ dur:"40 s",
+ shots:[["0–3", "Toma alta, timelapse del estacionamiento llenándose; el último hueco se llena.", "Aquí afuera alguien juega Tetris con tu camioneta…"], ["3–6", "Macro del espejo de la camioneta a centímetros del otro auto.", "…y nunca pierde."], ["6–11", "Sol de mediodía: pavimento brillando, sombra corta. El valet de espaldas, en su puesto.", "1:20 p.m. 32 °C (dato real del día)"], ["11–16", "Manos recibiendo llaves; la puerta del auto se abre (cliente sin cara).", "Te recibe antes que nadie."], ["16–21", "Tablero de llaves, cada una con su número; una mano cuelga la tuya.", "Sabe cuál es la tuya sin preguntar."], ["21–26", "Plano a ras de piso: sus zapatos corriendo entre autos.", ""], ["26–31", "Regresa con tu auto, abre la puerta y con la mano indica \"adelante\".", "Y te despide al final."], ["31–40", "Créditos sobre el estacionamiento lleno.", "Estacionamiento por: NOMBRE · Bajo el sol de Cancún, desde AÑO · Récord: X autos en un día · Capítulo 1"]],
+ audio:"Motores, llaves y pasos reales; después piano juguetón que se vuelve cálido en los créditos. Sin la música del videojuego Tetris (tiene derechos).",
+ copy:"Llegas, le das las llaves y ni lo piensas. Pero mientras comes, alguien está afuera, a pleno sol, haciendo magia con los coches. Este capítulo es para NOMBRE.",
+ cta:"Si alguna vez te acomodó la camioneta, déjale las gracias aquí",
+ mech:"Compartible + comentable",
+ why:"Nadie le da crédito al valet y todos lo hemos visto hacer lo imposible. El Tetris se entiende en un segundo y saca la risa; el crédito final la convierte en agradecimiento. Abre la serie con el personaje más inesperado.",
+ prod:"Rodaje 1: preparación a las 13:40 y llegadas reales de 14:40 a 15:30. Toma alta desde azotea o monopié. Placas borrosas y clientes sin cara."},
+{id:"C2",t:"carr",title:"Programa de mano: Omakase",role:"Carrusel · El menú como programa de cine",date:"Dom 6 dic",
+ slides:[
+  ["Portada","Programa de mano","Omakase · 15.12.2026 · Función única","Fondo negro, tipografía de cine"],
+  ["02","Primer acto","Tiempos 1 a 3. Se revelan en función.","Foto parcial, fuera de foco"],
+  ["03","Segundo acto","Del mar al fuego.","Foto: soplete sobre pescado"],
+  ["04","Tercer acto","El corazón de la noche.","Foto: un nigiri en plato negro"],
+  ["05","Intermedio","Una pausa para limpiar el paladar.","Foto: matcha batiéndose"],
+  ["06","Final","Se revela en función.","Foto: silueta del postre a contraluz"],
+  ["07","Créditos","Dirección: Rich. Elenco: tu mesa.","Fondo negro"],
+  ["08","Butacas limitadas","Reserva por mensaje directo.","Fondo negro"]
+ ],
+ copy:"Te dejamos el programa de mano. El resto se revela en función, el 15 de diciembre.",
+ cta:"Guárdalo y reserva tu butaca por DM",
+ mech:"Guardable + desliza para revelar",why:"Cuenta la estructura de la cena sin revelar los platos. La curiosidad es lo que lleva a reservar.",
+ prod:"Fotos del rodaje 2, semana del 16 de noviembre. Pendiente: confirmar número de tiempos con Rich."},
+{id:"R5",
+ t:"reel",
+ title:"Créditos: La barra",
+ role:"Capítulo 2 de la serie",
+ date:"Mar 8 dic",
+ hv:"Una comanda sale de la impresora y, antes de que termine de salir, ya cae hielo en el vaso.",
+ ht:"Pediste hace 40 segundos. Ya va en camino.",
+ dur:"38 s",
+ shots:[["0–3", "Impresora de comandas sacando un ticket.", "Pediste hace 40 segundos…"], ["3–6", "Hielo cayendo en el vaso, limón exprimido, servido.", "…ya va en camino."], ["6–11", "Antes del servicio: barra vacía, luz entrando, manos limpiando vasos uno por uno a contraluz.", "Pero esto empezó mucho antes."], ["11–15", "Botellas alineadas, limones cortados, todo en su lugar.", "Todo en tiempo y forma."], ["15–22", "Servicio: tickets acumulándose; speed ramp de manos sirviendo cuatro bebidas seguidas, con contador en pantalla.", "1, 2, 3, 4…"], ["22–27", "Shaker y vertido en macro, sonido real.", ""], ["27–31", "La bebida sale de la barra en charola, manos del mesero.", ""], ["31–38", "Créditos.", "Barra por: NOMBRE · X bebidas en un servicio · Nunca se le juntan las comandas · Capítulo 2"]],
+ audio:"Impresora, hielo, shaker y vertido reales; base rítmica suave que acelera con las comandas y se calma en los créditos.",
+ copy:"Todavía no terminas de pedir y ya está saliendo. No es magia: es NOMBRE, que deja cada vaso brillando antes de la primera comanda.",
+ cta:"Etiqueta a quien siempre pide \"lo de siempre\"",
+ mech:"Compartible",
+ why:"El orden, los vasos brillando y la velocidad son contenido satisfactorio que retiene hasta el final. El contraste entre la barra tranquila y el servicio a tope cuenta la historia sin palabras.",
+ prod:"Rodaje 1: preparación a las 14:00 (entra el bartender) y comandas reales de 15:30 a 16:15. Tener listas las bebidas más pedidas."},
+{id:"C3",t:"carr",title:"Los créditos de un nigiri",role:"Carrusel · Proceso detrás de un bocado",date:"Jue 10 dic",
+ slides:[
+  ["Portada","¿Cuántas personas caben en un nigiri?","Desliza.","Foto: macro de un nigiri"],
+  ["02","Quien eligió el pescado","Antes de que abriera el mercado.","Foto: pescado sobre hielo"],
+  ["03","Quien lavó el arroz","Hasta que el agua salió clara.","Foto: manos en agua con arroz"],
+  ["04","Quien lo sazonó","Vinagre, temperatura y paciencia.","Foto: pala de madera"],
+  ["05","Quien afiló el cuchillo","Para que el corte sea uno solo.","Foto: afilado"],
+  ["06","Quien lo formó","En menos de cinco segundos.","Foto: manos formando"],
+  ["07","Quien lo llevó a tu mesa","Sin que se mueva un grano.","Foto: plato en tránsito"],
+  ["08","Y tú","Que te lo comiste en un bocado. Guárdalo para la próxima vez que pidas uno.","Fondo negro"]
+ ],
+ copy:"Un bocado, muchas manos. La próxima vez que pidas un nigiri, ya sabes a quién darle las gracias.",
+ cta:"Guárdalo y mándaselo a tu compa del sushi",
+ mech:"Guardable + compartible",why:"Enseña algo que la gente no sabe, con una pregunta en la portada que obliga a deslizar hasta el final.",
+ prod:"Rodaje 1, martes 10 de noviembre: fotos fijas del bloque de Rich, 10:50."},
+{id:"R6",
+ t:"reel",
+ title:"Créditos: Los nopalitos",
+ role:"Capítulo 3 de la serie",
+ date:"Mié 16 dic",
+ hv:"Chiles cayendo en la plancha caliente; la piel se ampolla y truena.",
+ ht:"Lo primero que pruebas en Yamamoto no viene en el menú.",
+ dur:"35 s",
+ shots:[["0–3", "Chiles cayendo a la plancha, chisporroteo real.", "Lo primero que pruebas en Yamamoto…"], ["3–6", "Macro de la piel del chile ampollándose; volteo con pinzas.", "…no viene en el menú."], ["6–11", "Cuchillo picando nopal en tiras, sonido del corte.", ""], ["11–15", "Manos mezclando los nopalitos en un bowl grande.", ""], ["15–19", "Cenital: platitos servidos en fila, con contador en pantalla.", "Platito 1, 2, 3…"], ["19–24", "Un platito sale del pase y el mesero lo deja en la mesa.", "Llega antes que la carta."], ["24–28", "Una mano toma el primer nopalito con palillos (sin cara).", "Y siempre pides más."], ["28–35", "Créditos.", "Nopalitos y chiles toreados por: NOMBRE · X platitos al día, de cortesía · Capítulo 3"]],
+ audio:"Plancha y cuchillo en ASMR los primeros segundos; después piano cálido.",
+ copy:"Antes de abrir la carta ya te están consintiendo. Los nopalitos de bienvenida tienen nombre y apellido, y este capítulo es para NOMBRE.",
+ cta:"¿Team nopalitos o team chiles toreados? Te leemos",
+ mech:"Comentable + compartible",
+ why:"Todo cliente de Yamamoto conoce esos nopalitos. Reconocerlos genera comentarios de inmediato y la pregunta final abre debate. Es antojo puro con sonido real.",
+ prod:"Rodaje 1, bloque de cocina a las 11:40. Confirmar si se preparan a esa hora; si no, pedir una tanda para grabar. Los platitos en mesas reales se graban a las 14:40."},
+{id:"R7",t:"reel",title:"Créditos: La mesa",role:"Capítulo 4 de la serie",date:"Sáb 19 dic",
+ hv:"Un mantel largo cae en cámara lenta sobre la mesa.",
+ ht:"En diciembre, alguien pone la mesa para que tú te sientes a celebrar.",
+ dur:"38 s",shots:[["0–3", "Mantel largo cayendo en cámara lenta.", "En diciembre, alguien pone la mesa…"], ["3–7", "Manos alineando palillos, uno por uno.", "…para que tú te sientes a celebrar."], ["7–12", "Servilletas dobladas una por una, con un contador en pantalla.", "1, 2, 3… 12"], ["12–16", "Copas que se acomodan, sonido de cristal.", ""], ["16–21", "Velas que se encienden a lo largo de la mesa.", ""], ["21–26", "Platos que llegan al centro de la mesa.", ""], ["26–30", "Plano cenital: mesa completa para doce.", ""], ["30–38", "Créditos y frase final.", "Mesa por: meseros y garroteros, NOMBRES · Capítulo 4 · Tu posada, tu cena de fin de año: la mesa ya está puesta."]],
+ audio:"Sonido real de vajilla, después piano cálido.",
+ copy:"Diciembre es de mesas largas. Nosotros la ponemos; ustedes traen las historias.",
+ cta:"Etiqueta a quienes siempre se sientan contigo en diciembre",
+ mech:"Compartible",why:"Llega justo en temporada de posadas y cenas de fin de año. Invita a reservar para grupos sin mencionar una sola promoción.",
+ prod:"Rodaje 1: mesa larga con decoración navideña sobria a las 12:20 y servilletas reales a las 13:20, cuando el equipo dobla la mantelería."},
+{id:"R8",
+ t:"reel",
+ title:"Créditos: Antes de abrir",
+ role:"Capítulo 5 de la serie",
+ date:"Lun 21 dic",
+ hv:"Un dedo recorre la libreta de reservaciones del día; los nombres están fuera de foco.",
+ ht:"Antes de que llegues, ya hablaron de ti.",
+ dur:"38 s",
+ shots:[["0–3", "Libreta de reservaciones, dedo bajando por la lista.", "Antes de que llegues…"], ["3–6", "Plano de espaldas: el equipo uniformado en semicírculo, Irving al centro.", "…ya hablaron de ti."], ["6–11", "Detalles: pluma anotando, mandil amarrándose, manos con la libreta.", "1:20 p.m. · Junta antes del servicio"], ["11–16", "Irving señala hacia el salón y el equipo voltea. Audio real a volumen bajo.", "Frase real del briefing, subtitulada"], ["16–21", "Mano marcando una mesa en el plano del salón.", "Qué mesa, a qué hora, qué celebran."], ["21–26", "El equipo se dispersa a sus posiciones; plano de pies a ras de piso.", ""], ["26–30", "La puerta del restaurante se abre.", "Y entonces, abrimos."], ["30–38", "Créditos.", "Operación por: Ivan e Irving · Capitán, meseros y garroteros: NOMBRES · Cada día, antes de abrir · Capítulo 5"]],
+ audio:"Sonido real del briefing a volumen bajo, pasos y puerta; piano que crece cuando se abre el restaurante.",
+ copy:"Si alguna vez llegaste y ya sabían que venías a celebrar, ahora sabes por qué. Cada día, antes de abrir, el equipo repasa quién viene y qué se festeja.",
+ cta:"Etiqueta a con quién vas a celebrar este diciembre",
+ mech:"Compartible",
+ why:"Muestra el cuidado invisible detrás de una buena experiencia y responde el \"¿cómo sabían?\". Sale justo antes de Navidad, cuando más gente reserva para celebrar.",
+ prod:"Rodaje 1, 13:20 en punto. El briefing pasa una sola vez y no se repite: dos cámaras, sin interrumpir. Nombres de clientes fuera de foco o borrosos en edición."},
+{id:"R9",t:"reel",title:"Elenco de esta Navidad",role:"Navidad · Pieza central del mes",date:"Vie 25 dic",
+ hv:"Plano cenital de la mesa larga a oscuras. Las velas se encienden una por una.",
+ ht:"Esta película no tiene protagonista. Tiene mesa.",
+ dur:"40 s",shots:[["0–4", "Plano cenital de la mesa a oscuras; las velas se encienden una por una.", "Esta película no tiene protagonista."], ["4–8", "Platos que llegan desde distintas manos.", "Tiene mesa."], ["8–13", "Manos que pasan platos de un lado al otro de la mesa.", ""], ["13–17", "Una mano sirve de más en el plato de otra persona.", ""], ["17–21", "Un plato tapado junto a un lugar vacío.", "Para quien no pudo venir."], ["21–25", "Brindis: copas que chocan, sin caras.", ""], ["25–28", "El último bocado se parte en ocho pedazos.", ""], ["28–37", "Créditos sobre la mesa.", "Elenco de esta Navidad: La que siempre llega tarde · El que cocina de más · La que guarda un plato para quien no vino · Tú"], ["37–40", "Cartela final.", "Feliz Navidad, de parte de todo Yamamoto."]],
+ audio:"Piano cálido con sonido real de mesa: risas lejanas, cubiertos, copas.",
+ copy:"Los mejores elencos no se eligen, se heredan. Feliz Navidad de parte de los que cocinamos, servimos y ponemos la mesa todo el año.",
+ cta:"Manda este video a tu elenco",
+ mech:"Compartible",why:"Cada persona reconoce a su familia en los créditos y lo manda al chat familiar. Es el post navideño sin un solo cliché navideño.",
+ prod:"Rodaje 1, mesa larga, 12:20. Manos de Rich, cocina y equipo Formulab, sin caras. Ornamento navideño sobrio en la mesa."},
+{id:"C4",t:"carr",title:"Taquilla 2026",role:"Carrusel · El año en números",date:"Lun 28 dic",
+ slides:[
+  ["Portada","Taquilla 2026","Temporada 37 en números.","Fondo negro"],
+  ["02","Platos servidos","Número real del año.","Foto: pase de cocina lleno"],
+  ["03","Platitos de nopalitos de bienvenida","Número real del año.","Foto: platito de nopalitos"],
+  ["04","El más pedido","Nombre del platillo.","Foto del platillo"],
+  ["05","Matchas batidos","Número real del año.","Foto: matcha bar"],
+  ["06","Años del equipo sumados","Número real.","Foto: manos en la barra"],
+  ["07","La crítica","Tú. Cada reseña, cada mesa, cada regreso.","Fondo negro"],
+  ["08","Temporada 38","Próximamente.","Logo"]
+ ],
+ copy:"Así cerró la temporada 37. Gracias por cada butaca ocupada.",
+ cta:"¿Cuál fue tu platillo del año? Te leemos",
+ mech:"Guardable + comentable",why:"A la gente le encantan los recuentos de fin de año. Los números reales le dan peso a la historia de 37 años.",
+ prod:"Datos de Yamamoto. Fotos del rodaje y de archivo."},
+{id:"R10",t:"reel",title:"Créditos Finales 2026",role:"31 de diciembre · Cierre de la serie",date:"Jue 31 dic",
+ hv:"Pantalla negra con la palabra FIN, que se desvanece.",
+ ht:"Antes de que termine el año, faltan los créditos.",
+ dur:"45 s",shots:[["0–3", "Pantalla negra con la palabra FIN, que se desvanece.", "Antes de que termine el año…"], ["3–5", "Aparece texto.", "…faltan los créditos."], ["5–33", "Roll de créditos sobre tomas del año: valet, barra, nopalitos, mesa, briefing, cocina y momentos de las campañas de 2026.", "Dirección: Rich · Operación: Irving e Ivan · Y todo el equipo, área por área, con sus nombres reales"], ["33–37", "Créditos especiales.", "Con la participación especial de: Cancún"], ["37–41", "Último servicio: luces que se apagan, la puerta que se cierra, el letrero.", ""], ["41–45", "Cartela final.", "Yamamoto · 37 años en cartelera · Nos vemos en la temporada 38."]],
+ audio:"Piano de créditos finales que se desvanece hasta el silencio.",
+ copy:"Cada año en Yamamoto es una película que hacemos juntos. Estos son sus créditos. Gracias, Cancún, por 37 temporadas. Nos vemos en la 38.",
+ cta:"Comparte con quien te acompañó este año",
+ mech:"Compartible + cierre de serie",why:"El equipo y sus familias se ven en pantalla con nombre y lo comparten con orgullo. Cierra el arco que abrió el tráiler del 22 de noviembre.",
+ prod:"Archivo de 2026, más fachada, puerta y luces del rodaje 1 (las luces se invierten en edición para que se apaguen). Requiere la lista completa de nombres."}
+];
+
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function ph(s){return esc(s).replace(/\b(NOMBRES|NOMBRE|AÑO)\b/g,'<i class="ph">$1</i>')}
+
+const box=document.getElementById("pieces");
+box.innerHTML=P.map(p=>{
+  const isR=p.t==="reel";
+  let detail="";
+  if(isR){
+    detail=`<div class="hooks"><div><span class="mono">Hook visual · 0–1 s</span><p>${esc(p.hv)}</p></div><div><span class="mono">Hook en texto</span><p class="said">"${esc(p.ht)}"</p></div></div>
+    <div class="blk"><span class="mono">Guion toma por toma · ${esc(p.dur)}</span><ol class="shots">${p.shots.map(s=>`<li data-tc="${esc(s[0])} s"><div>${esc(s[1])}${s[2]?`<em>${ph(s[2])}</em>`:""}</div></li>`).join("")}</ol></div>`;
+  }else{
+    detail=`<div class="blk"><span class="mono">Slides</span><div class="slides" tabindex="0" aria-label="Slides del carrusel">${p.slides.map(s=>`<div class="slide"><span class="n">${esc(s[0])}</span><div style="display:flex;flex-direction:column;gap:8px"><h4>${esc(s[1])}</h4><p>${esc(s[2])}</p></div><span class="vis">${esc(s[3])}</span></div>`).join("")}</div><span class="swipe">Desliza →</span></div>`;
+  }
+  return `<details class="piece" data-t="${p.t}"><summary><span class="code">${p.id}</span><span class="ptitle"><strong>${esc(p.title)}</strong><span>${esc(p.role)}${p.dur?" · "+esc(p.dur):""}</span></span><span class="pdate">${esc(p.date)}</span></summary>
+  <div class="pbody">${detail}
+   <div class="copybox"><span class="mono">Copy del post</span><p>${ph(p.copy)}</p><span class="cta">CTA · ${esc(p.cta)}</span></div>
+   <div class="meta">
+    ${isR?`<div class="blk"><span class="mono">Audio</span><p>${esc(p.audio)}</p></div>`:""}
+    <div class="blk"><span class="mono">Por qué funciona</span><span class="tag">${esc(p.mech)}</span><p>${esc(p.why)}</p></div>
+    <div class="blk"><span class="mono">Producción</span><p>${esc(p.prod)}</p></div>
+   </div>
+  </div></details>`;
+}).join("");
+
+document.querySelectorAll(".filters button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".filters button").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));
+  const f=b.dataset.f;
+  document.querySelectorAll("details.piece").forEach(d=>{d.hidden=!(f==="all"||d.dataset.t===f)});
+}));
+
+/* Calendario: lun 9 nov a dom 3 ene */
+const map={
+ "2026-11-10":[["Rodaje 1","s"]],"2026-11-17":[["Rodaje 2","s"]],"2026-11-22":[["R1 Tráiler","r"]],"2026-11-27":[["R2 Ronqueo","r"]],"2026-11-29":[["C1 Reparto","c"]],
+ "2026-12-01":[["Ronqueo","e"]],"2026-12-02":[["R3 Omakase","r"]],"2026-12-04":[["R4 Valet","r"]],"2026-12-06":[["C2 Programa","c"]],"2026-12-08":[["R5 Barra","r"]],
+ "2026-12-10":[["C3 Nigiri","c"]],"2026-12-15":[["Omakase","e"]],"2026-12-16":[["R6 Nopalitos","r"]],
+ "2026-12-19":[["R7 Mesa","r"]],"2026-12-21":[["R8 Briefing","r"]],"2026-12-25":[["Navidad","e"],["R9 Elenco","r"]],"2026-12-28":[["C4 Taquilla","c"]],
+ "2026-12-31":[["Fin de año","e"],["R10 Créditos","r"]]
+};
+const cal=document.getElementById("cal");
+let html=["L","M","M","J","V","S","D"].map(d=>`<div class="dow">${d}</div>`).join("");
+const start=new Date(2026,10,9);
+for(let i=0;i<56;i++){
+  const d=new Date(start);d.setDate(start.getDate()+i);
+  const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  const inRange=d>=new Date(2026,10,10)&&d<=new Date(2026,11,31);
+  const label=d.getDate()===1?`${d.getDate()} ${["ene","","","","","","","","","","nov","dic"][d.getMonth()]}`:(i===0?"9 nov":d.getDate());
+  html+=`<div class="day ${inRange?"month":"out"}"><span class="d">${label}</span>${(map[key]||[]).map(c=>`<span class="chip ${c[1]}">${c[0]}</span>`).join("")}</div>`;
+}
+cal.innerHTML=html;
+
+const L=[
+ ["Arranque · Próximamente"],
+ ["Mar 10 nov","—","Rodaje 1: capítulos, mesa larga y Rich"],
+ ["Sem. 16 nov","—","Rodaje 2: ronqueo y omakase (fecha por confirmar)"],
+ ["Dom 22 nov","R1","Tráiler: Próximamente"],
+ ["Vie 27 nov","R2","Función especial: El Ronqueo"],
+ ["Dom 29 nov","C1","El Reparto"],
+ ["Construcción · Los créditos"],
+ ["Mar 1 dic","★","Ronqueo + stories en vivo"],
+ ["Mié 2 dic","R3","Tráiler: Dirigido por Rich"],
+ ["Vie 4 dic","R4","Créditos: El valet"],
+ ["Dom 6 dic","C2","Programa de mano: Omakase"],
+ ["Mar 8 dic","R5","Créditos: La barra"],
+ ["Jue 10 dic","C3","Los créditos de un nigiri"],
+ ["Pico · La función"],
+ ["Mar 15 dic","★","Omakase + stories"],
+ ["Mié 16 dic","R6","Créditos: Los nopalitos"],
+ ["Sáb 19 dic","R7","Créditos: La mesa"],
+ ["Lun 21 dic","R8","Créditos: Antes de abrir"],
+ ["Cierre · Créditos finales"],
+ ["Vie 25 dic","R9","Elenco de esta Navidad"],
+ ["Lun 28 dic","C4","Taquilla 2026"],
+ ["Jue 31 dic","R10","Créditos Finales 2026"]
+];
+document.getElementById("callist").innerHTML=L.map(r=>r.length===1?`<div class="ph-arc">${esc(r[0])}</div>`:`<div><span class="dt">${esc(r[0])}</span><span class="cd">${esc(r[1])}</span><span>${esc(r[2])}</span></div>`).join("");
+
+const R=[["Una idea de","The Formulab"],["Dirección","Rich"],["Operación","Irving · Ivan"],["Valet","Nombre por confirmar"],["Barra","Nombre por confirmar"],["Nopalitos y chiles toreados","Nombre por confirmar"],["Mesa","Meseros y garroteros"],["Briefing","Capitán y equipo de servicio"],["Con la participación especial de","Cancún"],["Temporada","37"]];
+const one=R.map(r=>`<div class="r"><span>${esc(r[0])}</span><b>${esc(r[1])}</b></div>`).join("");
+document.getElementById("roll").innerHTML=one+(matchMedia("(prefers-reduced-motion: reduce)").matches?"":one);
+const DAYS=[{"id": "d1", "tab": "Martes 10 nov", "title": "Rodaje 1 · Martes 10 de noviembre", "sub": "10:30 a 16:30 · El restaurante abre a las 2:00. Cámara A, cámara B y celular de stories en paralelo.", "rows": [{"t": "10:15–10:30", "h": "Llegada The Formulab", "who": "Pau · Brian · Luca", "d": "Descarga de equipo, baterías y tarjetas listas. Antes de prender todo, grabamos las luces encendiéndose. Briefing interno de 10 minutos con este shot list para repartir cámaras y quién lleva el celular de stories.", "p": "", "s": [["Luces del restaurante encendiéndose una por una al llegar (se invierte en edición para el cierre)", "R1 · R10", ""], ["Baterías cargadas y tarjetas formateadas, con respaldo", "—", ""], ["Repaso del shot list y reparto cámara A / cámara B", "—", ""]]}, {"t": "10:30–10:50", "h": "Montaje en barra de sushi", "who": "Equipo Formulab · Rich", "d": "Saludo a Rich y cocina, recorrido rápido. Luz cálida lateral en la barra, cámara cenital y lente macro listos.", "p": "", "s": [["Luz cálida lateral montada en la barra", "—", ""], ["Confirmar con Rich el orden de su bloque y los platillos de la mesa larga", "—", ""]]}, {"t": "10:50–11:40", "h": "Rich · Pescado y nigiri", "who": "Rich · Cámara A y B", "d": "El proceso completo de un nigiri, del arroz al plato. Fotos fijas de cada paso para el carrusel.", "p": "C3 · C1 · R1", "s": [["Lavado de arroz: agua turbia hasta que sale clara", "C3", ""], ["Pala de madera mezclando el vinagre, sonido real", "C3", ""], ["Pescado sobre hielo con luz lateral", "C3", ""], ["Afilado de cuchillo en macro, audio limpio", "C3 · R1", ""], ["Cuchillo saliendo de su funda de tela", "R1", ""], ["Corte de filete en un solo movimiento", "C3 · R1", ""], ["Manos formando nigiri: cenital y lateral", "C3 · R1", ""], ["Nigiri terminado en macro, movimiento lento", "C3", ""], ["Manos de Rich emplatando", "C1", ""], ["Plato en tránsito hacia la mesa", "C3", ""], ["Fotos fijas de cada paso del nigiri", "C3", "B"], ["Stories: clip vertical de 10 s del nigiri formándose", "Stories", "C"]]}, {"t": "11:40–12:20", "h": "Nopalitos y chiles toreados", "who": "Cocinero de nopalitos · Cámara A y B", "d": "La cortesía de bienvenida, de la plancha al platito. Si no se preparan a esta hora, se pide una tanda para grabar.", "p": "R6 · C1", "s": [["Chiles cayendo a la plancha, chisporroteo real", "R6", ""], ["Macro de la piel del chile ampollándose y volteo con pinzas", "R6", ""], ["Cuchillo picando nopal en tiras, sonido del corte", "R6", ""], ["Manos mezclando nopalitos en el bowl", "R6", ""], ["Cenital: platitos servidos en fila (para el contador)", "R6", ""], ["Platito saliendo del pase", "R6", ""], ["Foto fija del platito de nopalitos y chiles", "C1 · C4", "B"], ["1 minuto de sonido ambiente de cocina, sin música", "R10", "B"], ["Stories: clip vertical de los chiles en la plancha", "Stories", "C"]]}, {"t": "12:20–13:10", "h": "Mesa larga navideña", "who": "Rich · cocina · equipo Formulab (solo manos)", "d": "Mesa para 12 con ornamento navideño sobrio. Primero el montaje (capítulo de la mesa), después la cena (Navidad). Rich manda 4 a 6 platillos para compartir.", "p": "R7 · R9 · R1", "s": [["Mantel largo cayendo en cámara lenta", "R7", ""], ["Palillos alineados uno por uno", "R7", ""], ["Copas acomodándose, sonido de cristal", "R7", ""], ["Ornamento navideño colocándose: ramas, frutos rojos (manos)", "R9", ""], ["Velas encendiéndose a lo largo de la mesa, cenital", "R7 · R9 · R1", ""], ["Cenital de la mesa completa para 12", "R7", ""], ["Platos llegando desde distintas manos", "R9", ""], ["Manos pasando platos de un lado al otro", "R9", ""], ["Una mano sirviendo de más en otro plato", "R9", ""], ["Plato tapado junto a un lugar vacío", "R9", ""], ["Brindis: copas chocando, sin caras", "R9", ""], ["El último bocado partido en ocho", "R9", ""], ["Fotos fijas de la mesa puesta", "C1", "B"], ["Stories: foto vertical de la mesa puesta con velas (story del 24 dic)", "Stories", "C"], ["Stories: clip vertical de 10 s del brindis (story del 25 dic)", "Stories", "C"]]}, {"t": "13:10–13:20", "h": "Cambio de locación", "who": "Equipo Formulab", "d": "Recoger la mesa larga. Cámaras en posición discreta en el área del briefing antes de que llegue el equipo de servicio. Snack rápido.", "p": "", "s": [["Cámara A en posición para el briefing; cámara B junto a la mantelería", "—", ""]]}, {"t": "13:20–13:40", "h": "Briefing y mantelería", "who": "Irving · capitán · meseros · garroteros", "d": "Pasa una sola vez y no se repite: no interrumpimos. Cámara A en el briefing, cámara B en servilletas y mantelería al mismo tiempo.", "p": "R8 · R7 · C1", "s": [["Libreta de reservaciones con dedo recorriendo (nombres fuera de foco)", "R8", ""], ["Equipo en semicírculo de espaldas, Irving al centro", "R8", ""], ["Detalles: pluma anotando, mandil amarrándose", "R8", ""], ["Irving señala el salón y el equipo voltea", "R8", ""], ["Audio real del briefing con micrófono cerca", "R8", ""], ["El equipo se dispersa: pies a ras de piso", "R8", ""], ["Servilletas dobladas una por una (para el contador)", "R7", "B"], ["Mantelería doblándose, manos de meseros y garroteros", "R7", "B"], ["Foto fija de servilletas y libreta", "C1", "B"], ["Stories: clip vertical del equipo antes de abrir, de espaldas (stories del 24 y 31 dic)", "Stories", "C"]]}, {"t": "13:40–14:00", "h": "Valet · antes de las llegadas", "who": "Valet · Cámara A", "d": "El puesto y el calor antes de que empiecen a llegar autos. Ubicar el punto alto para el timelapse.", "p": "R4 · C1", "s": [["Valet llegando a su puesto, de espaldas", "R4", ""], ["Tablero de llaves; mano colgando una", "R4", ""], ["Sol: pavimento brillando, sombra corta", "R4", ""], ["Foto del celular con la temperatura del día", "R4", ""], ["Foto fija: llaves en el tablero", "C1", ""], ["Timelapse montado en azotea o punto alto", "R4", ""], ["Stories: clip vertical del valet en su puesto", "Stories", "C"]]}, {"t": "14:00–14:40", "h": "Barra · preparación", "who": "Bartender · Cámara A y B", "d": "El restaurante abre a las 2:00 y entra el bartender: vasos, mise en place y barra en orden antes de la primera comanda.", "p": "R5 · C1", "s": [["Barra vacía con luz entrando", "R5", ""], ["Manos limpiando vasos uno por uno, a contraluz", "R5", ""], ["Botellas alineadas, limones cortados", "R5", ""], ["Foto fija: vasos brillando", "C1", "B"], ["Valet esperando bajo el sol, de espaldas", "R4", "B"], ["Stories: clip vertical de los vasos brillando", "Stories", "C"]]}, {"t": "14:40–15:30", "h": "Valet · llegadas reales", "who": "Valet · Cámara A · Cámara B en salón", "d": "El Tetris con autos reales. Placas borrosas y clientes sin cara. Cámara B graba los platitos de nopalitos llegando a mesas reales.", "p": "R4 · R6", "s": [["Timelapse alto del estacionamiento llenándose (mínimo 10 min)", "R4", ""], ["Auto entrando en un hueco imposible, a centímetros", "R4", ""], ["Macro del espejo casi tocando otro auto", "R4", ""], ["Manos recibiendo llaves", "R4", ""], ["Zapatos corriendo entre autos, a ras de piso", "R4", ""], ["Regresa con el auto, puerta abierta, mano indicando “adelante”", "R4", ""], ["Platito de nopalitos llegando a una mesa real", "R6", "B"], ["Mano tomando un nopalito con palillos, sin cara", "R6", "B"], ["Stories: clip vertical del Tetris de autos", "Stories", "C"]]}, {"t": "15:30–16:15", "h": "Barra · servicio", "who": "Bartender · Cámara A · Cámara B en exteriores", "d": "Comandas reales saliendo rapidísimo. Cámara B se va a fachada, puerta y sonido ambiente.", "p": "R5 · R1 · R10", "s": [["Impresora sacando una comanda", "R5", ""], ["Tickets acumulándose", "R5", ""], ["Hielo cayendo en el vaso y limón exprimido", "R5", ""], ["Manos sirviendo cuatro bebidas seguidas (speed ramp)", "R5", ""], ["Shaker y vertido en macro", "R5", ""], ["Bebida saliendo de la barra en charola", "R5", ""], ["Fachada y letrero de Yamamoto", "R1 · R10", "B"], ["Puerta del restaurante abriéndose", "R8 · R1", "B"], ["Pase de cocina lleno", "C4", "B"], ["2 minutos de sonido ambiente del comedor, sin música", "R9 · R10", "B"], ["Stories: clip vertical de comandas saliendo", "Stories", "C"]]}, {"t": "16:15–16:30", "h": "Cierre", "who": "Equipo Formulab", "d": "Revisar faltantes de esta lista, respaldo doble de tarjetas y agradecimiento al equipo.", "p": "", "s": [["Revisar tomas pendientes de este día", "—", ""], ["Respaldo doble de todas las tarjetas", "—", ""], ["Agradecer al equipo de Yamamoto", "—", ""]]}]}, {"id": "d2", "tab": "Rodaje 2", "title": "Rodaje 2 · Semana del 16 de noviembre", "sub": "Solo Rich preparando para el ronqueo y el omakase. Fecha por confirmar, cuando Rich tenga el menú; ideal a más tardar el miércoles 18 para que el tráiler salga el 22.", "rows": [{"t": "Bloque 1", "h": "Ronqueo · tráiler", "who": "Rich · Cámara A y B", "d": "Cuchillos, hielo y tabla lista, más cortes de atún de la barra para explicar las partes.", "p": "R2 · R1", "s": [["Hielo cayendo sobre la tabla larga vacía", "R2 · R1", ""], ["Rich acomoda los cuchillos del más corto al más largo", "R2", ""], ["Afilado del cuchillo largo en macro", "R2", ""], ["Cenital de la tabla lista, esperando", "R2", ""], ["Macro de cortes de atún: akami, chutoro, otoro", "R2", ""], ["Rich limpia la hoja con un trapo, lento", "R2", ""], ["Stories: fotos verticales de Rich preparando (cuenta regresiva 28 nov y encuesta 30 nov)", "Stories", "C"]]}, {"t": "Bloque 2", "h": "Omakase · Dirigido por Rich", "who": "Rich · Cámara A y B", "d": "3 o 4 tiempos del menú del 15 en plato negro, sin revelar el menú completo.", "p": "R3 · C2 · R1", "s": [["Plato negro con un solo bocado, en silencio", "R3", ""], ["Pincel de salsa en macro", "R3 · R1", ""], ["Soplete sobre el pescado, la grasa brillando", "R3 · C2", ""], ["Flor colocada con pinzas, el gesto final", "R3", ""], ["Tres tiempos emplatándose, uno tras otro", "R3", ""], ["Recorrido por la barra con los lugares puestos", "R3", ""], ["Fotos: tiempo fuera de foco, nigiri en plato negro, silueta del postre", "C2", "B"], ["Matcha batiéndose", "C2 · C4", "B"], ["Stories: fotos verticales de las manos de Rich para \"Pregúntale al director\"", "Stories", "C"], ["Stories: clip vertical del emplatado (cuenta regresiva 6 dic)", "Stories", "C"]]}]}];
+/* Producción: call sheets */
+document.getElementById("callsheets").innerHTML=DAYS.map(d=>`<div class="csday"><div class="csday-head"><p class="eyebrow">${esc(d.tab)}</p><h3>${esc(d.title)}</h3><p>${esc(d.sub)}</p></div><div class="callsheet">${d.rows.map(r=>`<div class="row"><span class="time">${esc(r.t)}</span><div><h3>${esc(r.h)}</h3><p>${esc(r.d)}</p><p class="who">${esc(r.who)}</p>${r.p?`<p class="for">${esc(r.p)}</p>`:""}</div></div>`).join("")}</div></div>`).join("");
+
+/* Shot list */
+const KEY="yamamoto-dic-shotlist";
+let done={};try{done=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){done={}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(done))}catch(e){}}
+let day="d1";
+function renderSL(){
+  document.getElementById("sl-days").innerHTML=DAYS.map(d=>`<button type="button" id="sl-day-${d.id}" data-d="${d.id}" aria-pressed="${d.id===day}">${esc(d.tab)}</button>`).join("");
+  const d=DAYS.find(x=>x.id===day);
+  document.getElementById("sl-list").innerHTML=`<p style="font-size:14px;color:var(--muted);margin-bottom:18px">${esc(d.sub)}</p>`+d.rows.map((r,ri)=>{
+    const ids=r.s.map((_,si)=>`${d.id}-${ri}-${si}`);const n=ids.filter(i=>done[i]).length;
+    return `<div class="sl-block"><div class="sl-bh"><span class="time">${esc(r.t)}</span><h3>${esc(r.h)}</h3><span class="n">${n}/${ids.length}</span><span class="who">${esc(r.who)}</span></div><p class="sl-note">${esc(r.d)}</p>${r.s.map((x,si)=>{const id=ids[si];return `<label class="sl-item" for="sl-${id}"><input type="checkbox" id="sl-${id}" data-id="${id}" ${done[id]?"checked":""}><span class="txt">${esc(x[0])}</span><span class="sl-tags">${x[2]==="B"?`<span class="b">Cám B</span>`:x[2]==="C"?`<span class="b">Celular</span>`:""}${x[1]!=="—"&&x[1]!=="Stories"?`<span>${esc(x[1])}</span>`:""}</span></label>`}).join("")}</div>`}).join("");
+  updateCount();
+}
+function updateCount(){
+  let t=0,c=0;DAYS.forEach(d=>d.rows.forEach((r,ri)=>r.s.forEach((_,si)=>{t++;if(done[`${d.id}-${ri}-${si}`])c++})));
+  document.getElementById("sl-done").textContent=c;document.getElementById("sl-total").textContent=t;
+  document.getElementById("sl-fill").style.width=(t?c/t*100:0)+"%";
+}
+document.getElementById("sl-days").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;day=b.dataset.d;renderSL()});
+document.getElementById("sl-list").addEventListener("change",e=>{const i=e.target.dataset.id;if(!i)return;if(e.target.checked)done[i]=1;else delete done[i];save();
+  const blk=e.target.closest(".sl-block");const boxes=[...blk.querySelectorAll("input")];blk.querySelector(".n").textContent=`${boxes.filter(x=>x.checked).length}/${boxes.length}`;updateCount()});
+const rs=document.getElementById("sl-reset");let armed=false;
+rs.addEventListener("click",()=>{if(!armed){armed=true;rs.textContent="Toca otra vez para confirmar";rs.classList.add("warn");setTimeout(()=>{armed=false;rs.textContent="Desmarcar todo";rs.classList.remove("warn")},4000);return}
+  done={};save();armed=false;rs.textContent="Desmarcar todo";rs.classList.remove("warn");renderSL()});
+renderSL();
+
+/* Pestañas */
+function route(){const sl=location.hash==="#shotlist";document.getElementById("view-shotlist").hidden=!sl;document.getElementById("view-propuesta").hidden=sl;
+  document.getElementById("tab-shotlist").setAttribute("aria-current",sl?"page":"false");document.getElementById("tab-propuesta").setAttribute("aria-current",sl?"false":"page");
+  if(sl||location.hash==="#propuesta")window.scrollTo(0,0)}
+addEventListener("hashchange",route);route();
+</script>
+
+</body></html>

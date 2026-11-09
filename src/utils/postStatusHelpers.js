@@ -136,3 +136,36 @@ export function isAssetDownloadable(estado) {
   const norm = String(estado || "").toLowerCase();
   return ["aprobado", "programado", "publicado"].includes(norm);
 }
+
+/**
+ * Retorna la configuración visual del formato de publicación (Reel, Carrusel, Historia).
+ */
+export function getPostFormatMeta(tipoPost, filesCount = 1) {
+  const norm = String(tipoPost || "reel").toLowerCase();
+  if (norm === "historia" || norm === "story") {
+    return {
+      key: "historia",
+      label: filesCount > 1 ? `Historias (${filesCount})` : "Historia",
+      badgeText: filesCount > 1 ? `HISTORIAS (${filesCount})` : "HISTORIA",
+      isStory: true,
+      ringClass: "p-[1.5px] rounded-full bg-gradient-to-tr from-[#ef18d6] to-[#188ff0]",
+      badgeClass: "bg-gradient-to-r from-pink-500/20 to-blue-500/20 text-brand-magenta border border-pink-500/30 font-sora font-extrabold"
+    };
+  }
+  if (norm === "carrousel" || norm === "carrusel") {
+    return {
+      key: "carrousel",
+      label: "Carrusel",
+      badgeText: "CARRUSEL",
+      isStory: false,
+      badgeClass: "bg-blue-500/20 text-brand-blue border border-blue-500/30 font-sora font-extrabold"
+    };
+  }
+  return {
+    key: "reel",
+    label: "Reel",
+    badgeText: "REEL",
+    isStory: false,
+    badgeClass: "bg-brand-magenta/20 text-brand-magenta border border-brand-magenta/30 font-sora font-extrabold"
+  };
+}

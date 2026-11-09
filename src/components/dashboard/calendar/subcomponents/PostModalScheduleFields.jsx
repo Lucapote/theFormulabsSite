@@ -2,7 +2,8 @@ import {
   Video as VideoIcon,
   Calendar as CalendarIcon,
   Clock,
-  Layers
+  Layers,
+  Smartphone
 } from "lucide-react";
 import { POST_STATUS_LIST, getPostStatusMeta } from "@/utils/postStatusHelpers";
 
@@ -27,11 +28,11 @@ export default function PostModalScheduleFields({
         <label className="block text-xs font-sora font-bold uppercase text-gray-700 tracking-wide mb-2">
           Formato de Publicación *
         </label>
-        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
           <button
             type="button"
             onClick={() => onFormatChange("reel")}
-            className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl border font-sora text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer active:scale-[0.98] ${
+            className={`py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl border font-sora text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer active:scale-[0.98] ${
               tipoPost === "reel"
                 ? "bg-gray-900 text-white border-gray-900 shadow-md"
                 : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
@@ -48,7 +49,7 @@ export default function PostModalScheduleFields({
           <button
             type="button"
             onClick={() => onFormatChange("carrousel")}
-            className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl border font-sora text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer active:scale-[0.98] ${
+            className={`py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl border font-sora text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer active:scale-[0.98] ${
               tipoPost === "carrousel"
                 ? "bg-gray-900 text-white border-gray-900 shadow-md"
                 : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
@@ -60,6 +61,23 @@ export default function PostModalScheduleFields({
               }`}
             />
             <span className="truncate">Carrusel (Múltiple)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onFormatChange("historia")}
+            className={`py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl border font-sora text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer active:scale-[0.98] ${
+              tipoPost === "historia"
+                ? "bg-gray-900 text-white border-gray-900 shadow-md"
+                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            <Smartphone
+              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${
+                tipoPost === "historia" ? "text-[#ef18d6]" : "text-gray-400"
+              }`}
+            />
+            <span className="truncate">Historias</span>
           </button>
         </div>
       </div>

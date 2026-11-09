@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import { X, ChevronLeft, ChevronRight, Film } from "lucide-react";
 import PostMediaPreview from "./PostMediaPreview";
 import PostCopyBottomSheet from "./PostCopyBottomSheet";
+import InstagramStoryViewerModal from "./InstagramStoryViewerModal";
+import { useModalHistoryBack } from "@/hooks/useModalHistoryBack";
 
 /**
  * InstagramPostPreviewModal
  * High-impact Instagram story/reel style mobile preview modal.
+ * Delega automáticamente a InstagramStoryViewerModal para el formato 'historia'.
  */
 export default function InstagramPostPreviewModal({
   post,
@@ -20,12 +23,15 @@ export default function InstagramPostPreviewModal({
   permiteDescarga = false,
   onPostUpdated = null
 }) {
+  useModalHistoryBack(Boolean(post), onClose, "instagram-post-preview");
+
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const handleEdit = onEdit || onEditPost;
 
   useEffect(() => {
     setActiveMediaIndex(0);
   }, [post?.id]);
+
   useEffect(() => {
     if (!post) return;
     const handleKeyDown = (e) => {
@@ -42,6 +48,23 @@ export default function InstagramPostPreviewModal({
   }, [post, hasPrevPost, hasNextPost, onPrevPost, onNextPost, onClose]);
 
   if (!post) return null;
+
+  // Si es un paquete de historias, renderizar el simulador de Instagram Stories en 9:16
+  if (post.tipo_post === "historia" || post.tipo_post === "story") {
+    return (
+      <InstagramStoryViewerModal
+        post={post}
+        onClose={onClose}
+        isInternal={isInternal}
+        hasPrevPost={hasPrevPost}
+        hasNextPost={hasNextPost}
+        onPrevPost={onPrevPost}
+        onNextPost={onNextPost}
+        permiteDescarga={permiteDescarga}
+        onPostUpdated={onPostUpdated}
+      />
+    );
+  }
 
   const files = Array.isArray(post.archivos)
     ? post.archivos

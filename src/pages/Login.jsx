@@ -23,7 +23,7 @@ export default function Login() {
       setIsSubmitting(true);
       await login(email, password);
       toast.success("Sesión iniciada correctamente.");
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       // Log error strictly to developer console (no error box in UI)
       console.error("Authentication Failure / Error de inicio de sesión:", error);

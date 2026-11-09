@@ -1,4 +1,4 @@
-import { Users, RefreshCw, UserPlus, Calendar as CalendarIcon } from "lucide-react";
+import { Users, RefreshCw, UserPlus } from "lucide-react";
 
 /**
  * ClientsCalendarHeaderCard
@@ -7,10 +7,8 @@ import { Users, RefreshCw, UserPlus, Calendar as CalendarIcon } from "lucide-rea
  */
 export default function ClientsCalendarHeaderCard({
   isLoading,
-  selectedCliente,
   onReload,
-  onNewClient,
-  onNewCalendar
+  onNewClient
 }) {
   return (
     <div className="bg-white rounded-[2rem] p-6 md:p-8 shadow-xl border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -46,16 +44,6 @@ export default function ClientsCalendarHeaderCard({
         >
           <UserPlus className="w-4 h-4 text-brand-magenta" />
           Nuevo Cliente
-        </button>
-
-        <button
-          type="button"
-          onClick={onNewCalendar}
-          disabled={!selectedCliente}
-          className="h-11 px-6 bg-brand-magenta hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-sora font-bold text-xs rounded-full shadow-lg shadow-pink-500/20 transition-all flex items-center gap-2 cursor-pointer active:scale-[0.98]"
-        >
-          <CalendarIcon className="w-4 h-4" />
-          Nuevo Calendario
         </button>
       </div>
     </div>

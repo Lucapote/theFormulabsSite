@@ -2,6 +2,7 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useModalHistoryBack } from "@/hooks/useModalHistoryBack";
 
 /**
  * BaseFormModal
@@ -36,6 +37,8 @@ export default function BaseFormModal({
   className = "",
   children
 }) {
+  useModalHistoryBack(isOpen, onClose, title || eyebrow || "base-form-modal");
+
   const generatedFormId = React.useId();
   const effectiveFormId = formId || (onSubmit ? `form-${generatedFormId}` : undefined);
 

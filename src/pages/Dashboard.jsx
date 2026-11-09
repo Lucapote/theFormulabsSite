@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { createProposal, updateProposal } from "@/services/proposalService";
 import { buildProposalContentJson } from "@/utils/proposalHelpers";
@@ -14,15 +14,19 @@ import BankSettingsModal from "@/components/dashboard/common/BankSettingsModal";
 import DashboardHeader from "@/components/dashboard/common/DashboardHeader";
 import DashboardTabs from "@/components/dashboard/common/DashboardTabs";
 
-/**
- * Dashboard Page
- * Core operational portal for managing proposals, client calendars, operations, and diagnostics.
- * Strictly decoupled under 200 lines per GEMINI.md Rule 4.B and Rule 5.
- */
+const VALID_TABS = ["proposals", "calendars", "operaciones", "diagnostics"];
+
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("proposals");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const paramTab = searchParams.get("tab");
+  const activeTab = VALID_TABS.includes(paramTab) ? paramTab : "proposals";
+
+  const setActiveTab = (newTab) => {
+    setSearchParams({ tab: newTab }, { replace: true });
+  };
+
   const [showBankModal, setShowBankModal] = useState(false);
 
   // Proposal modal & action controls
@@ -103,9 +107,7 @@ export default function Dashboard() {
   const copyProposalLink = (item) => {
     const slug = item.slug;
     const token = item.contenido?.token;
-    const fullUrl = token
-      ? `${window.location.origin}/${slug}?token=${token}`
-      : `${window.location.origin}/${slug}`;
+    const fullUrl = `${window.location.origin}/${slug}${token ? `?token=${token}` : ""}`;
     navigator.clipboard.writeText(fullUrl);
     setCopiedSlug(slug);
     toast.success("Enlace privado copiado al portapapeles.");

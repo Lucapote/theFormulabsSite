@@ -137,10 +137,8 @@ export default function ClientsCalendarSection({
       {/* Cabecera Modularizada */}
       <ClientsCalendarHeaderCard
         isLoading={loadingClientes || loadingCalendarios}
-        selectedCliente={selectedCliente}
         onReload={() => loadClientes(selectedCliente?.id)}
         onNewClient={handleOpenClientModal}
-        onNewCalendar={() => openNewCalendarModal()}
       />
 
       {/* Main Grid: Client Sidebar + Calendars Content Area */}
@@ -161,7 +159,7 @@ export default function ClientsCalendarSection({
           calendarios={calendarios}
           loadingCalendarios={loadingCalendarios}
           copiedSlug={copiedSlug}
-          onOpenCalendarModal={openNewCalendarModal}
+          onOpenCalendarModal={(c) => openNewCalendarModal(c || selectedCliente)}
           onDeleteCalendar={handleDeleteCalendar}
           onCopyCalendarLink={copyCalendarLink}
           onSelectActiveCalendar={setActiveCalendar}
