@@ -6,6 +6,23 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ---
 
+## [2026-11-11] — Subida Directa a Cloudflare R2 (Bypass Vercel 413), Refresco de Auth Token (Bypass 401) y Sincronización de Cajas Pendientes de Medios
+
+### Agregado
+- **Renovación Proactiva de Sesión JWT (`r2Service.js`)**:
+  - Función `getFreshAuthToken()` que inspecciona la caducidad del token Supabase (`expires_at`) y ejecuta `supabase.auth.refreshSession()` si restan menos de 60 segundos antes de vencer.
+  - Mecanismo de reintento automático (`retry on 401`) al solicitar URLs prefirmadas en `getR2PresignedUploadUrl`.
+
+### Modificado / Corregido
+- **Eliminación del Error 413 (`calendarService.js`)**:
+  - Los archivos pesados y videos (`isVideo || size > 4 MB`) ahora se transmiten **directamente desde el navegador hacia Cloudflare R2** mediante URLs prefirmadas `PUT` emitidas por S3 (`uploadBinaryWithProgress`).
+  - Se eliminó el reenvío de archivos pesados a través de `/api/upload-r2` en Vercel, eludiendo el tope estructural de 4.5 MB de las funciones serverless.
+- **Sincronización de Cajas Pendientes de Medios (`ScheduledPostsList.jsx` y `ScheduledPostsFilterBar.jsx`)**:
+  - Corrección de la condición de filtrado: cambió de `!firstFile && !post.caption` a `!firstFile`.
+  - Ahora las publicaciones importadas desde Word con copy pero sin imágenes/videos asignados aparecen inmediatamente en *"CAJAS PENDIENTES DE MEDIOS"* en lugar de reportar erróneamente `(0 cajas)`.
+
+---
+
 ## [2026-11-07] — Intercepción del Botón Atrás en Móviles (Pila LIFO) y Persistencia de Pestañas en Dashboard
 
 ### Agregado

@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { getR2PresignedUploadUrl, deleteR2Object } from "@/services/r2Service";
+import { getR2PresignedUploadUrl, deleteR2Object, getFreshAuthToken } from "@/services/r2Service";
 import { generateVideoThumbnail, compressVideo, compressImage } from "@/utils/mediaCompressor";
 
 /**
@@ -726,11 +726,9 @@ export async function uploadMediaFile(calendarioId, file, progressOptions) {
 
     let authHeaderValue = "";
     try {
-      if (supabase) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.access_token) {
-          authHeaderValue = `Bearer ${session.access_token}`;
-        }
+      const freshToken = await getFreshAuthToken();
+      if (freshToken) {
+        authHeaderValue = `Bearer ${freshToken}`;
       }
     } catch (_) {}
 
@@ -795,34 +793,12 @@ export async function uploadMediaFile(calendarioId, file, progressOptions) {
     const contentType = fileToUpload.type || (isVideo ? "video/mp4" : "image/jpeg");
     let publicUrl = "";
 
-    // 3. Subida del archivo principal a Cloudflare R2 mediante /api/upload-r2 con seguimiento de progreso real
-    try {
-      const uploadHeaders = {
-        "x-file-name": encodeURIComponent(fileToUpload.name),
-        "x-file-type": contentType,
-        "x-calendario-id": calendarioId,
-      };
-      if (authHeaderValue) {
-        uploadHeaders["Authorization"] = authHeaderValue;
-      }
+    // 4. Subida directa a Cloudflare R2:
+    // Para videos o archivos > 4 MB se utiliza EXCLUSIVAMENTE URL prefirmada directa a R2
+    // para evitar el límite estricto de 4.5 MB (HTTP 413) de las funciones serverless de Vercel.
+    const isLargeFile = isVideo || fileToUpload.size > 4 * 1024 * 1024;
 
-      const apiRes = await uploadBinaryWithProgress({
-        url: "/api/upload-r2",
-        method: "POST",
-        headers: uploadHeaders,
-        body: fileToUpload,
-        onProgress: onUploadProgress,
-      });
-
-      if (apiRes.ok && apiRes.json?.success && apiRes.json?.publicUrl) {
-        publicUrl = apiRes.json.publicUrl;
-      }
-    } catch (apiErr) {
-      console.warn("Aviso: Subida /api/upload-r2 no disponible, intentando URL prefirmada:", apiErr);
-    }
-
-    // 4. Fallback a URL prefirmada si /api/upload-r2 fallara
-    if (!publicUrl) {
+    if (isLargeFile) {
       const presignedRes = await getR2PresignedUploadUrl({
         fileName: fileToUpload.name,
         fileType: contentType,
@@ -846,10 +822,67 @@ export async function uploadMediaFile(calendarioId, file, progressOptions) {
 
       if (!uploadRes.ok) {
         console.error("uploadMediaFile R2 PUT upload error:", uploadRes.status, uploadRes.text);
-        return { success: false, error: `Error al subir archivo a R2 (HTTP ${uploadRes.status})` };
+        return { success: false, error: `Error de red al subir archivo a R2 (HTTP ${uploadRes.status}). Verifica la política de CORS en Cloudflare.` };
       }
 
       publicUrl = presignedRes.publicUrl;
+    } else {
+      // Para imágenes pequeñas (< 4 MB), intentar subida rápida mediante /api/upload-r2
+      try {
+        const uploadHeaders = {
+          "x-file-name": encodeURIComponent(fileToUpload.name),
+          "x-file-type": contentType,
+          "x-calendario-id": calendarioId,
+        };
+        if (authHeaderValue) {
+          uploadHeaders["Authorization"] = authHeaderValue;
+        }
+
+        const apiRes = await uploadBinaryWithProgress({
+          url: "/api/upload-r2",
+          method: "POST",
+          headers: uploadHeaders,
+          body: fileToUpload,
+          onProgress: onUploadProgress,
+        });
+
+        if (apiRes.ok && apiRes.json?.success && apiRes.json?.publicUrl) {
+          publicUrl = apiRes.json.publicUrl;
+        }
+      } catch (apiErr) {
+        console.warn("Aviso: Subida /api/upload-r2 no disponible para archivo pequeño, recurriendo a URL prefirmada:", apiErr);
+      }
+
+      // Fallback a URL prefirmada si /api/upload-r2 fallara
+      if (!publicUrl) {
+        const presignedRes = await getR2PresignedUploadUrl({
+          fileName: fileToUpload.name,
+          fileType: contentType,
+          calendarioId,
+        });
+
+        if (!presignedRes.success || !presignedRes.uploadUrl) {
+          console.error("uploadMediaFile R2 presigned error:", presignedRes.error);
+          return { success: false, error: presignedRes.error || "No se pudo obtener URL prefirmada de R2" };
+        }
+
+        const uploadRes = await uploadBinaryWithProgress({
+          url: presignedRes.uploadUrl,
+          method: "PUT",
+          headers: {
+            "Content-Type": contentType,
+          },
+          body: fileToUpload,
+          onProgress: onUploadProgress,
+        });
+
+        if (!uploadRes.ok) {
+          console.error("uploadMediaFile R2 PUT upload error:", uploadRes.status, uploadRes.text);
+          return { success: false, error: `Error de red al subir archivo a R2 (HTTP ${uploadRes.status})` };
+        }
+
+        publicUrl = presignedRes.publicUrl;
+      }
     }
 
     // 5. Registrar el metadato con URL de video y miniatura en archivos_galeria de Supabase

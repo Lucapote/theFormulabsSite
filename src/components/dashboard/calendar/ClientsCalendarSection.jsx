@@ -124,6 +124,7 @@ export default function ClientsCalendarSection({
               forceViewMode="list"
               hideViewModeSwitcher={true}
               showOnlyDrafts={true}
+              refreshTrigger={galleryRefreshKey}
               onPostUpdated={handlePostUpdated}
             />
           </div>

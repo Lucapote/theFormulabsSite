@@ -5,6 +5,7 @@ import {
   Loader2
 } from "lucide-react";
 import { toast } from "sonner";
+import { useUpload } from "@/context/UploadContext";
 import {
   getPostsByCalendario,
   createPost,
@@ -36,10 +37,14 @@ export default function ScheduledPostsList({
   forceViewMode = null,
   hideViewModeSwitcher = false,
   showOnlyDrafts = false,
+  refreshTrigger = 0,
   onPostUpdated = null
 }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Global upload background listener
+  const { addUploadListener } = useUpload();
 
   // Filters state
   const [estadoFilter, setEstadoFilter] = useState("all");
@@ -83,14 +88,29 @@ export default function ScheduledPostsList({
 
   useEffect(() => {
     loadPosts();
-  }, [calendarioId]);
+  }, [calendarioId, refreshTrigger]);
+
+  // Real-time listener for background uploads
+  useEffect(() => {
+    if (!addUploadListener || !calendarioId) return;
+    const removeListener = addUploadListener((updatedCalId) => {
+      if (updatedCalId === calendarioId) {
+        loadPosts();
+      }
+    });
+    return () => removeListener();
+  }, [calendarioId, addUploadListener]);
 
   // Compute filtered posts list
   const filteredPosts = posts.filter((post) => {
     const firstFile = post.archivos && post.archivos.length > 0 ? post.archivos[0] : null;
-    const isEmptyBox = !firstFile && !post.caption;
+    const isPendingMedia = !firstFile;
 
-    if (showOnlyDrafts && !isEmptyBox) return false;
+    // En modo showOnlyDrafts (bajo el Banco de Medios y Galería),
+    // mostramos estrictamente todas las publicaciones pendientes de archivos multimedia
+    if (showOnlyDrafts) {
+      return isPendingMedia;
+    }
 
     if (estadoFilter !== "all") {
       if (estadoFilter === "sin_empezar") {
@@ -232,7 +252,7 @@ export default function ScheduledPostsList({
           <CalendarIcon className="w-12 h-12 text-pink-400 mx-auto mb-3" />
           <h4 className="font-sora font-extrabold text-gray-900 text-lg mb-1">
             {showOnlyDrafts
-              ? "No hay cajas vacías pendientes"
+              ? "No hay cajas pendientes de medios"
               : estadoFilter === "publicado"
               ? formatoFilter === "reel"
                 ? "No hay Reels publicados aún"
@@ -243,7 +263,7 @@ export default function ScheduledPostsList({
           </h4>
           <p className="text-xs text-gray-500 max-w-sm mx-auto mb-6">
             {showOnlyDrafts
-              ? "Todas las cajas vacías han sido completadas."
+              ? "Todas las publicaciones tienen archivos multimedia asignados."
               : estadoFilter === "publicado"
               ? "Las publicaciones pasarán aquí al publicarse."
               : "No hay elementos con los filtros seleccionados."}

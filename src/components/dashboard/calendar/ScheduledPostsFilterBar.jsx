@@ -59,14 +59,14 @@ export default function ScheduledPostsFilterBar({
         <div>
           <div className="hidden sm:inline-flex items-center gap-2 text-brand-magenta font-bold tracking-widest uppercase text-xs mb-1 font-sora">
             <Film className="w-4 h-4 text-brand-blue" />
-            <span>{showOnlyDrafts ? "CAJAS VACÍAS PENDIENTES" : "PUBLICACIONES Y CAJAS EDITORIALES"}</span>
+            <span>{showOnlyDrafts ? "CAJAS PENDIENTES DE MEDIOS" : "PUBLICACIONES Y CAJAS EDITORIALES"}</span>
           </div>
           <h3 className="text-xl sm:text-2xl font-sora font-extrabold text-gray-900 tracking-tight">
             {calendarioNombre} ({filteredPostsCount} {showOnlyDrafts ? "cajas" : "posts"})
           </h3>
           <p className="hidden sm:block text-xs text-gray-500 font-medium mt-0.5">
             {showOnlyDrafts
-              ? "Asigna medios, fecha y copy a cada caja para programarla en el calendario."
+              ? "Asigna archivos multimedia desde la galería a cada caja pendiente."
               : "Gestiona publicaciones programadas, borradores y publicadas."}
           </p>
         </div>

@@ -1,61 +1,44 @@
 # Estado del Proyecto — The Formulab (STATUS.md)
 
-**Última actualización:** 2026-11-07  
-**Fase actual:** Intercepción del Botón Atrás en Móviles (Pila LIFO) y Persistencia de Pestañas en Dashboard.
+**Última actualización:** 2026-11-11  
+**Fase actual:** Subida Directa a Cloudflare R2 (Bypass Vercel 413), Refresco de Auth Token (Bypass 401) y Sincronización Reactiva de Cajas Pendientes de Medios.
 
 ---
 
 ## 📸 Foto de Hoy (Contexto Operativo)
 
-1. **Intercepción del Botón Atrás en Celulares (`useModalHistoryBack.js`) — [100% COMPLETADO]**:
-   - **Gestión LIFO de Modales**: Se implementó una pila global en memoria de callbacks de cierre combinada con `window.history.pushState` al abrir cualquier modal.
-   - Al presionar el botón físico o gesto de "Atrás" en móviles (Android/iOS), el navegador ya no abandona el Dashboard ni redirige al login: intercepta el `popstate` y **cierra el modal superior** suavemente.
-   - Si existen modales anidados (ej. diálogo de confirmación sobre un modal), el primer toque de Atrás cierra el diálogo superior y el segundo toque cierra el modal base.
-   - **Cierre por UI Silencioso**: Si el usuario cierra el modal mediante la "X", "Cancelar" o clic en el backdrop, el hook ejecuta un `history.back()` programático marcado, limpiando la entrada sintética sin disparar eventos redundantes.
-   - **Integración Universal en `BaseFormModal.jsx`**: Protege de forma automática a más del 90% de los modales de la plataforma sin duplicar lógica en cada vista.
-   - **Integración en Visor de Medios (`InstagramPostPreviewModal.jsx`)**: El lightbox de publicaciones y el visor de stories también se cierran suavemente con el botón Atrás.
-2. **Eliminación de la Pantalla de Login del Historial (`Login.jsx`) — [100% COMPLETADO]**:
-   - Al iniciar sesión exitosamente, se utiliza `navigate("/dashboard", { replace: true })`, eliminando `/login` de la pila de historial del navegador para que nunca se vuelva a ella por retroceso.
-3. **Persistencia de Pestaña Activa en URL (`Dashboard.jsx`) — [100% COMPLETADO]**:
-   - Sincronización bidireccional mediante `useSearchParams` (`?tab=operaciones`, `?tab=calendars`, `?tab=proposals`, `?tab=diagnostics`) usando `{ replace: true }`.
-   - Permite que el usuario permanezca exactamente en la pestaña donde estaba tras recargar la página o navegar con el botón Atrás.
+1. **Blindaje Total de Cajas Pendientes de Medios (`ScheduledPostsList.jsx` y `ScheduledPostsFilterBar.jsx`) — [100% COMPLETADO]**:
+   - Se erradicó el filtro restrictivo viejo: ahora en modo `showOnlyDrafts` (bajo la Galería), la lista retorna directamente `!firstFile`, evitando que publicaciones con copywriting importado desde Word queden ocultas en `(0 cajas)`.
+   - Textos alineados con la identidad del sistema: *"CAJAS PENDIENTES DE MEDIOS (X cajas)"* y *"No hay cajas pendientes de medios"*.
+2. **Sincronización Reactiva en Tiempo Real (`ClientsCalendarSection.jsx` y `ScheduledPostsList.jsx`) — [100% COMPLETADO]**:
+   - Se agregó la prop `refreshTrigger = 0` y se pasó `refreshTrigger={galleryRefreshKey}` a la instancia de `ScheduledPostsList`.
+   - Se conectó el hook global `useUpload` (`addUploadListener`) en `ScheduledPostsList`: tan pronto como finaliza una subida en segundo plano a ese calendario, la lista de cajas se recarga de inmediato sin requerir recargar la página.
+3. **Subida Directa a Cloudflare R2 sin Límite 413 (`calendarService.js`) — [100% COMPLETADO]**:
+   - Los videos y archivos mayores a 4 MB se transmiten directamente al bucket R2 mediante URLs prefirmadas `PUT` emitidas por S3 (`uploadBinaryWithProgress`), evitando el límite de 4.5 MB de Vercel.
+4. **Refresco Proactivo de Tokens JWT (`r2Service.js`) — [100% COMPLETADO]**:
+   - `getFreshAuthToken()` verifica la expiración del token y auto-renueva la sesión Supabase si faltan menos de 60 segundos, reintentando automáticamente en caso de 401.
 
 ---
 
 ## ✅ Resuelto Recientemente
 
-1. **Intercepción Móvil de Botón Atrás y Pestañas en Dashboard — [COMPLETADO]**:
+1. **Sincronización Reactiva y Blindaje de Cajas — [COMPLETADO]**:
+   - `ScheduledPostsList.jsx` (380 líneas).
+   - `ScheduledPostsFilterBar.jsx` (218 líneas).
+   - `ClientsCalendarSection.jsx` (231 líneas).
+2. **Subida Directa a R2 y Refresco de Tokens — [COMPLETADO]**:
+   - `calendarService.js` (658 líneas).
+   - `r2Service.js` (116 líneas).
+3. **Intercepción Móvil de Botón Atrás y Pestañas en Dashboard — [COMPLETADO]**:
    - `useModalHistoryBack.js` (96 líneas).
    - `BaseFormModal.jsx` (208 líneas).
    - `InstagramPostPreviewModal.jsx` (207 líneas).
    - `Login.jsx` (123 líneas).
    - `Dashboard.jsx` (194 líneas).
-2. **Flujo de Creación de Calendarios por Cliente — [COMPLETADO]**:
-   - `ClientsCalendarHeaderCard.jsx` (53 líneas): Sin botón de nuevo calendario en cabecera superior.
-   - `ClientsCalendarSection.jsx` (231 líneas): Props depuradas sin parámetros huérfanos.
-   - `ClientCalendarsGrid.jsx` (235 líneas): Invocación segura sin paso de eventos del DOM.
-   - `useClientsCalendarManager.js`: Validación `isClientObject` con protección defensiva.
-2. **Paquete de Historias de Instagram (Stories Pack) — [COMPLETADO]**:
-   - `getPostFormatMeta` en `postStatusHelpers.js`.
-   - `PostModalScheduleFields.jsx` (135 líneas) y `PostModal.jsx` (250 líneas).
-   - `InstagramStoryViewerModal.jsx` (239 líneas) y `StoryInstructionsDrawer.jsx` (161 líneas).
-   - `InstagramPostPreviewModal.jsx` (204 líneas).
-   - `CalendarDesktopGrid.jsx` (219 líneas) y `CalendarMobileView.jsx` (246 líneas).
-   - `PostCardItem.jsx` (240 líneas) y `PostCardItemActions.jsx` (134 líneas).
-   - `api/cron-publish.js` y `api/publish-now.js` con exclusión segura de historias.
-2. **Modularización Progresiva de Componentes Extensos (Opción B — Sprint 1) — [COMPLETADO]**:
-   - `NotificationCenterPopover.jsx` (200 líneas).
-   - `FinanceCostModal.jsx` (222 líneas).
-   - `CreateClientModal.jsx` (115 líneas).
-   - `PostCopyBottomSheet.jsx` (248 líneas).
-3. **Arquitectura de 2 Columnas en Tarjetas de Ciclo — [COMPLETADO]**:
-   - `OperationsCycleCard.jsx` (149 líneas) ensambla el layout 4/8 con Columna 1 de Administración/Finanzas y Columna 2 de Mission Control Rodajes.
-4. **Spotlight Próximo Rodaje & Requerimientos de Producción — [COMPLETADO]**:
-   - Borde rosa 2px (`border-2 border-[#ef18d6]`), cuadro multilínea en checklist con auto-limpieza de viñetas y flujo de 3 pasos en auto-reserva.
 
 ---
 
-## ⏳ Próximos Pasos Disponibles
+## ⏳ Próximos Pasos Inmediatos
 
-- Recargar el navegador para disfrutar del nuevo botón de **Historias (Pack)** en el modal de publicaciones y del simulador interactivo de Instagram Stories en el calendario y vista previa.
-- Ejecutar la migración SQL `20261106_requerimientos_produccion_checklist.sql` en Supabase para persistir permanentemente los requerimientos si aún no se aplicó.
+- **Subir cambios a Git y desplegar en Vercel**: `git commit` y `git push` para que Vercel compile el nuevo bundle en `https://www.theformulab.io`.
+- **Verificar en Producción**: Recargar `https://www.theformulab.io/dashboard?tab=calendars` y confirmar la aparición de las 6 cajas pendientes bajo la galería.

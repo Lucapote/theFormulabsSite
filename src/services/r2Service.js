@@ -7,17 +7,29 @@
 import { supabase } from "@/lib/supabase";
 import { compressReceiptFile } from "@/utils/mediaCompressor";
 
-async function getAuthHeaders() {
-  const headers = { "Content-Type": "application/json" };
+export async function getFreshAuthToken() {
+  if (!supabase) return null;
   try {
-    if (supabase) {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.access_token) {
-        headers["Authorization"] = `Bearer ${session.access_token}`;
+    let { data: { session } } = await supabase.auth.getSession();
+    const isExpired = session?.expires_at ? session.expires_at * 1000 < Date.now() + 60000 : false;
+    if (!session || isExpired) {
+      const refreshRes = await supabase.auth.refreshSession();
+      if (refreshRes?.data?.session) {
+        session = refreshRes.data.session;
       }
     }
+    return session?.access_token || null;
   } catch (err) {
-    console.warn("No se pudo obtener el token de sesión para R2:", err);
+    console.warn("Error obteniendo token fresco de Supabase:", err);
+    return null;
+  }
+}
+
+async function getAuthHeaders() {
+  const headers = { "Content-Type": "application/json" };
+  const token = await getFreshAuthToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
   return headers;
 }
@@ -27,12 +39,25 @@ async function getAuthHeaders() {
  */
 export async function getR2PresignedUploadUrl({ fileName, fileType, calendarioId }) {
   try {
-    const headers = await getAuthHeaders();
-    const res = await fetch("/api/r2-presigned-url", {
+    let headers = await getAuthHeaders();
+    let res = await fetch("/api/r2-presigned-url", {
       method: "POST",
       headers,
       body: JSON.stringify({ fileName, fileType, calendarioId }),
     });
+
+    // Reintento automático tras refresco si retornó 401
+    if (res.status === 401 && supabase) {
+      const refreshRes = await supabase.auth.refreshSession();
+      if (refreshRes?.data?.session?.access_token) {
+        headers["Authorization"] = `Bearer ${refreshRes.data.session.access_token}`;
+        res = await fetch("/api/r2-presigned-url", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ fileName, fileType, calendarioId }),
+        });
+      }
+    }
 
     if (!res.ok) {
       const errText = await res.text().catch(() => "");
