@@ -1,6 +1,19 @@
-import { Film, Clapperboard, CheckCircle2, Clock, Users } from "lucide-react";
+import {
+  Film,
+  Clapperboard,
+  CheckCircle2,
+  Clock,
+  CalendarRange,
+  ChevronDown,
+  ChevronUp
+} from "lucide-react";
 
-export default function HomeDayMetrics({ metrics, posts = [], productions = [] }) {
+export default function HomeDayMetrics({
+  metrics,
+  weekData,
+  isWeekOpen,
+  onToggleWeek
+}) {
   const {
     totalPosts = 0,
     totalProductions = 0,
@@ -8,17 +21,11 @@ export default function HomeDayMetrics({ metrics, posts = [], productions = [] }
     pendingPosts = 0
   } = metrics || {};
 
-  // Extract unique active clients for today
-  const activeClientsSet = new Set();
-  posts.forEach((p) => {
-    const name = p.calendario?.cliente?.nombre || p.calendario?.nombre;
-    if (name) activeClientsSet.add(name);
-  });
-  productions.forEach((pr) => {
-    const name = pr.cliente?.nombre || pr.nombre_cliente;
-    if (name) activeClientsSet.add(name);
-  });
-  const activeClientsCount = activeClientsSet.size;
+  const {
+    totalWeekPosts = 0,
+    totalWeekProductions = 0,
+    totalWeekActivities = 0
+  } = weekData || {};
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 font-inter">
@@ -76,26 +83,48 @@ export default function HomeDayMetrics({ metrics, posts = [], productions = [] }
         </div>
       </div>
 
-      {/* Metric 3: Clientes con actividad */}
-      <div className="bg-white rounded-[1.8rem] p-5 border border-gray-100 shadow-md flex items-center justify-between">
-        <div className="space-y-1">
-          <span className="text-[10px] font-sora font-extrabold tracking-widest uppercase text-gray-400 block">
-            CLIENTES CON ACTIVIDAD
-          </span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-sora font-black text-gray-900 tracking-tight">
-              {activeClientsCount}
+      {/* Metric 3: EN ESTA SEMANA (Interactiva) */}
+      <div
+        onClick={onToggleWeek}
+        className={`bg-white rounded-[1.8rem] p-5 border shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center justify-between group ${
+          isWeekOpen
+            ? "border-purple-300 ring-2 ring-purple-100 bg-gradient-to-br from-purple-50/20 via-white to-white"
+            : "border-gray-100 hover:border-purple-200"
+        }`}
+        title="Haz clic para ver o contraer el desglose de los 7 días de la semana"
+      >
+        <div className="space-y-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-sora font-extrabold tracking-widest uppercase text-purple-600 block">
+              EN ESTA SEMANA
             </span>
-            <span className="text-xs font-sora font-medium text-gray-500">
-              {activeClientsCount === 1 ? "marca activa" : "marcas activas"}
+            <span className="text-[9px] font-sora font-bold text-purple-700 bg-purple-50 border border-purple-100 px-1.5 py-0.2 rounded-md">
+              7 Días
             </span>
           </div>
-          <p className="text-[11px] font-medium text-gray-500 pt-1 truncate max-w-[200px]" title={Array.from(activeClientsSet).join(", ")}>
-            {activeClientsCount > 0 ? Array.from(activeClientsSet).join(", ") : "Día despejado de entregas"}
-          </p>
+
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-sora font-black text-gray-900 tracking-tight">
+              {totalWeekActivities}
+            </span>
+            <span className="text-xs font-sora font-medium text-gray-500">
+              {totalWeekActivities === 1 ? "actividad" : "actividades"}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 pt-1 text-[11px] font-medium text-gray-500">
+            <span>{totalWeekPosts} posts</span>
+            <span>•</span>
+            <span>{totalWeekProductions} rodajes</span>
+            <span className="text-purple-600 font-bold ml-1 inline-flex items-center gap-0.5 group-hover:underline">
+              {isWeekOpen ? "Ocultar" : "Ver días"}
+              {isWeekOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </span>
+          </div>
         </div>
-        <div className="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 shrink-0">
-          <Users className="w-6 h-6" />
+
+        <div className="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 shrink-0 group-hover:scale-105 transition-transform">
+          <CalendarRange className="w-6 h-6" />
         </div>
       </div>
     </div>

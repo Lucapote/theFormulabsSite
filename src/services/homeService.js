@@ -211,3 +211,101 @@ export async function getDayAgendaSummary(dateStr) {
     return { success: false, error: err.message };
   }
 }
+
+/**
+ * Calcula el rango de la semana (Lunes a Domingo) y desglosa la actividad de los 7 días.
+ *
+ * @param {string} dateStr - Fecha de referencia en formato YYYY-MM-DD
+ * @returns {Promise<{ success: boolean, data?: object, error?: string }>}
+ */
+export async function getWeekAgendaSummary(dateStr) {
+  if (!dateStr) return { success: false, error: "Fecha requerida." };
+
+  try {
+    if (!supabase) return { success: false, error: "Supabase no configurado." };
+
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    const day = date.getDay();
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+    const monday = new Date(y, m - 1, d + diffToMonday);
+
+    const pad = (n) => String(n).padStart(2, "0");
+    const formatDate = (dt) => `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`;
+
+    const dayNames = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+    const daysMap = new Map();
+    const days = [];
+
+    for (let i = 0; i < 7; i++) {
+      const current = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+      const curStr = formatDate(current);
+      const dayObj = {
+        dateStr: curStr,
+        dayName: dayNames[i],
+        dayNumber: current.getDate(),
+        postsCount: 0,
+        productionsCount: 0,
+        totalActivities: 0
+      };
+      days.push(dayObj);
+      daysMap.set(curStr, dayObj);
+    }
+
+    const mondayStr = days[0].dateStr;
+    const sundayStr = days[6].dateStr;
+
+    // Consultas paralelas en rango
+    const [postsRes, prodsRes] = await Promise.all([
+      supabase
+        .from("posts")
+        .select("id, fecha_programada, estado, tipo_post")
+        .gte("fecha_programada", mondayStr)
+        .lte("fecha_programada", sundayStr),
+      supabase
+        .from("producciones")
+        .select("id, fecha_rodaje, estado, tipo_sesion")
+        .gte("fecha_rodaje", mondayStr)
+        .lte("fecha_rodaje", sundayStr)
+    ]);
+
+    const weekPosts = postsRes.data || [];
+    const weekProds = prodsRes.data || [];
+
+    weekPosts.forEach((p) => {
+      if (p.fecha_programada && daysMap.has(p.fecha_programada)) {
+        const item = daysMap.get(p.fecha_programada);
+        item.postsCount++;
+        item.totalActivities++;
+      }
+    });
+
+    weekProds.forEach((pr) => {
+      if (pr.fecha_rodaje && daysMap.has(pr.fecha_rodaje)) {
+        const item = daysMap.get(pr.fecha_rodaje);
+        item.productionsCount++;
+        item.totalActivities++;
+      }
+    });
+
+    const totalWeekPosts = weekPosts.length;
+    const totalWeekProductions = weekProds.length;
+    const totalWeekActivities = totalWeekPosts + totalWeekProductions;
+
+    return {
+      success: true,
+      data: {
+        weekStart: mondayStr,
+        weekEnd: sundayStr,
+        days,
+        totalWeekPosts,
+        totalWeekProductions,
+        totalWeekActivities
+      }
+    };
+  } catch (err) {
+    console.error("getWeekAgendaSummary catch error:", err);
+    return { success: false, error: err.message };
+  }
+}
+

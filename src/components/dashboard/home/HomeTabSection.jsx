@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { getLocalDateString } from "@/utils/formatters";
-import { getDayAgendaSummary } from "@/services/homeService";
+import { getDayAgendaSummary, getWeekAgendaSummary } from "@/services/homeService";
 import { updatePost, createPost } from "@/services/calendarService";
 import HomeDateNavigator from "./HomeDateNavigator";
 import HomeDayMetrics from "./HomeDayMetrics";
+import HomeWeekStrip from "./HomeWeekStrip";
 import HomePostsAgenda from "./HomePostsAgenda";
 import HomeProductionsAgenda from "./HomeProductionsAgenda";
 import PostModal from "@/components/dashboard/calendar/PostModal";
@@ -21,22 +22,35 @@ export default function HomeTabSection({ setActiveTab }) {
   const [productions, setProductions] = useState([]);
   const [metrics, setMetrics] = useState({});
 
+  // Week Strip state
+  const [isWeekOpen, setIsWeekOpen] = useState(false);
+  const [weekData, setWeekData] = useState(null);
+
   // Modals state
   const [editingPost, setEditingPost] = useState(null);
   const [isSavingPost, setIsSavingPost] = useState(false);
   const [selectedProduction, setSelectedProduction] = useState(null);
 
-  // Load agenda data for the selected date
+  // Load agenda data for the selected date + week totals
   const loadDayAgenda = useCallback(async (dateStr) => {
     setLoading(true);
-    const res = await getDayAgendaSummary(dateStr);
-    if (res.success && res.data) {
-      setPosts(res.data.posts || []);
-      setProductions(res.data.productions || []);
-      setMetrics(res.data.metrics || {});
+    const [dayRes, weekRes] = await Promise.all([
+      getDayAgendaSummary(dateStr),
+      getWeekAgendaSummary(dateStr)
+    ]);
+
+    if (dayRes.success && dayRes.data) {
+      setPosts(dayRes.data.posts || []);
+      setProductions(dayRes.data.productions || []);
+      setMetrics(dayRes.data.metrics || {});
     } else {
-      toast.error(res.error || "No se pudo cargar la agenda del día.");
+      toast.error(dayRes.error || "No se pudo cargar la agenda del día.");
     }
+
+    if (weekRes.success && weekRes.data) {
+      setWeekData(weekRes.data);
+    }
+
     setLoading(false);
   }, []);
 
@@ -84,14 +98,25 @@ export default function HomeTabSection({ setActiveTab }) {
         loading={loading}
       />
 
-      {/* 2. Key Metrics Bar */}
+      {/* 2. Key Metrics Bar (including "En Esta Semana" toggle) */}
       <HomeDayMetrics
         metrics={metrics}
-        posts={posts}
-        productions={productions}
+        weekData={weekData}
+        isWeekOpen={isWeekOpen}
+        onToggleWeek={() => setIsWeekOpen((prev) => !prev)}
       />
 
-      {/* 3. Main Split Grid: Posts Agenda (left) & Productions Agenda (right) */}
+      {/* 3. Collapsible 7-Days Week Strip ("Pantallazo de lo que viene") */}
+      {isWeekOpen && (
+        <HomeWeekStrip
+          weekData={weekData}
+          selectedDate={selectedDate}
+          onSelectDate={(newDate) => setSelectedDate(newDate)}
+          onClose={() => setIsWeekOpen(false)}
+        />
+      )}
+
+      {/* 4. Main Split Grid: Posts Agenda (left) & Productions Agenda (right) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left column (7 cols): Publicaciones del día */}
         <div className="lg:col-span-7">

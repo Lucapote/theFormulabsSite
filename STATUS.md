@@ -7,7 +7,11 @@
 
 ## 📸 Foto de Hoy (Contexto Operativo)
 
-1. **Pantalla de Inicio & Agenda Diaria ("Qué Toca Hoy") (`src/components/dashboard/home/`) — [100% COMPLETADO]**:
+1. **Tarjeta y Tira Desplegable "En Esta Semana" (`HomeDayMetrics.jsx` y `HomeWeekStrip.jsx`) — [100% COMPLETADO]**:
+   - Se reemplazó la 3ra tarjeta superior por **"EN ESTA SEMANA"** con el total de actividades (posts + rodajes) de la semana y botón de toggle.
+   - **Tira Semanal de 7 Días (`HomeWeekStrip.jsx`)**: Cuadrícula Lunes a Domingo con badges de actividad por día y selección interactiva que conmuta la agenda inferior de inmediato.
+   - **Cálculo de Rango Semanal (`homeService.js`)**: Función `getWeekAgendaSummary` para consultas en rango de semana.
+2. **Pantalla de Inicio & Agenda Diaria ("Qué Toca Hoy") (`src/components/dashboard/home/`) — [100% COMPLETADO]**:
    - Se implementó la nueva vista principal `Inicio`, configurada como la primera pestaña y abierta por defecto al entrar a `/dashboard`.
    - **Navegador de Fechas (`HomeDateNavigator.jsx`)**: Botones rápidos (*Ayer*, *Hoy*, *Mañana*), selector nativo de fecha, avance/retroceso y recarga.
    - **Métricas del Día (`HomeDayMetrics.jsx`)**: Indicadores clave de publicaciones del día (listas vs en edición), rodajes agendados y marcas activas.

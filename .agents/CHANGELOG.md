@@ -6,6 +6,24 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ---
 
+## [2026-11-11] — Tarjeta y Tira Desplegable "En Esta Semana" en Inicio
+
+### Agregado
+- **Tira Semanal Desplegable de 7 Días (`HomeWeekStrip.jsx`)**:
+  - Cuadrícula responsive de Lunes a Domingo que desglosa la cantidad de publicaciones y rodajes para cada día.
+  - Resaltado visual del día seleccionado y badge de "Hoy".
+  - Navegación al instante: hacer clic en cualquier día cambia de inmediato la agenda inferior a esa fecha.
+- **Función de Rango Semanal en Servicio (`homeService.js`)**:
+  - `getWeekAgendaSummary`: Calcula dinámicamente Lunes y Domingo de la semana y consulta de forma atómica en Supabase los posts y producciones en rango, agregando los totales de actividades.
+
+### Modificado
+- **Tarjeta Métrica "En Esta Semana" (`HomeDayMetrics.jsx`)**:
+  - Sustitución de la 3ra tarjeta superior por "EN ESTA SEMANA", mostrando el total de actividades acumuladas de los 7 días y botón de toggle interactivo.
+- **Orquestador de Inicio (`HomeTabSection.jsx`)**:
+  - Integración del estado `isWeekOpen` y renderizado de `HomeWeekStrip` entre las métricas y la agenda (173 líneas, $\le 200$).
+
+---
+
 ## [2026-11-11] — Pantalla de Inicio y Agenda Diaria ("Qué Toca Hoy")
 
 ### Agregado
