@@ -146,8 +146,13 @@ export default function ScheduledPostsList({
   // Create / Edit Post Save Handler
   const handleSavePost = async (formData) => {
     setIsSaving(true);
-    if (formData.id) {
-      const res = await updatePost(formData.id, formData, formData.archivosAnteriores);
+    const targetId = formData.id || editingPost?.id;
+    if (targetId) {
+      const res = await updatePost(
+        targetId,
+        { ...formData, calendario_id: calendarioId || formData.calendario_id },
+        formData.archivosAnteriores || editingPost?.archivos || []
+      );
       if (res.success) {
         toast.success("Publicación actualizada con éxito.");
         setShowModal(false);
@@ -158,7 +163,10 @@ export default function ScheduledPostsList({
         toast.error(res.error || "No se pudo actualizar el post.");
       }
     } else {
-      const res = await createPost(formData);
+      const res = await createPost({
+        ...formData,
+        calendario_id: calendarioId || formData.calendario_id
+      });
       if (res.success) {
         toast.success("Publicación programada exitosamente.");
         setShowModal(false);

@@ -6,6 +6,16 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ---
 
+## [2026-11-11] — Corrección de `calendario_id es requerido` al Actualizar Publicaciones
+
+### Corregido
+- **Persistencia de `id` y `calendario_id` al Guardar Post (`PostModal.jsx`)**:
+  - Al enviar el formulario de edición de publicación, `PostModal` no incluía `id: initialData?.id` ni `calendario_id` en el objeto `payload`.
+  - Esto causaba que `ScheduledPostsList.jsx` interpretara la edición como una creación de nuevo post (`!formData.id`) y llamara a `createPost` sin `calendario_id`, arrojando el error `calendario_id es requerido`.
+  - Se incluyeron explícitamente `id`, `calendario_id` y `archivosAnteriores` en el payload de `PostModal.jsx` y se agregaron fallbacks defensivos en `handleSavePost` de `ScheduledPostsList.jsx` (`formData.id || editingPost?.id`).
+
+---
+
 ## [2026-11-11] — Subida Directa a Cloudflare R2 (Bypass Vercel 413), Refresco de Auth Token (Bypass 401) y Sincronización de Cajas Pendientes de Medios
 
 ### Agregado

@@ -7,7 +7,10 @@
 
 ## 📸 Foto de Hoy (Contexto Operativo)
 
-1. **Blindaje Total de Cajas Pendientes de Medios (`ScheduledPostsList.jsx` y `ScheduledPostsFilterBar.jsx`) — [100% COMPLETADO]**:
+1. **Corrección de `calendario_id es requerido` (`PostModal.jsx` y `ScheduledPostsList.jsx`) — [100% COMPLETADO]**:
+   - Se aseguró que `PostModal` entregue `id: initialData?.id`, `calendario_id: calendarioId || initialData?.calendario_id` y `archivosAnteriores` en el payload.
+   - `handleSavePost` en `ScheduledPostsList.jsx` utiliza `formData.id || editingPost?.id`, invocando correctamente `updatePost` en vez de confundirlo con una creación de post (`createPost`).
+2. **Blindaje Total de Cajas Pendientes de Medios (`ScheduledPostsList.jsx` y `ScheduledPostsFilterBar.jsx`) — [100% COMPLETADO]**:
    - Se erradicó el filtro restrictivo viejo: ahora en modo `showOnlyDrafts` (bajo la Galería), la lista retorna directamente `!firstFile`, evitando que publicaciones con copywriting importado desde Word queden ocultas en `(0 cajas)`.
    - Textos alineados con la identidad del sistema: *"CAJAS PENDIENTES DE MEDIOS (X cajas)"* y *"No hay cajas pendientes de medios"*.
 2. **Sincronización Reactiva en Tiempo Real (`ClientsCalendarSection.jsx` y `ScheduledPostsList.jsx`) — [100% COMPLETADO]**:

@@ -126,6 +126,9 @@ export default function PostModal({
     }
 
     const payload = {
+      id: initialData?.id,
+      calendario_id: calendarioId || initialData?.calendario_id,
+      archivosAnteriores: initialData?.archivos || [],
       tipo_post: tipoPost,
       fecha_programada: fechaProgramada,
       hora_programada: horaProgramada || "18:00",
