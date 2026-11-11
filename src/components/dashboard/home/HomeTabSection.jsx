@@ -10,11 +10,8 @@ import HomePostsAgenda from "./HomePostsAgenda";
 import HomeProductionsAgenda from "./HomeProductionsAgenda";
 import PostModal from "@/components/dashboard/calendar/PostModal";
 import ProductionDetailModal from "@/components/dashboard/operations/ProductionDetailModal";
+import InstagramPostPreviewModal from "@/components/common/InstagramPostPreviewModal";
 
-/**
- * HomeTabSection
- * Principal orchestrator view for the "Inicio" / Agenda Diaria Mission Control.
- */
 export default function HomeTabSection({ setActiveTab }) {
   const [selectedDate, setSelectedDate] = useState(getLocalDateString());
   const [loading, setLoading] = useState(true);
@@ -22,16 +19,14 @@ export default function HomeTabSection({ setActiveTab }) {
   const [productions, setProductions] = useState([]);
   const [metrics, setMetrics] = useState({});
 
-  // Week Strip state
   const [isWeekOpen, setIsWeekOpen] = useState(false);
   const [weekData, setWeekData] = useState(null);
 
-  // Modals state
   const [editingPost, setEditingPost] = useState(null);
+  const [previewPost, setPreviewPost] = useState(null);
   const [isSavingPost, setIsSavingPost] = useState(false);
   const [selectedProduction, setSelectedProduction] = useState(null);
 
-  // Load agenda data for the selected date + week totals
   const loadDayAgenda = useCallback(async (dateStr) => {
     setLoading(true);
     const [dayRes, weekRes] = await Promise.all([
@@ -58,7 +53,6 @@ export default function HomeTabSection({ setActiveTab }) {
     loadDayAgenda(selectedDate);
   }, [selectedDate, loadDayAgenda]);
 
-  // Handle saving post edits directly from Home agenda
   const handleSavePost = async (formData) => {
     setIsSavingPost(true);
     const targetId = formData.id || editingPost?.id;
@@ -117,18 +111,17 @@ export default function HomeTabSection({ setActiveTab }) {
       )}
 
       {/* 4. Main Split Grid: Posts Agenda (left) & Productions Agenda (right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left column (7 cols): Publicaciones del día */}
-        <div className="lg:col-span-7">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <div className="lg:col-span-7 flex flex-col">
           <HomePostsAgenda
             posts={posts}
             onSelectPost={(post) => setEditingPost(post)}
+            onPreviewPost={(post) => setPreviewPost(post)}
             onNavigateToCalendars={() => setActiveTab("calendars")}
           />
         </div>
 
-        {/* Right column (5 cols): Rodajes y logística del día */}
-        <div className="lg:col-span-5">
+        <div className="lg:col-span-5 flex flex-col">
           <HomeProductionsAgenda
             productions={productions}
             onSelectProduction={(prod) => setSelectedProduction(prod)}
@@ -136,6 +129,19 @@ export default function HomeTabSection({ setActiveTab }) {
           />
         </div>
       </div>
+
+      {/* Preview Modal */}
+      {previewPost && (
+        <InstagramPostPreviewModal
+          post={previewPost}
+          onClose={() => setPreviewPost(null)}
+          onEdit={(post) => {
+            setPreviewPost(null);
+            setEditingPost(post);
+          }}
+          isInternal={true}
+        />
+      )}
 
       {/* Post Modal (View/Edit) */}
       {editingPost && (

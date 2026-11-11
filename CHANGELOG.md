@@ -6,6 +6,27 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ---
 
+## [2026-11-11] — Balance de Alturas y Estados Vacíos Compactos en Agenda de Inicio
+
+### Modificado
+- **Estados Vacíos Compactos (`HomePostsAgenda.jsx` y `HomeProductionsAgenda.jsx`)**:
+  - Reducción del padding de `py-12` a `py-6 sm:py-8`.
+  - Iconos de 40px (`w-10 h-10`) con estilo sobrio de laboratorio.
+  - Textos descriptivos sintetizados en una línea para evitar dominancia visual vacía.
+  - Botones CTA de 32px de altura (`h-8 px-4 text-xs`).
+- **Tarjetas de Publicación Enriquecidas y Proporcionadas (`HomePostsAgenda.jsx`)**:
+  - Aumento de padding a `p-4 sm:p-5` con bordes redondeados `rounded-2xl`.
+  - Badges de plataforma (*Instagram* en púrpura suave) y hora en tipografía mono.
+  - Miniatura ampliada a 16x16 / 20x20 con indicador de video centrado.
+  - Extracto de copy de 2 a 3 líneas con tipografía nítida `leading-relaxed`.
+  - Botones de acción visibles: "Ver Vista Previa" y "Editar".
+- **Equilibrio Simétrico en Columnas (`HomeTabSection.jsx`)**:
+  - Cuadrícula con `items-stretch` y contenedores con `h-full min-h-[290px] sm:min-h-[310px] flex flex-col justify-between`.
+  - Eliminación del desnivel visual asimétrico cuando una columna tiene elementos y la otra está vacía.
+  - Integración de `InstagramPostPreviewModal` al hacer clic en "Ver Vista Previa".
+
+---
+
 ## [2026-11-11] — Tarjeta y Tira Desplegable "En Esta Semana" en Inicio
 
 ### Agregado
