@@ -13,15 +13,16 @@ import OperationsTabSection from "@/components/dashboard/operations/OperationsTa
 import BankSettingsModal from "@/components/dashboard/common/BankSettingsModal";
 import DashboardHeader from "@/components/dashboard/common/DashboardHeader";
 import DashboardTabs from "@/components/dashboard/common/DashboardTabs";
+import HomeTabSection from "@/components/dashboard/home/HomeTabSection";
 
-const VALID_TABS = ["proposals", "calendars", "operaciones", "diagnostics"];
+const VALID_TABS = ["inicio", "proposals", "calendars", "operaciones", "diagnostics"];
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const paramTab = searchParams.get("tab");
-  const activeTab = VALID_TABS.includes(paramTab) ? paramTab : "proposals";
+  const activeTab = VALID_TABS.includes(paramTab) ? paramTab : "inicio";
 
   const setActiveTab = (newTab) => {
     setSearchParams({ tab: newTab }, { replace: true });
@@ -132,6 +133,8 @@ export default function Dashboard() {
           diagnosticsCount={diagnostics.length}
           leadsPendientesCount={leadsPendientesCount}
         />
+
+        {activeTab === "inicio" && <HomeTabSection setActiveTab={setActiveTab} />}
 
         {activeTab === "calendars" && (
           <ClientsCalendarSection

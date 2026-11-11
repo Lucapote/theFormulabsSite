@@ -6,6 +6,28 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ---
 
+## [2026-11-11] — Pantalla de Inicio y Agenda Diaria ("Qué Toca Hoy")
+
+### Agregado
+- **Módulo de Inicio en Dashboard (`src/components/dashboard/home/`)**:
+  - `HomeTabSection.jsx`: Orquestador principal de la agenda diaria ($\le 150$ líneas).
+  - `HomeDateNavigator.jsx`: Barra de control de fecha con accesos rápidos (*Ayer*, *Hoy*, *Mañana*), selector nativo de fecha, avance/retroceso por día y botón de recarga.
+  - `HomeDayMetrics.jsx`: Indicadores KPI con publicaciones del día (listas vs en proceso), rodajes programados y marcas activas hoy.
+  - `HomePostsAgenda.jsx`: Columna cronológica de publicaciones del día con hora, cliente, formato (Reel, Carrusel, Historia), estado visual y apertura de modal de edición/previsualización al hacer clic.
+  - `HomeProductionsAgenda.jsx`: Columna cronológica de rodajes del día con horario de filmación, cliente, locación, tipo de sesión, estado y conteo de requerimientos de producción, con apertura directa de la ficha de logística al hacer clic.
+- **Servicio Asíncrono de Agenda Diaria (`src/services/homeService.js`)**:
+  - `getDayScheduledPosts`: Obtiene publicaciones de la fecha con joins enriquecidos hacia calendarios y clientes.
+  - `getDayProductions`: Obtiene sesiones de rodaje de la fecha vinculadas con clientes y ciclos.
+  - `getDayAgendaSummary`: Consolida posts, rodajes y métricas consolidadas en una sola llamada paralela.
+
+### Modificado
+- **Pestaña por Defecto en Dashboard (`Dashboard.jsx` y `DashboardTabs.jsx`)**:
+  - Se agregó la pestaña **"Inicio"** como la primera opción en la barra superior con icono `Home`.
+  - Se configuró `"inicio"` como la pestaña inicial por defecto al ingresar a `/dashboard`.
+  - Mantiene estricto cumplimiento de $\le 200$ líneas en `Dashboard.jsx` (198 líneas).
+
+---
+
 ## [2026-11-11] — Corrección de `calendario_id es requerido` al Actualizar Publicaciones
 
 ### Corregido

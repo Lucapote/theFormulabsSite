@@ -1,4 +1,4 @@
-import { FileText, Users, Clapperboard, BarChart2 } from "lucide-react";
+import { Home, FileText, Users, Clapperboard, BarChart2 } from "lucide-react";
 
 /**
  * DashboardTabs
@@ -13,6 +13,19 @@ export default function DashboardTabs({
 }) {
   return (
     <div className="flex flex-wrap gap-2 sm:gap-3 mb-6 sm:mb-8">
+      <button
+        type="button"
+        onClick={() => onSelectTab("inicio")}
+        className={`py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-sora text-xs font-bold transition-all duration-150 active:scale-[0.98] cursor-pointer flex items-center gap-2 ${
+          activeTab === "inicio"
+            ? "bg-gray-900 text-white shadow-md"
+            : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-100"
+        }`}
+      >
+        <Home className="w-4 h-4 text-brand-blue" />
+        Inicio
+      </button>
+
       <button
         type="button"
         onClick={() => onSelectTab("proposals")}
