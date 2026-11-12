@@ -323,6 +323,7 @@ export default function ScheduledPostsList({
         onSave={handleSavePost}
         calendarioId={calendarioId}
         initialData={editingPost}
+        existingPosts={posts}
         isSaving={isSaving}
       />
 

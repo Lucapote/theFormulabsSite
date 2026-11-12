@@ -229,6 +229,7 @@ export default function MediaGallery({
           onSave={handleSavePostFromGallery}
           calendarioId={calendarioId}
           initialData={editingPost}
+          existingPosts={posts}
           isSaving={isSavingPost}
         />
       )}

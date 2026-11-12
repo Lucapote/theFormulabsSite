@@ -6,6 +6,25 @@ El formato se basa en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/
 
 ---
 
+## [2026-11-12] — Exclusión de Medios en Uso en el Modal de Publicación
+
+### Agregado
+- **Subcomponente Modular de Texto (`PostModalCaptionField.jsx`)**:
+  - Extraído de `PostModal.jsx` para mantener el modal estrictamente en 244 líneas ($\le 250$). Encapsula el campo multilínea de caption e instrucciones de historia.
+
+### Modificado
+- **Exclusión de Medios en Uso (`PostModal.jsx`)**:
+  - Implementación del cálculo `availableGalleryFiles` con doble verificación: evalúa si el archivo multimedia está presente en cualquier otra publicación de `existingPosts` o tiene la bandera `en_uso` en la base de datos.
+  - Al crear un post nuevo, se ocultan al 100% los archivos comprometidos (tanto videos como imágenes).
+  - Al editar un post existente, se mantienen los archivos propios ya asignados a este post (apareciendo seleccionados) y se ocultan los de los demás posts.
+- **Transparencia en Selector de Medios (`PostModalMediaGalleryPicker.jsx`)**:
+  - Encabezado con contador real de disponibles y badge informativo `X en uso ocultos`.
+  - Mensaje de estado vacío explicativo cuando todos los medios compatibles están en uso en otras publicaciones.
+- **Suministro Reactivo de Posts (`ScheduledPostsList.jsx` y `MediaGallery.jsx`)**:
+  - Envío de `existingPosts={posts}` a `<PostModal>` para resolver el filtro de disponibilidad de forma síncrona sin latencia de red.
+
+---
+
 ## [2026-11-11] — Balance de Alturas y Estados Vacíos Compactos en Agenda de Inicio
 
 ### Modificado

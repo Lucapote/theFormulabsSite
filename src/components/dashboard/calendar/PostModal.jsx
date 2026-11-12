@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 import BaseFormModal from "@/components/common/BaseFormModal";
-import { getArchivosByCalendario } from "@/services/calendarService";
+import { getArchivosByCalendario, getPostsByCalendario } from "@/services/calendarService";
 import MediaDetailModal from "@/components/common/MediaDetailModal";
 import MediaFramingModal from "@/components/dashboard/calendar/MediaFramingModal";
 import { getLocalDateString } from "@/utils/formatters";
@@ -10,6 +10,7 @@ import { useMediaRatios } from "@/hooks/useMediaRatios";
 import PostModalClientFeedbackBanner from "./subcomponents/PostModalClientFeedbackBanner";
 import PostModalMediaGalleryPicker from "./subcomponents/PostModalMediaGalleryPicker";
 import PostModalScheduleFields from "./subcomponents/PostModalScheduleFields";
+import PostModalCaptionField from "./subcomponents/PostModalCaptionField";
 
 /**
  * PostModal
@@ -22,6 +23,7 @@ export default function PostModal({
   onSave,
   calendarioId,
   initialData = null,
+  existingPosts = null,
   isSaving = false
 }) {
   const isEditing = Boolean(initialData?.id);
@@ -35,6 +37,7 @@ export default function PostModal({
   const [observacionesDescartadas, setObservacionesDescartadas] = useState(false);
 
   const [galleryFiles, setGalleryFiles] = useState([]);
+  const [internalPosts, setInternalPosts] = useState([]);
   const [loadingGallery, setLoadingGallery] = useState(false);
   const [previewMedia, setPreviewMedia] = useState(null);
   const [showFramingModal, setShowFramingModal] = useState(false);
@@ -42,63 +45,74 @@ export default function PostModal({
 
   useEffect(() => {
     setObservacionesDescartadas(false);
-    if (initialData) {
-      setTipoPost(initialData.tipo_post || "reel");
-      setFechaProgramada(initialData.fecha_programada || "");
-      setHoraProgramada(initialData.hora_programada || "18:00");
-      setCaption(initialData.caption || "");
-      setEstado(initialData.estado || "sin_empezar");
-      setArchivos(initialData.archivos || []);
-    } else {
-      setTipoPost("reel");
-      setFechaProgramada("");
-      setHoraProgramada("18:00");
-      setCaption("");
-      setEstado("sin_empezar");
-      setArchivos([]);
-    }
+    setTipoPost(initialData?.tipo_post || "reel");
+    setFechaProgramada(initialData?.fecha_programada || "");
+    setHoraProgramada(initialData?.hora_programada || "18:00");
+    setCaption(initialData?.caption || "");
+    setEstado(initialData?.estado || "sin_empezar");
+    setArchivos(initialData?.archivos || []);
   }, [initialData, isOpen]);
 
-  const loadGalleryFiles = async () => {
+  const loadGalleryData = useCallback(async () => {
     if (!calendarioId) return;
     setLoadingGallery(true);
     try {
-      const res = await getArchivosByCalendario(calendarioId);
-      if (res.success) {
-        setGalleryFiles(res.data || []);
-      }
+      const promises = [getArchivosByCalendario(calendarioId)];
+      if (!existingPosts) promises.push(getPostsByCalendario(calendarioId));
+      const [resArchivos, resPosts] = await Promise.all(promises);
+      if (resArchivos.success) setGalleryFiles(resArchivos.data || []);
+      if (resPosts?.success) setInternalPosts(resPosts.data || []);
     } catch {
       toast.error("Error al cargar archivos de galería");
     } finally {
       setLoadingGallery(false);
     }
-  };
+  }, [calendarioId, existingPosts]);
 
   useEffect(() => {
-    if (isOpen && calendarioId) {
-      loadGalleryFiles();
-    }
-  }, [isOpen, calendarioId]);
+    if (isOpen && calendarioId) loadGalleryData();
+  }, [isOpen, calendarioId, loadGalleryData]);
 
-  const availableGalleryFiles = useMemo(() => {
-    if (tipoPost === "reel") {
-      return galleryFiles.filter(
-        (f) => f.tipo === "video" || /\.(mp4|mov|webm)$/i.test(f.url || "")
-      );
-    }
-    return galleryFiles;
-  }, [galleryFiles, tipoPost]);
+  const postsList = existingPosts || internalPosts || [];
+
+  // Excluir archivos en uso por otros posts para evitar duplicidades
+  const { availableGalleryFiles, hiddenInUseCount } = useMemo(() => {
+    const isReel = tipoPost === "reel";
+    const formatFiltered = isReel
+      ? galleryFiles.filter((f) => f.tipo === "video" || /\.(mp4|mov|webm)$/i.test(f.url || ""))
+      : galleryFiles;
+
+    let inUseCount = 0;
+    const available = formatFiltered.filter((file) => {
+      const inOther = postsList.some((p) => {
+        if (initialData?.id && p.id === initialData.id) return false;
+        return Array.isArray(p.archivos) && p.archivos.some((a) => (a.id && a.id === file.id) || (a.url && a.url === file.url));
+      });
+      if (inOther) {
+        inUseCount++;
+        return false;
+      }
+
+      if (file.en_uso) {
+        const isCurrent = (initialData?.archivos || []).some((a) => (a.id && a.id === file.id) || (a.url && a.url === file.url));
+        if (!isCurrent) {
+          inUseCount++;
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    return { availableGalleryFiles: available, hiddenInUseCount: inUseCount };
+  }, [galleryFiles, tipoPost, postsList, initialData]);
 
   const handleToggleFileSelection = (file) => {
     if (tipoPost === "reel") {
       setArchivos([file]);
     } else {
       const exists = archivos.some((item) => item.id === file.id);
-      if (exists) {
-        setArchivos(archivos.filter((item) => item.id !== file.id));
-      } else {
-        setArchivos([...archivos, file]);
-      }
+      setArchivos(exists ? archivos.filter((item) => item.id !== file.id) : [...archivos, file]);
     }
   };
 
@@ -161,7 +175,6 @@ export default function PostModal({
         isSubmitDisabled={isSaving}
       >
         <div className="space-y-5 sm:space-y-6">
-          {/* Banner de Observaciones del Cliente */}
           {initialData?.notas_cambios && estado === "en_edicion" && !observacionesDescartadas && (
             <PostModalClientFeedbackBanner
               notasCambios={initialData.notas_cambios}
@@ -170,7 +183,6 @@ export default function PostModal({
             />
           )}
 
-          {/* Campos de Formato, Fecha, Hora y Estado */}
           <PostModalScheduleFields
             tipoPost={tipoPost}
             onFormatChange={handleFormatChange}
@@ -182,48 +194,28 @@ export default function PostModal({
             onEstadoChange={setEstado}
           />
 
-          {/* Caption / Copywriting o Instrucciones de Historia */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-sora font-bold uppercase text-gray-700 tracking-wide">
-                {tipoPost === "historia"
-                  ? "Instrucciones de la Historia / Secuencia *"
-                  : "Caption / Copywriting del Post *"}
-              </label>
-              <span className="text-[11px] font-mono text-gray-400">
-                {caption.length} / 2200 car.
-              </span>
-            </div>
-            <textarea
-              rows={4}
-              placeholder={
-                tipoPost === "historia"
-                  ? "Instrucciones de publicación para Instagram: Stickers a colocar, links web, encuestas, textos sobreimpresos, menciones, música..."
-                  : "Escribe el texto de la publicación, hashtags y llamadas a la acción..."
-              }
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              className="w-full p-3.5 rounded-xl border border-gray-200 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 bg-gray-50/50 outline-none text-sm text-gray-900 font-medium transition-all leading-relaxed font-inter"
-            />
-          </div>
+          <PostModalCaptionField
+            tipoPost={tipoPost}
+            caption={caption}
+            onChange={setCaption}
+          />
 
-          {/* Selector de Medios de Galería */}
           <PostModalMediaGalleryPicker
             tipoPost={tipoPost}
             estado={estado}
             archivos={archivos}
             availableGalleryFiles={availableGalleryFiles}
+            hiddenInUseCount={hiddenInUseCount}
             invalidFiles={invalidFiles}
             loadingGallery={loadingGallery}
             onOpenFraming={() => setShowFramingModal(true)}
-            onReloadGallery={loadGalleryFiles}
+            onReloadGallery={loadGalleryData}
             onToggleSelection={handleToggleFileSelection}
             onPreviewMedia={setPreviewMedia}
           />
         </div>
       </BaseFormModal>
 
-      {/* Modal de Encuadre Instagram */}
       {showFramingModal && (
         <MediaFramingModal
           isOpen={showFramingModal}
@@ -234,12 +226,11 @@ export default function PostModal({
           onFramingComplete={(processedFiles) => {
             const videoFiles = archivos.filter((a) => a.tipo === "video");
             setArchivos([...videoFiles, ...processedFiles]);
-            loadGalleryFiles();
+            loadGalleryData();
           }}
         />
       )}
 
-      {/* Lightbox Preview */}
       {previewMedia && (
         <MediaDetailModal
           media={previewMedia}

@@ -5,13 +5,14 @@ import { canSaveWithoutMedia } from "@/utils/postStatusHelpers";
 /**
  * PostModalMediaGalleryPicker
  * Selector visual de medios de la galería del cliente para asignar al post,
- * con advertencias de proporción para Instagram y botón de encuadre.
+ * con advertencias de proporción para Instagram y exclusión de medios en uso.
  */
 export default function PostModalMediaGalleryPicker({
   tipoPost,
   estado,
   archivos = [],
   availableGalleryFiles = [],
+  hiddenInUseCount = 0,
   invalidFiles = [],
   loadingGallery = false,
   onOpenFraming,
@@ -22,9 +23,14 @@ export default function PostModalMediaGalleryPicker({
   return (
     <div className="space-y-3 pt-2 border-t border-gray-100">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
-        <label className="text-xs font-sora font-bold uppercase text-gray-700 tracking-wide flex items-center gap-1.5">
+        <label className="text-xs font-sora font-bold uppercase text-gray-700 tracking-wide flex items-center gap-1.5 flex-wrap">
           <Film className="w-4 h-4 text-brand-blue" />
           Medios de Galería ({archivos.length} asignados / {availableGalleryFiles.length} disponibles)
+          {hiddenInUseCount > 0 && (
+            <span className="text-[10px] font-sora font-bold text-purple-700 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-full lowercase">
+              {hiddenInUseCount} en uso ocultos
+            </span>
+          )}
           {!canSaveWithoutMedia(estado) ? (
             <span className="text-brand-magenta font-black">*</span>
           ) : (
@@ -71,7 +77,7 @@ export default function PostModalMediaGalleryPicker({
               Proporción no soportada por Meta ({invalidFiles.length} imagen{invalidFiles.length > 1 ? "es" : ""})
             </p>
             <p className="text-amber-700 font-inter text-[11px] mt-0.5 leading-snug">
-              Instagram solo admite proporciones entre 4:5 (vertical) y 1.91:1 (horizontal). Encuadra a 4:5 o 1:1 para evitar rechazos de publicación.
+              Instagram solo admite proporciones entre 4:5 (vertical) y 1.91:1 (horizontal). Encuadra a 4:5 o 1:1 para evitar rechazos.
             </p>
           </div>
           <button
@@ -79,7 +85,7 @@ export default function PostModalMediaGalleryPicker({
             onClick={onOpenFraming}
             className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-sora font-bold text-[11px] shrink-0 transition-colors cursor-pointer active:scale-[0.98]"
           >
-            Encuadrar ahora
+            Encuadrar
           </button>
         </div>
       )}
@@ -99,9 +105,9 @@ export default function PostModalMediaGalleryPicker({
               ? "No hay videos disponibles en la galería"
               : "No hay archivos disponibles en la galería"}
           </p>
-          <p className="text-[11px] text-gray-400 mt-0.5">
-            {tipoPost === "reel"
-              ? "El formato Reel requiere archivos de video. Sube un video en la pestaña Galería para seleccionarlo aquí."
+          <p className="text-[11px] text-gray-400 mt-0.5 max-w-sm mx-auto">
+            {hiddenInUseCount > 0
+              ? `Todos los archivos compatibles (${hiddenInUseCount}) ya están en uso en otras publicaciones programadas. Sube nuevos medios en la Galería.`
               : "Sube imágenes o videos en la pestaña Galería de este cliente para poder seleccionarlos aquí."}
           </p>
         </div>
@@ -128,4 +134,3 @@ export default function PostModalMediaGalleryPicker({
     </div>
   );
 }
-
